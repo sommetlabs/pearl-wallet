@@ -9,7 +9,7 @@ npm ci
 VITE_PEARL_NETWORK=testnet2 npm run dev -- --port 5177
 ```
 
-Configure Abyss with `NEXT_PUBLIC_PEARL_WALLET_URL=http://127.0.0.1:5177`. Serve Abyss through `localhost` during development. Use a separate HTTPS origin for a hosted wallet. Each deployment must serve `functions/api/pearl/[[path]].ts` and `public/_headers`; static hosting alone cannot provide the public provider proxy. The `/connect` response must preserve its cross-origin opener (`Cross-Origin-Opener-Policy: unsafe-none`). Other wallet pages keep the upstream isolation headers.
+Configure Abyss with `NEXT_PUBLIC_PEARL_WALLET_URL=http://127.0.0.1:5177`. Serve Abyss through `localhost` during development. Use a separate HTTPS origin for a hosted wallet. Vercel deploys `api/[...path].ts` with the routing and security headers in `vercel.json`; static hosting alone cannot provide the public provider proxy. Import this fork into Vercel, build the feature branch in its Preview environment, and use its generated HTTPS URL—no custom domain or extra GitHub workflow is needed. Set `VITE_PEARL_NETWORK=testnet2` for the build. The `/connect` response must preserve its cross-origin opener (`Cross-Origin-Opener-Policy: unsafe-none`). Other wallet pages keep the upstream isolation headers.
 
 The Vite proxy provides `/api/pearl` in development. The hosted function forwards only bounded public Blockbook reads and same-origin signed broadcasts to `https://blockbook.testnet.pearlresearch.ai/api/v2`. It accepts no keys, node credentials or arbitrary destinations. Abyss has a read-only version of this proxy.
 
