@@ -262,7 +262,7 @@ describe("v0.1.8 / wipeKeystore clears localStorage (opus2 L)", () => {
     expect(fakeLocalStorage.getItem("pearl-wallet-ui-v3")).not.toBeNull();
     const { db } = await import("../src/storage/db");
     const tx = vi.spyOn(db, "transaction").mockImplementation((async (...args: unknown[]) => (args[args.length - 1] as () => Promise<unknown>)()) as never);
-    const spies = (["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const).map((t) => {
+    const spies = (["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const).map((t) => {
       const tbl = db[t] as unknown as { clear?: () => Promise<void>; delete?: () => Promise<void> };
       return vi.spyOn(tbl, t === "keystore" ? ("delete" as never) : ("clear" as never)).mockResolvedValue(undefined as never);
     });

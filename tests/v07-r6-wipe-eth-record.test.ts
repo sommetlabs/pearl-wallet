@@ -80,7 +80,7 @@ async function openTab() {
   // The wallet's own tables: the wipe transaction runs its body and commits.
   vi.spyOn(dbm.db, "transaction").mockImplementation((async (...args: unknown[]) => (args[args.length - 1] as () => Promise<unknown>)()) as never);
   vi.spyOn(dbm.db.keystore, "get").mockResolvedValue(undefined as never);
-  for (const name of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+  for (const name of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
     vi.spyOn(dbm.db[name] as never, (name === "keystore" ? "delete" : "clear") as never).mockResolvedValue(undefined as never);
   }
   const ethTx = await import("../src/services/eth-tx");

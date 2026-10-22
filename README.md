@@ -1,3 +1,13 @@
+# Sommet Labs Pearl wallet · Preview
+
+Independent fork of [PearlWallet](https://github.com/PearlBridgeXYZ/pearlwallet), based on upstream commit `30eb4d376795092d5fb1008d88f00d2121608f1a`.
+
+This branch adds Pearl testnet2 support and a separate approval window for Abyss PRL ↔ NIGHT swaps on Midnight Preview. The default build uses test assets. See [Preview integration](docs/PREVIEW-INTEGRATION.md) for setup, trust assumptions, signing and recovery.
+
+The original project's documentation follows; its Ethereum bridge and mainnet features are outside the Preview swap integration.
+
+---
+
 # PearlWallet
 
 **An open-source, non-custodial wallet for PRL on Pearl and WPRL and ETH on Ethereum, with PearlBridge built in.**

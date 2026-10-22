@@ -11,6 +11,7 @@ import { formatGrains, formatWei, formatWprl, formatUSD } from "../../lib/format
 
 export default function Dashboard() {
   const addresses = useWallet((s) => s.addresses);
+  const testnet = useWallet((s) => s.pearlNetwork === "testnet2");
   const multisigEnabled = useUI((s) => s.multisigEnabled);
   const ethEnabled = useUI((s) => s.ethEnabled);
   const offlineSigningEnabled = useUI((s) => s.offlineSigningEnabled);
@@ -34,7 +35,7 @@ export default function Dashboard() {
   });
   const price = b.price.value;
   const usdOf = (v: bigint | null) =>
-    v !== null && price !== null ? `≈ ${formatUSD((price * Number(v)) / 1e8)}` : "";
+    !testnet && v !== null && price !== null ? `≈ ${formatUSD((price * Number(v)) / 1e8)}` : "";
 
   return (
     <Page>
@@ -49,7 +50,7 @@ export default function Dashboard() {
       <h1 className="page-title">Your wallet</h1>
       <div className="dashboard-balance">
         <h2 className="sr-only">Total balance</h2>
-        {b.totalUsd !== null ? (
+        {testnet ? <div className="dashboard-total break-words font-mono tabular-nums">{b.prl.value === null ? "—" : formatGrains(b.prl.value)} PRL</div> : b.totalUsd !== null ? (
           <div className="dashboard-total break-words font-mono tabular-nums">{formatUSD(b.totalUsd)}</div>
         ) : b.prl.value !== null && b.price.status === "error" ? (
           <div className="mt-3 text-lg text-text-3">— <span className="text-sm">price unavailable</span></div>
@@ -70,13 +71,13 @@ export default function Dashboard() {
             <span aria-hidden="true" className="block h-12 w-48 max-w-full animate-pulse motion-reduce:animate-none rounded-pb bg-surface-3" />
           </div>
         )}
-        {(b.totalStatus === "partial" || b.totalStale) && b.totalUsd !== null && (
+        {!testnet && (b.totalStatus === "partial" || b.totalStale) && b.totalUsd !== null && (
           <div className="mt-2 text-xs text-warn">
             {b.totalStatus === "partial" ? "Some balances couldn't be read completely. The total is an estimate and may be higher or lower." : "Showing last known balance."}
           </div>
         )}
         <UpdatedAgo at={b.prl.updatedAt} />
-        <p className="dashboard-scope">PRL + WPRL in USD. ETH for network fees is shown separately.</p>
+        <p className="dashboard-scope">{testnet ? "Pearl testnet2 · test assets have no market value." : "PRL + WPRL in USD. ETH for network fees is shown separately."}</p>
         <div className="dashboard-assets">
           <div className="dashboard-asset">
             <h2>PRL</h2>

@@ -23,7 +23,7 @@ import { vaultDescriptorFromPubkeys } from "../src/chains/pearl/multisig";
 import { pearlParams } from "../src/chains/pearl/network";
 import { hexToBytes } from "../src/crypto/descriptor";
 
-const STORES = ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const;
+const STORES = ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const;
 type StoreName = (typeof STORES)[number];
 const data = new Map<StoreName, Map<string, unknown>>();
 const inTx = new AsyncLocalStorage<boolean>();

@@ -119,6 +119,7 @@ export function vaultDescriptorFromPubkeys(
   pubkeys: Uint8Array[],
   params: PearlNetworkParams,
 ): VaultDescriptor {
+  if (params.name !== "mainnet") throw new Error("Multisig vaults are not enabled for testnet2");
   if (!Number.isInteger(threshold) || threshold < MULTISIG_MIN_THRESHOLD) {
     throw new Error("E_MULTISIG_BAD_THRESHOLD");
   }

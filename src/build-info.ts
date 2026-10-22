@@ -11,5 +11,5 @@ export const BUILD_TIME: string = __BUILD_TIME__;
 
 // Public source repo where the build originates. Footer links here so users
 // can audit the exact commit they're running.
-export const REPO_URL = "https://github.com/PearlBridgeXYZ/pearlwallet";
+export const REPO_URL = "https://github.com/sommetlabs/pearl-wallet";
 export const COMMIT_URL = `${REPO_URL}/commit/${BUILD_GIT_SHA}`;

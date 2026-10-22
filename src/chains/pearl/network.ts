@@ -1,8 +1,12 @@
-// Pearl L1 network params. Mainnet-only — Pearl has no testnet.
+// Address parameters remain tied to the selected chain, independently of transport.
 
 import { isAllowedRpcOverride } from "../../state/ui-store";
 
-export type PearlNetwork = "mainnet";
+export type PearlNetwork = "mainnet" | "testnet2";
+export const DEFAULT_PEARL_NETWORK: PearlNetwork = import.meta.env.VITE_PEARL_NETWORK === "mainnet" ? "mainnet" : "testnet2";
+let selectedNetwork = DEFAULT_PEARL_NETWORK;
+export const activePearlNetwork = (): PearlNetwork => selectedNetwork;
+export const selectPearlNetwork = (network:PearlNetwork):void => { selectedNetwork=network; };
 
 export interface PearlNetworkParams {
   name: PearlNetwork;
@@ -30,6 +34,12 @@ export const PEARL_MAINNET: PearlNetworkParams = {
   magic: 0xd9b4bef9,
 };
 
+export const PEARL_TESTNET2: PearlNetworkParams = {
+  name: "testnet2", hrp: "tprl", decimals: 8,
+  rpcUrl: "/api/pearl", rpcLabel: "Public Pearl testnet2",
+  explorerUrl: "https://blockbook.testnet.pearlresearch.ai", magic: 0x324c5250,
+};
+
 // v0.2.5: Pool of Pearl sentry RPC endpoints the client rotates through on
 // transient failures. The primary (index 0) is the CF-fronted load-balancer
 // hostname; the rest are direct sentry hostnames per the fleet plan in
@@ -55,7 +65,7 @@ export const PEARL_RPC_POOL: readonly string[] = [
 
 /** Public block-explorer URL for a confirmed Pearl tx. */
 export function pearlTxExplorerUrl(network: PearlNetwork, txid: string): string {
-  return `${PEARL_MAINNET.explorerUrl}/tx/${txid}?network=${network}`;
+  return `${pearlParams(network).explorerUrl}/tx/${txid}`;
 }
 
 /**
@@ -64,7 +74,8 @@ export function pearlTxExplorerUrl(network: PearlNetwork, txid: string): string 
  * fields stay canonical so the address codec / explorer / magic don't
  * silently change when a user points at a third-party node.
  */
-export function pearlParams(_net: PearlNetwork = "mainnet", override?: string): PearlNetworkParams {
+export function pearlParams(net: PearlNetwork = DEFAULT_PEARL_NETWORK, override?: string): PearlNetworkParams {
+  if (net === "testnet2") return PEARL_TESTNET2;
   const trimmed = override?.trim();
   if (!trimmed) return PEARL_MAINNET;
   // v0.1.8 audit Opus2 H-2: the consumer (every rpcUrl() reader) cannot

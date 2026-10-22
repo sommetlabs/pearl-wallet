@@ -19,11 +19,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "useDefineForClassFields": true,
+    "allowImportingTsExtensions": true,
     "types": ["vite/client", "node"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "vite.config.ts", "vite.config.offline.ts"]
+  "include": ["src", "vite.config.ts", "vite.config.offline.ts", "packages/connector/src"]
 }

@@ -52,7 +52,7 @@ function installFakeIdb(db: { transaction: unknown; keystore: unknown }) {
   }) as never);
   // A consented overwrite with a different wallet also clears the replaced
   // wallet's tables in its transaction (FZ3 round 3): empty here.
-  for (const t of ["addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"]) {
+  for (const t of ["addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"]) {
     const table = (db as unknown as Record<string, unknown>)[t];
     if (table) vi.spyOn(table as never, "clear" as never).mockImplementation((async () => undefined) as never);
   }

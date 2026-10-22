@@ -22,7 +22,7 @@ async function openTab() {
   vi.spyOn(dbm.db.keystore, "get").mockResolvedValue(undefined as never);
   vi.spyOn(dbm.db.keystore, "add").mockRejectedValue(quota());
   vi.spyOn(dbm.db.keystore, "put").mockRejectedValue(quota());
-  for (const t of ["addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+  for (const t of ["addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
     vi.spyOn(dbm.db[t] as never, "clear" as never).mockResolvedValue(undefined as never);
   }
   const wc = await import("../src/crypto/worker-client");

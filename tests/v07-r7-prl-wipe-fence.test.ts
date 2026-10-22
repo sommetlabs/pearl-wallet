@@ -136,7 +136,7 @@ function stubWipeTables(afterCommit?: Promise<void>) {
     if (afterCommit) await afterCommit;
     return out;
   }) as never);
-  for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+  for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
     const tbl = db[t] as unknown as { clear?: () => Promise<void>; delete?: () => Promise<void> };
     if (tbl.clear) vi.spyOn(tbl, "clear").mockResolvedValue(undefined as never);
     if (tbl.delete) vi.spyOn(tbl, "delete").mockResolvedValue(undefined as never);

@@ -281,7 +281,7 @@ describe("FZ1 / Sonnet S2 — wipe removes the record", () => {
     expect(hasV3(shared)).toBe(true);
     const { db, wipeKeystore } = await import("../src/storage/db");
     vi.spyOn(db, "transaction").mockImplementation((async (...args: unknown[]) => (args[args.length - 1] as () => Promise<unknown>)()) as never);
-    for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+    for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
       const tbl = db[t] as unknown as Record<string, unknown>;
       vi.spyOn(tbl as never, (t === "keystore" ? "delete" : "clear") as never).mockResolvedValue(undefined as never);
     }
