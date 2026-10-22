@@ -61,6 +61,14 @@ describe("verified live Preview protocol", () => {
 describe("safe funding and recovery", () => {
   afterEach(() => vi.unstubAllGlobals());
   const fixture = fixtures[1]!;
+  it("reads the provider root without a framework trailing-slash redirect", async () => {
+    const fetcher = vi.fn(async (url: string) => {
+      if (url.endsWith("/")) throw new Error("Redirect refused");
+      return Response.json({ chain: "testnet2" });
+    });
+    vi.stubGlobal("fetch", fetcher);
+    expect(await new PearlBlockbook().read("/")).toEqual({ chain: "testnet2" });
+  });
   it("does not reveal a claim preimage inside the refund race window", () => {
     const action = { method: "claimSwap" } as Extract<PearlAction, { method: "claimSwap" }>;
     expect(() => assertClaimWindow(action, 1000, 989)).toThrow("12 Pearl blocks");

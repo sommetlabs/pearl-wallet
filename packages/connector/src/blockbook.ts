@@ -34,7 +34,7 @@ export class PearlBlockbook {
       )
     )
       throw new Error("Unsupported Pearl request");
-    const response = await fetch(`${this.base}${path}`, {
+    const response = await fetch(`${this.base}${path === "/" ? "" : path}`, {
       signal: AbortSignal.timeout(25_000),
       credentials: "same-origin",
       cache: "no-store",
