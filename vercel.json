@@ -73,6 +73,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/pearl/:path+",
+      "destination": "/api/pearl?providerPath=:path+"
+    },
+    {
       "source": "/((?!api/|assets/).*)",
       "destination": "/index.html"
     }
