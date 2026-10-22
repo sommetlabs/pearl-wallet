@@ -58,8 +58,8 @@ describe("Landing page visitor states", () => {
     const html = render("no-wallet");
     expect(html).toContain('href="/onboarding/create"');
     expect(html).toContain('href="/onboarding/restore"');
-    expect(html).toContain('href="https://github.com/PearlBridgeXYZ/pearlwallet/releases/latest"');
-    expect(html).toContain('href="https://github.com/PearlBridgeXYZ/pearlwallet"');
+    expect(html).toContain('href="https://github.com/sommetlabs/pearl-wallet/releases/latest"');
+    expect(html).toContain('href="https://github.com/sommetlabs/pearl-wallet"');
     expect(html).toContain('href="https://pearlbridge.xyz/audit"');
     expect(html.match(/<article>/g)).toHaveLength(6);
     expect(html.match(/<details(?: class="landing-about")?>/g)).toHaveLength(8);
