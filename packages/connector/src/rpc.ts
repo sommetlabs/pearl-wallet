@@ -1,4 +1,4 @@
-import { PearlBlockbook, PearlProviderError } from "./blockbook.ts";
+import { PearlBlockbook, PearlTransactionNotFound } from "./blockbook.ts";
 import { z } from "zod";
 
 const chain = new PearlBlockbook();
@@ -47,9 +47,12 @@ export async function testnetRead(
     const id = hash.parse(params[0]);
     let value: unknown;
     try {
+      // tx-specific answers 500 for a missing transaction on public Blockbook.
+      // Only its explicit tx lookup can establish absence for recovery checks.
+      await chain.read(`/tx/${id}`);
       value = await chain.read(`/tx-specific/${id}`);
     } catch (error) {
-      if (error instanceof PearlProviderError && error.status === 404)
+      if (error instanceof PearlTransactionNotFound)
         throw new Error("rpc -5: No information available about transaction");
       throw error;
     }

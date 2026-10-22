@@ -175,7 +175,7 @@ export default function NativeSwaps() {
                   void perform(async () => {
                     const receipt = await approveSwap(review);
                     setMessage(
-                      `${receipt.status === "broadcast" ? "Refund submitted" : "Broadcast needs observation"}: ${receipt.transactionId}`,
+                      `${receipt.status === "broadcast" ? "Refund accepted; waiting for Pearl confirmations" : "Refund submission not confirmed. Use Check status in the wallet before retrying"}: ${receipt.transactionId}`,
                     );
                     setReview(null);
                   })

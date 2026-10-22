@@ -10,6 +10,11 @@ export class PearlProviderError extends Error {
     super(`Pearl provider request failed (${status})`);
   }
 }
+export class PearlTransactionNotFound extends Error {
+  constructor(readonly txid: string) {
+    super("The signed transaction is not visible on Pearl yet");
+  }
+}
 const height = z.number().int().nonnegative().max(499_999_999);
 const txSchema = z.object({
   txid: hash,
@@ -40,7 +45,15 @@ export class PearlBlockbook {
       cache: "no-store",
       redirect: "error",
     });
-    if (!response.ok) throw new PearlProviderError(response.status);
+    if (!response.ok) {
+      const txid = /^\/tx\/([0-9a-f]{64})$/.exec(path)?.[1];
+      const body = await response.json().catch(() => null);
+      if (
+        txid && [400, 404].includes(response.status) &&
+        body?.error === `Transaction '${txid}' not found`
+      ) throw new PearlTransactionNotFound(txid);
+      throw new PearlProviderError(response.status);
+    }
     return response.json();
   }
   async tip(): Promise<{ height: number; hash: string }> {
@@ -69,10 +82,10 @@ export class PearlBlockbook {
   ): Promise<PearlObservation> {
     const tip = snapshot ?? (await this.tip());
     hash.parse(txid);
-    const [summary, bytes] = await Promise.all([
-      this.read(`/tx/${txid}`),
-      this.read(`/tx-specific/${txid}`),
-    ]);
+    // Check existence first: Blockbook returns an unrelated 500 from tx-specific
+    // for missing transactions, which must not hide the useful not-found result.
+    const summary = await this.read(`/tx/${txid}`);
+    const bytes = await this.read(`/tx-specific/${txid}`);
     const raw = txSchema.parse(summary);
     const wire = z
       .object({
@@ -92,13 +105,11 @@ export class PearlBlockbook {
     const block = z
       .object({ blockHash: hash })
       .parse(await this.read(`/block-index/${raw.blockHeight}`));
-    if (
-      block.blockHash !== raw.blockHash ||
-      wire.blockhash !== raw.blockHash ||
-      raw.blockHeight > tip.height ||
-      raw.confirmations !== tip.height - raw.blockHeight + 1
-    )
+    if (raw.blockHeight > tip.height)
+      throw new Error("Pearl mined a block during verification. Refresh the review and try again.");
+    if (block.blockHash !== raw.blockHash || wire.blockhash !== raw.blockHash)
       throw new Error("Pearl transaction is outside the canonical chain");
+    if (!snapshot) await this.assertTip(tip);
     return {
       tx,
       confirmations: tip.height - raw.blockHeight + 1,
@@ -108,8 +119,13 @@ export class PearlBlockbook {
   }
   async assertTip(tip: { height: number; hash: string }): Promise<void> {
     const current = await this.tip();
-    if (current.hash !== tip.hash || current.height !== tip.height)
-      throw new Error("Pearl tip changed; refresh before signing");
+    if (current.height < tip.height)
+      throw new Error("Pearl reorganized during verification. Refresh the review before signing.");
+    const anchor = current.height === tip.height
+      ? current.hash
+      : z.object({ blockHash: hash }).parse(await this.read(`/block-index/${tip.height}`)).blockHash;
+    if (anchor !== tip.hash)
+      throw new Error("Pearl reorganized during verification. Refresh the review before signing.");
   }
   async utxos(
     address: string,
@@ -155,7 +171,7 @@ export class PearlBlockbook {
     if (parseTx(hex.decode(rawHex)).txid !== hash.parse(txid))
       throw new Error("Signed bytes differ from journaled transaction");
     try {
-      const response = await fetch(`${this.base}/sendtx/`, {
+      const response = await fetch(`${this.base}/sendtx`, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
         body: rawHex,

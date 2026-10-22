@@ -125,7 +125,7 @@ export async function reviewSwap(action: SwapAction): Promise<SwapReview> {
       }
     }
     if (!chosen)
-      throw new Error("Insufficient confirmed PRL across your receive and change addresses");
+      throw new Error("Not enough confirmed PRL for this amount plus its network fee. Lower the amount and try again.");
     plan = {
       action,
       terms,

@@ -6,8 +6,10 @@ import { CHANNEL } from "@sommetlabs/pearl-wallet-connect/protocol";
 import { hex } from "@scure/base";
 import { checkedSwapTerms, assertClaimWindow } from "../src/crypto/pearl-swap";
 import { secretHash } from "@sommetlabs/pearl-wallet-connect/native";
-import { PearlBlockbook } from "@sommetlabs/pearl-wallet-connect/blockbook";
+import { PearlBlockbook, PearlTransactionNotFound, PearlProviderError } from "@sommetlabs/pearl-wallet-connect/blockbook";
+import { PREVIEW } from "@sommetlabs/pearl-wallet-connect/native";
 import { proxyPearlRequest } from "@sommetlabs/pearl-wallet-connect/proxy";
+import { testnetRead } from "@sommetlabs/pearl-wallet-connect/rpc";
 import type { PearlAction } from "@sommetlabs/pearl-wallet-connect/protocol";
 import { WalletConnection } from "../src/services/wallet-connection";
 import fixtures from "./fixtures/preview-swaps.json";
@@ -108,6 +110,37 @@ describe("safe funding and recovery", () => {
     expect(await new PearlBlockbook().broadcast(fixture.parentHex, txid)).toBe("broadcast");
     expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1);
   });
+  it("broadcasts the exact saved bytes without a trailing slash on the hosted wallet route", async () => {
+    const txid = parseTxHex(fixture.parentHex).txid;
+    const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url !== "/api/pearl/sendtx" || init?.method !== "POST")
+        return new Response("NOT_FOUND", { status: 404 });
+      expect(init.body).toBe(fixture.parentHex);
+      expect(init.redirect).toBe("error");
+      return Response.json({ result: txid });
+    });
+    vi.stubGlobal("fetch", fetcher);
+    expect(await new PearlBlockbook().broadcast(fixture.parentHex, txid)).toBe("broadcast");
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+  it("distinguishes a missing transaction from a broken route or provider outage", async () => {
+    const txid = parseTxHex(fixture.parentHex).txid;
+    const fetcher = vi.fn(async () => Response.json({ error: `Transaction '${txid}' not found` }, { status: 400 }));
+    vi.stubGlobal("fetch", fetcher);
+    await expect(new PearlBlockbook().transaction(txid, { height: 500, hash: "aa".repeat(32) }))
+      .rejects.toBeInstanceOf(PearlTransactionNotFound);
+    expect(fetcher).toHaveBeenCalledOnce();
+    fetcher.mockImplementation(async () => new Response("NOT_FOUND", { status: 404 }));
+    await expect(new PearlBlockbook().read(`/tx/${txid}`)).rejects.toBeInstanceOf(PearlProviderError);
+  });
+  it("lets recovery establish an explicitly absent transaction without trusting a broken route", async () => {
+    const txid = parseTxHex(fixture.parentHex).txid;
+    const fetcher = vi.fn(async () => Response.json({ error: `Transaction '${txid}' not found` }, { status: 400 }));
+    vi.stubGlobal("fetch", fetcher);
+    await expect(testnetRead("getrawtransaction", [txid, 0])).rejects.toThrow("rpc -5");
+    fetcher.mockImplementation(async () => new Response("NOT_FOUND", { status: 404 }));
+    await expect(testnetRead("getrawtransaction", [txid, 0])).rejects.toBeInstanceOf(PearlProviderError);
+  });
   it("keeps unknown bytes reserved when observation returns another transaction", async () => {
     const txid = parseTxHex(fixture.parentHex).txid;
     vi.stubGlobal(
@@ -155,6 +188,51 @@ describe("safe funding and recovery", () => {
       ).status,
     ).toBe(403);
     expect(fetcher).not.toHaveBeenCalled();
+  });
+});
+
+describe("Pearl verification across a new block", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const fixture = fixtures[1]!;
+  const txid = parseTxHex(fixture.parentHex).txid;
+  const anchor = "aa".repeat(32);
+  const mined = "bb".repeat(32);
+  function provider(options: { reorg?: boolean; wrongParent?: boolean; minedHeight?: number } = {}) {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const path = url.replace("/api/pearl", "");
+      const data: Record<string, unknown> = {
+        "": { backend: { chain: "testnet2", blocks: 501, headers: 501, bestBlockHash: "cc".repeat(32) }, blockbook: { inSync: true, initialSync: false } },
+        "/block-index/0": { blockHash: PREVIEW.pearlGenesis },
+        "/block-index/500": { blockHash: options.reorg ? "dd".repeat(32) : anchor },
+        [`/tx/${txid}`]: { txid, blockHeight: options.minedHeight ?? 480, blockHash: mined, confirmations: 22 },
+        [`/tx-specific/${txid}`]: { txid, hex: fixture.parentHex, blockhash: mined },
+        [`/block-index/${options.minedHeight ?? 480}`]: { blockHash: options.wrongParent ? "ee".repeat(32) : mined },
+      };
+      if (!(path in data)) throw new Error(`Unexpected provider path ${path}`);
+      return Response.json(data[path]);
+    }));
+  }
+  it("uses confirmations at the verified snapshot while the chain advances normally", async () => {
+    provider();
+    const chain = new PearlBlockbook();
+    const tip = { height: 500, hash: anchor };
+    expect((await chain.transaction(txid, tip)).confirmations).toBe(21);
+    await expect(chain.assertTip(tip)).resolves.toBeUndefined();
+  });
+  it("still rejects a parent outside the canonical chain", async () => {
+    provider({ wrongParent: true });
+    await expect(new PearlBlockbook().transaction(txid, { height: 500, hash: anchor }))
+      .rejects.toThrow("outside the canonical chain");
+  });
+  it("still rejects a replaced snapshot block", async () => {
+    provider({ reorg: true });
+    await expect(new PearlBlockbook().assertTip({ height: 500, hash: anchor }))
+      .rejects.toThrow("reorganized");
+  });
+  it("requests a fresh review when the transaction was mined after the snapshot", async () => {
+    provider({ minedHeight: 501 });
+    await expect(new PearlBlockbook().transaction(txid, { height: 500, hash: anchor }))
+      .rejects.toThrow("Refresh the review");
   });
 });
 

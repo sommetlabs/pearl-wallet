@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import type { PearlReceipt } from "@sommetlabs/pearl-wallet-connect/protocol";
+import { PearlTransactionNotFound } from "@sommetlabs/pearl-wallet-connect/blockbook";
 import { WalletConnection, type WalletRequest } from "../../services/wallet-connection";
 import {
   approveSwap,
   connectedSwapAccount,
   reviewSwap,
+  pearl,
   type SwapReview,
 } from "../../services/pearl-swap";
 import { useWallet } from "../../state/wallet-store";
@@ -27,7 +30,7 @@ export default function Connect() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState<string | null>(null);
+  const [done, setDone] = useState<string | { receipt: PearlReceipt; confirmationsRequired: number } | null>(null);
 
   useEffect(
     () =>
@@ -85,11 +88,9 @@ export default function Connect() {
             : null;
       if (!result) throw new Error("Review the verified transaction first");
       respond(result);
-      setDone(
-        "transactionId" in result
-          ? `${result.status === "unknown" ? "Broadcast needs observation" : "Transaction submitted"}: ${result.transactionId}`
-          : "Wallet connected. Return to Abyss to continue.",
-      );
+      setDone("transactionId" in result
+        ? { receipt: result, confirmationsRequired: request.action.method === "connect" ? 2 : request.action.quote.quote.pearlLeg.terms.minConfirmations }
+        : "Wallet connected. Return to Abyss to continue.");
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Wallet approval failed");
     } finally {
@@ -311,17 +312,72 @@ export default function Connect() {
             {error}
           </p>
         )}
-        {done && (
+        {error?.startsWith("Quote expired") && review?.recovered && (
+          <p className="mt-3 text-sm text-text-2">
+            The saved deposit was not resent. Open the{" "}
+            <Link className="underline" to="/dashboard" target="_blank" rel="noopener noreferrer">wallet dashboard</Link>
+            {" "}and use Check status for this transaction before starting another swap.
+          </p>
+        )}
+        {typeof done === "string" && (
           <p role="status" className="mt-4 break-words text-sm text-text-2">
             {done}
           </p>
         )}
+        {done && typeof done !== "string" && <SubmittedTransaction {...done} />}
         <p className="mt-6 border-t border-line pt-4 text-xs leading-6 text-text-3">
           Your keys stay in this wallet. Abyss receives your public account and transaction
           receipts.
         </p>
       </div>
     </Page>
+  );
+}
+function SubmittedTransaction({ receipt, confirmationsRequired }: { receipt: PearlReceipt; confirmationsRequired: number }) {
+  const [observation, setObservation] = useState<
+    { kind: "checking" | "missing" | "unavailable" } |
+    { kind: "found"; confirmations: number }
+  >({ kind: "checking" });
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const check = async () => {
+      let complete = false;
+      try {
+        const found = await pearl.transaction(receipt.transactionId);
+        if (!cancelled) setObservation({ kind: "found", confirmations: found.confirmations });
+        complete = found.confirmations >= confirmationsRequired;
+      } catch (error) {
+        if (!cancelled)
+          setObservation({ kind: error instanceof PearlTransactionNotFound ? "missing" : "unavailable" });
+      }
+      if (!cancelled && !complete) timer = setTimeout(() => void check(), 10_000);
+    };
+    void check();
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [receipt.transactionId, confirmationsRequired]);
+  const observed = observation.kind === "found";
+  const confirmed = observed && observation.confirmations >= confirmationsRequired;
+  const accepted = observed || (receipt.status === "broadcast" && observation.kind === "checking");
+  return (
+    <div className="mt-4 space-y-3 text-sm" role="status" aria-live="polite">
+      <p className="font-semibold">
+        {confirmed ? "Transaction confirmed" : accepted ? "Waiting for Pearl confirmations" : "Submission not confirmed"}
+      </p>
+      <p className="text-text-2">
+        {confirmed
+          ? "Return to Abyss to continue your swap. This confirms this transaction, not the whole swap."
+          : accepted
+            ? "Pearl accepted your transaction. We check every 10 seconds. Return to Abyss to follow the swap."
+            : observation.kind === "missing"
+              ? "The signed transaction is not visible on Pearl. Return to Abyss to check or retry the saved transaction."
+              : "We cannot confirm Pearl accepted your transaction. Return to Abyss to check or retry the saved transaction."}
+      </p>
+      {observed && <p className="font-mono tabular-nums">Confirmations: {observation.confirmations}/{confirmationsRequired}</p>}
+      {!accepted && <p className="text-text-2">Keep your saved swap. Retrying uses the same signed transaction.</p>}
+      <p className="break-all font-mono text-xs">Transaction {receipt.transactionId}</p>
+      <button className="btn-secondary" onClick={() => window.close()}>Return to Abyss</button>
+    </div>
   );
 }
 function display(amount: string, asset: string): string {
