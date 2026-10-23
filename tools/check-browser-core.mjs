@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-const extension = join(root, ".core-browser");
+const extension = process.env.PEARL_EXTENSION_DIR ?? join(root, ".core-browser");
 const profile = mkdtempSync(join(tmpdir(), "abyss-core-profile-"));
 let context;
 try {
