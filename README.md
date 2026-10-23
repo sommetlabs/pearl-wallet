@@ -1,4 +1,12 @@
-# Sommet Labs Pearl wallet · Preview
+# Abyss Wallet v2
+
+General-purpose Pearl wallet and dApp connector, developed in this repository on `feat/abyss-wallet-v2`. The first target is a standalone Chrome/Brave extension, using wallet logic ported from [Pearl Research Labs' official source](https://github.com/pearl-research-labs/pearl).
+
+The official-derived account/address core, bundled XMSS key generation and offline Taproot payment signing are implemented and tested against native reference fixtures. **The consumer extension is not ready yet.** See [implementation status, verification and settings/features](docs/V2-IMPLEMENTATION.txt).
+
+The existing hosted Preview wallet remains on `feat/preview-wallet-connector`. Its documentation follows as reference while the v2 extension is built.
+
+## Existing Preview web wallet
 
 Independent fork of [PearlWallet](https://github.com/PearlBridgeXYZ/pearlwallet), based on upstream commit `30eb4d376795092d5fb1008d88f00d2121608f1a`.
 

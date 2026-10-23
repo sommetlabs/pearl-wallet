@@ -148,7 +148,7 @@ export function vaultDescriptorFromPubkeys(
   // also defaults to it in @scure/btc-signer, but passing the constant
   // (a) documents intent and (b) lets the binding test assert that
   // the implementation tweaked from NUMS, not from a foreign key.
-  const tr = p2tr(TAPROOT_UNSPENDABLE_KEY, leaf, undefined, false);
+  const tr = p2tr(TAPROOT_UNSPENDABLE_KEY, { script: leaf.script }, undefined, false);
 
   const address = encodeTaprootAddress(tr.tweakedPubkey, params);
 

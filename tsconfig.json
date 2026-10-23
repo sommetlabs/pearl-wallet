@@ -41,6 +41,9 @@
     "vite.config.ts",
     "vite.config.offline.ts",
     "packages/connector/src",
-    "api"
+    "api",
+    "tests/core",
+    "tools/browser-core",
+    "vite.core.config.ts"
   ]
 }

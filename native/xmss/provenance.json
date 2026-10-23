@@ -1,0 +1,33 @@
+{
+  "upstream": "https://github.com/pearl-research-labs/pearl",
+  "commit": "99b95ac5e77450f4deebcc23ec2d30f86a885c26",
+  "toolchain": "wasi-sdk-34.0-x86_64-linux",
+  "toolchainArchiveSha256": "b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4",
+  "wasmSha256": "7d9bf30dda00cd4d1e890e308a5ba105abd23734cc7e127771f8a9a4c10e916e",
+  "sources": {
+    "xmss/src/xmss.cpp": "97a0311d82d94601503397571bc47689fd8e7794c20aadf4da7ced8c9983d189",
+    "xmss/xmss.h": "bc6ff0d7cadce0c992b3d1d037484276569c73bfddaeefb0e4d7e303a7a531ba",
+    "xmss/external/params.c": "9cd1ae104093772613a9d609a706f3bdec5f21f09c9a4d750cfb91da1917af8d",
+    "xmss/external/params.h": "79b8cd86c8b2a6dbf070ef05bcf9ecffbf46d0711e67085b3b60a14d9a011ca3",
+    "xmss/external/hash.c": "2a2b917c8026176b60fe304239d46ec849ebeb1b273c49034a800d4f02f6fa4e",
+    "xmss/external/hash.h": "e44fa35c95fe88fb641276ff30fec30f20cbd2fd814fdbf22677c8946b2f817e",
+    "xmss/external/fips202.c": "528e5079c14d6fbe025ba7aad74e4f6b72ae65a7de9f1c572780f8f10056d5f0",
+    "xmss/external/fips202.h": "c6a539c9690a4622697267fd9b035572115646d84945b2253437d9a7de78c5b5",
+    "xmss/external/hash_address.c": "2b060e5aa77a4a262fb0379783ccb23a7ff4a911e3009606202f21a8e0d36396",
+    "xmss/external/hash_address.h": "9f2da9c5f0eb180ffb322e7077a28369883131403ba1ef0cca7de862d1e2180b",
+    "xmss/external/wots.c": "78cb8158ed3d3022e0196a2117cd508ec1660285044c7a6ab92ac163bdeb433d",
+    "xmss/external/wots.h": "7e530e2ce415fa530a1313449c97d553dc3cda03b3a58416a9c5c3cf9e672d89",
+    "xmss/external/xmss_core.c": "198d412cb7a439348e9b189d026996edcbccfd59ba38f8a4824524ffe047c19c",
+    "xmss/external/xmss_core.h": "ff6c421eb83bb1d0e0027e60b033dd8f6d76d99b8592bd13eb795113e2a9b0e8",
+    "xmss/external/xmss_commons.c": "7bcaf8502fb5b19a4630776e50bd041d7696a99f0ad0c9889159fc19ecb43454",
+    "xmss/external/xmss_commons.h": "5a2543d5e2fd1d886234198837061ee1a33cc6733faa968cd6af3339f2976873",
+    "xmss/external/utils.c": "4da0f10d49fc8e99450e41663437291ebe6e5f0e97111f7d3ca3be0619a3ade9",
+    "xmss/external/utils.h": "ab6c3fd437bbf74e6d8384d2a21c206c51a8fd8c821888ba49c51051061ccf41"
+  },
+  "exports": [
+    "memory",
+    "xmss_keygen",
+    "malloc"
+  ],
+  "imports": []
+}

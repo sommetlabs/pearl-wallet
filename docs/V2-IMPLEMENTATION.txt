@@ -1,0 +1,124 @@
+ABYSS WALLET V2
+
+Repository: sommetlabs/pearl-wallet
+Branch: feat/abyss-wallet-v2
+Scope: general Pearl wallet and dApp provider, Chrome/Brave first, official-derived
+wallet logic, no local daemon or hosted signer. Abyss is the first dApp integration.
+UI direction: use Abyss's existing style.
+
+IMPLEMENTED FOUNDATION
+
+src/core/hd.ts translates the official Oyster DeriveNonStandard routine instead
+of assuming standard BIP32. Network parameters use the official testnet coin type
+and zpub/vpub versions. Account descriptors distinguish plain from XMSS-committed
+addresses; no automatic fallback changes a restored address scheme.
+
+src/core/wasm/xmss.wasm compiles the official, unmodified C/C++ XMSS code. It has
+no host imports and exposes key generation only. Each call uses a fresh instance
+and clears its memory after copying the public result. Stateful XMSS signing is
+not enabled. native/NOTICE and native/xmss/provenance.json preserve attribution,
+source hashes and build provenance.
+
+src/core/transactions.ts signs reviewed Taproot key-path payments offline, including
+outputs with the official XMSS commitment. It validates input ownership, amount
+encoding, network, duplicate outpoints and the exact approved fee. This primitive
+does not fetch UTXOs, reserve inputs, approve requests or broadcast; the extension's
+wallet owner must perform those operations and supply verified prevouts.
+
+The permission-free browser harness uses public test keys only. It is not the
+consumer wallet and must never be funded. Native verification checks signatures
+with Pearl's script engine; it does not broadcast or prove live mempool acceptance.
+
+Verified on 23 October 2026: 64 native account/address fixtures, four official
+XMSS commitments, plain and XMSS-committed key-path transfer signatures, and
+rejection of a tampered transaction. The packaged harness passed in Chrome for
+Testing 156 and standalone Brave 1.98.60 using disposable profiles. The full
+suite passed 1658 tests; six pre-existing live checks remain skipped. Type checking,
+the testnet web build and the reproducible XMSS build also passed.
+
+Build/test dependencies were refreshed without forcing peer resolution. The
+dependency audit has no high/critical findings; five moderate advisories remain
+in the existing web UI's router/CSS dependencies. They are outside the isolated
+core bundle and must be resolved when that UI is replaced for the extension.
+
+VERIFY
+
+  npm ci --ignore-scripts
+  npm exec playwright -- install chromium
+  npm test -- tests/core
+  npm run typecheck
+  npm run check:core
+
+Official reference commit: 99b95ac5e77450f4deebcc23ec2d30f86a885c26.
+For native verification, check out that exact official Pearl revision, build its
+XMSS static library with make -C xmss lib, and set:
+
+  PEARL_SOURCE=/absolute/path/to/official/pearl
+  PEARL_GO=/absolute/path/to/go
+
+Then run npm run check:core:reference. It runs in a disposable headless browser
+profile and verifies both browser-signed payments plus a tampered transaction.
+The Go source requires the version declared by the pinned official go.mod.
+To check a standalone Brave binary, also set PEARL_BROWSER_EXECUTABLE to its path.
+
+To reproduce public address fixtures, run tools/pearl-reference/main.go with
+go run -tags xmss from that official checkout. Use only the built-in public seeds;
+never put a real wallet phrase into fixtures or test scripts.
+
+To rebuild the bundled Wasm, set PEARL_SOURCE and WASI_SDK_PATH (WASI SDK 34),
+then npm run build:xmss. The script checks source hashes, exported capabilities
+and the expected binary hash. It refuses a changed compiler/source result.
+
+SETTINGS AND FEATURE REFERENCES
+
+1AM: statically inspected the Desktop regular 6.4.6 extension's Settings bundle,
+provider, relay and background connection checks. Rabby: inspected its public
+ConnectedSites and CustomRPC screens. Sparrow: reviewed its official feature
+documentation for UTXO/payment review, labels and coin control. These are design
+references, not endorsements or a license to copy 1AM code/assets.
+
+First extension release:
+- Security: manual lock, bounded idle auto-lock, password change and lock on
+  browser/session restart. Sensitive exports require reauthentication.
+- Networks: clear testnet/mainnet identity, per-network indexer/explorer settings,
+  endpoint checks against genesis, service status and retry/rescan. A failed read
+  is not zero funds. Changing endpoints cannot change account derivation.
+- Connections: list sites, selected accounts and granted read scopes; revoke one
+  or all sites. Every write still needs its own approval. Any approved dApp can
+  use the provider; no Abyss-only site allowlist.
+- Recovery: local recovery-phrase export, account/scheme-aware backups and saved
+  transaction/swap recovery. Cache rescan is separate from removing a wallet.
+- Activity: confirmed/pending/reserved balances, exact fee and change review,
+  transaction details, same-byte rebroadcast and explicit conflict/reorg states.
+- Display: Abyss styling, system/light/dark preference, hide balances, accessible
+  text sizes and local display preferences. Optional external fiat data must be
+  disclosed and disabled independently of core wallet functionality.
+- About: build/version, supported networks/formats and useful support diagnostics
+  that omit phrases, keys, passwords and confidential recovery data.
+
+Further useful Pearl features: contacts/labels, payment URIs and QR, coin control,
+consolidation, verified fee replacement, watch-only/offline transaction exchange
+and hardware/multisig support. Each gets a separate acceptance case before it is
+advertised. Midnight-only DUST/prover settings do not belong in a Pearl wallet.
+
+KEEP THE CODE SMALL
+
+Use ordinary typed modules and folder conventions. Keep one connector/protocol
+package and one wallet owner. Do not add a plugin framework or one method per
+dApp. Comments should explain source provenance, interoperability differences or
+otherwise non-obvious invariants, not repeat function names or narrate routine code.
+
+NEXT WORK
+
+The consumer extension, encrypted vault/account restoration, permissions, balance
+scanner/provider API, general transaction/message approvals, operation journal,
+Abyss integration and live swap/refund acceptance are not implemented by this
+foundation. Do not describe the harness as a usable wallet or a completed v2.
+
+References:
+https://github.com/pearl-research-labs/pearl/tree/99b95ac5e77450f4deebcc23ec2d30f86a885c26
+https://github.com/RabbyHub/Rabby/tree/develop/src/ui/views/ConnectedSites
+https://github.com/RabbyHub/Rabby/tree/develop/src/ui/views/CustomRPC
+https://sparrowwallet.com/features/
+Desktop 1AM distribution reviewed: regular 6.4.6, including Settings-CxROi4F2.js,
+content-scripts/injected.js, content-scripts/content.js and background.js.

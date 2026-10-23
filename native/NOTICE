@@ -1,0 +1,20 @@
+The browser HD derivation and account commitment implementation is translated
+from Pearl Research Labs' official reference wallet, commit
+99b95ac5e77450f4deebcc23ec2d30f86a885c26:
+
+  node/btcutil/hdkeychain/extendedkey.go (DeriveNonStandard)
+  node/chaincfg/params.go (network/HD parameters)
+  wallet/waddrmgr/scoped_manager.go (BIP86/PQ scopes and XMSS leaf)
+  wallet/waddrmgr/xmss_keys.go (XMSS seed expansion)
+
+Copyright (c) 2025-2026 Pearl Research Labs.
+Copyright (c) 2015-2016 The Decred developers.
+See xmss/Pearl-ISC.txt and xmss/btcsuite-ISC.txt for retained notices.
+
+src/core/wasm/xmss.wasm compiles the unmodified official XMSS implementation
+and its CC0 dependency. Source hashes and compiler provenance are recorded in
+xmss/provenance.json. The Wasm module exports key generation only, not XMSS
+signing. See xmss/XMSS-CC0.txt for the dependency's license.
+
+Browser adapters and TypeScript translations are by Sommet Labs, 2026.
+These changes do not imply endorsement by Pearl Research Labs.
