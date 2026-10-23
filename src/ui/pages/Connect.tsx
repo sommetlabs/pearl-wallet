@@ -381,7 +381,7 @@ function SubmittedTransaction({ receipt, confirmationsRequired }: { receipt: Pea
   );
 }
 function display(amount: string, asset: string): string {
-  const decimals = asset === "PRL" ? 8 : 6;
+  const decimals = asset === "NIGHT" ? 6 : 8;
   const n = BigInt(amount);
   const unit = 10n ** BigInt(decimals);
   const fraction = (n % unit).toString().padStart(decimals, "0").replace(/0+$/, "");

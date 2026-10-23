@@ -1,6 +1,6 @@
 {
   "name": "@sommetlabs/pearl-wallet-connect",
-  "version": "0.1.0-preview.7",
+  "version": "0.1.0-preview.9",
   "type": "module",
   "license": "MIT",
   "exports": {
