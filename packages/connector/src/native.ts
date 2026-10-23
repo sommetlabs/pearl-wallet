@@ -14,6 +14,11 @@ export const PREVIEW = Object.freeze({
   midnightGenesis: "3c096de209e06a1a8c52be7bda109ee8c891a42288c0a9db5495f9616dd13796",
   source: "92bcb2de2268bc9a666060ede2c92ff4d56a8d04a952a3612dbed3612ed42ac9",
   dest: "dfc7d392c125739addc75bbe84507b3090b3385c602bc9a89a9fc75d0c981739",
+  wprl: Object.freeze({
+    address: "1ecfc611899c7c7cc0b6a0bef9f714561fe588d63b2400ef6fcff7c7f92480c6",
+    colorHex: "65c644caf437aec3eeaae671c809cf4782e8bf055fb1c30eadd05a4d0f6365ff",
+    decimals: 8,
+  }),
   quoteKey: "54ee1aad75661ff1f61335f5d9954c150a25d035f11e99540c76e39e9d4772b7",
   pearlKey: "7f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212",
   node: "https://rpc.preview.midnight.network",
@@ -77,30 +82,45 @@ export function verifyQuote(value: unknown, expectedKey?: string): SignedQuote {
   )
     throw new Error("Unsafe Pearl leg terms");
   const sellingPearl = q.direction === "pearl->midnight";
+  const counter = sellingPearl ? q.buy : q.sell;
+  const issued = counter.asset === "WPRL";
+  const counterAsset = issued ? "WPRL" : "NIGHT";
   if (
-    q.sell.asset !== (sellingPearl ? "PRL" : "NIGHT") ||
-    q.buy.asset !== (sellingPearl ? "NIGHT" : "PRL") ||
+    q.sell.asset !== (sellingPearl ? "PRL" : counterAsset) ||
+    q.buy.asset !== (sellingPearl ? counterAsset : "PRL") ||
     terms.amountGrains !== (sellingPearl ? q.sell.amount : q.buy.amount) ||
     terms.claimerKeyHex !== (sellingPearl ? q.solver.pearlKeyHex : q.user.pearlKeyHex) ||
     terms.refunderKeyHex !== (sellingPearl ? q.user.pearlKeyHex : q.solver.pearlKeyHex)
   )
     throw new Error("Quote asset or signing roles differ");
-  const night = "00".repeat(32);
+  const pearlAsset = sellingPearl ? q.sell : q.buy;
+  if (pearlAsset.issuer) throw new Error("Native PRL cannot be an issued asset");
+  if (issued) {
+    const token = networks.midnight.wprl;
+    if ((token && (token.address !== PREVIEW.wprl.address || token.colorHex !== PREVIEW.wprl.colorHex || token.decimals !== 8)) ||
+        (counter.decimals !== undefined && counter.decimals !== 8) || counter.issuer !== true ||
+        (counter.chain !== undefined && counter.chain !== "midnight") || counter.colorHex !== PREVIEW.wprl.colorHex)
+      throw new Error("Quote names an unsupported Midnight WPRL token");
+    if (q.price.feeBps !== 0 || !/^(0|[1-9][0-9]*)$/.test(q.price.feeAmount) ||
+        q.price.feeAsset !== q.buy.asset || BigInt(q.sell.amount) - BigInt(q.price.feeAmount) !== BigInt(q.buy.amount))
+      throw new Error("WPRL must be quoted at par less its fixed issuance fee");
+  } else if (counter.issuer) throw new Error("A saved NIGHT trade cannot acquire issuer capabilities");
+  const counterColor = issued ? PREVIEW.wprl.colorHex : "00".repeat(32);
   if (q.midnightLeg.contract === "intent-source") {
     const leg = q.midnightLeg;
     if (
-      leg.depositColorHex !== night ||
+      leg.depositColorHex !== counterColor ||
       leg.depositAmount !== q.sell.amount ||
       leg.wantColorHex !== q.pearlLeg.termsHashHex ||
       leg.minWantAmount !== q.buy.amount ||
       leg.quotedSolverHex !== q.solver.intentSourceCommitmentHex ||
-      q.sell.colorHex !== night
+      q.sell.colorHex !== counterColor
     )
       throw new Error("Midnight order does not bind the Pearl leg");
   } else if (
-    q.midnightLeg.fillColorHex !== night ||
+    q.midnightLeg.fillColorHex !== counterColor ||
     q.midnightLeg.fillAmount !== q.buy.amount ||
-    q.buy.colorHex !== night ||
+    q.buy.colorHex !== counterColor ||
     !q.user.midnight
   )
     throw new Error("Midnight fill differs from the quote");

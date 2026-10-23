@@ -1,4 +1,4 @@
-// Native Preview quote wire format, matched to mn-solver 331044d.
+// Preview quote wire format. Retain PRL/NIGHT decoding for saved swaps; new wrapping uses PRL/WPRL.
 import { z } from "zod";
 export const hex32 = z.string().regex(/^[0-9a-f]{64}$/);
 export const whole = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
@@ -29,9 +29,10 @@ export const nativeEscrowSchema = z.strictObject({
   address: z.string().min(1).max(90).optional(),
 });
 const asset = z.strictObject({
-  asset: z.enum(["NIGHT", "PRL"]),
+  asset: z.enum(["NIGHT", "PRL", "WPRL"]),
   amount,
   colorHex: hex32.optional(),
+  issuer: z.literal(true).optional(),
   chain: z.enum(["midnight", "pearl"]).optional(),
   decimals: whole.max(18).optional(),
 });
@@ -43,6 +44,7 @@ const commonQuote = z.strictObject({
       networkId: z.literal("preview"),
       intentSourceAddress: hex32,
       intentDestAddress: hex32,
+      wprl: z.strictObject({ address: hex32, colorHex: hex32, decimals: z.literal(8) }).optional(),
     }),
   }),
   sell: asset,
@@ -51,7 +53,7 @@ const commonQuote = z.strictObject({
     buyPerSell: decimal,
     feeBps: whole.max(10000),
     feeAmount: decimal,
-    feeAsset: z.enum(["NIGHT", "PRL"]),
+    feeAsset: z.enum(["NIGHT", "PRL", "WPRL"]),
   }),
   solver: z.strictObject({
     quoteKeyHex: hex32,
