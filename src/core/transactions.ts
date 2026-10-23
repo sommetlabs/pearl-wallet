@@ -2,7 +2,7 @@ import { Transaction } from "@scure/btc-signer";
 import { bech32m } from "@scure/base";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
 import { secp256k1 } from "@noble/curves/secp256k1";
-import { accountPath, childIndex, deriveOysterPath } from "./hd";
+import { accountPath, childIndex, derivePath } from "./hd";
 import { deriveAddress, type AccountDescriptor } from "./accounts";
 import { networkParams } from "./networks";
 import type { XmssPublicKeyProvider } from "./xmss";
@@ -132,11 +132,21 @@ export async function signTransfer(
     for (const output of outputs) tx.addOutput(output);
     for (let i = 0; i < inputs.length; i++) {
       const input = inputs[i];
-      const key = deriveOysterPath(signingSeed, selectedAccount.network, [
-        ...accountPath(selectedAccount.network, selectedAccount.accountIndex),
-        input.branch,
-        input.index,
-      ]);
+      const key = derivePath(
+        signingSeed,
+        selectedAccount.network,
+        [
+          ...accountPath(
+            selectedAccount.network,
+            selectedAccount.accountIndex,
+            86,
+            selectedAccount.coinType,
+          ),
+          input.branch,
+          input.index,
+        ],
+        selectedAccount.derivation,
+      );
       try {
         tx.signIdx(key.privateKey!, i);
       } finally {

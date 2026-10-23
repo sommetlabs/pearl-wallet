@@ -18,7 +18,9 @@
     "build:core": "vite build --config vite.core.config.ts",
     "check:core": "npm run build:core && node tools/check-browser-core.mjs",
     "check:core:reference": "npm run build:core && node tools/check-browser-core.mjs --native",
-    "build:xmss": "node tools/build-xmss.mjs"
+    "build:xmss": "node tools/build-xmss.mjs",
+    "build:extension": "npm run typecheck && node tools/build-extension.mjs",
+    "check:extension": "npm run build:extension && node tools/check-wallet-extension.mjs"
   },
   "dependencies": {
     "@noble/curves": "1.6.0",
@@ -36,10 +38,12 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
     "viem": "2.21.19",
+    "zod": "^4.6.7",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "@types/chrome": "^0.3.6",
     "@types/node": "^22.7.5",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.11",

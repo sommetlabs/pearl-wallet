@@ -12,7 +12,7 @@ import {
 import {
   accountPath,
   deriveOysterChild,
-  deriveOysterPath,
+  derivePath,
   HARDENED,
 } from "../../src/core/hd";
 import { networkParams, type Network } from "../../src/core/networks";
@@ -42,7 +42,7 @@ describe("official native Pearl compatibility", () => {
         vector.branch,
         vector.index,
       ];
-      const key = deriveOysterPath(seed, account.network, path);
+      const key = derivePath(seed, account.network, path);
       try {
         expect(bytesToHex(key.privateKey!)).toBe(vector.privateKeyHex);
         expect(bytesToHex(key.publicKey!)).toBe(vector.publicKeyHex);

@@ -84,15 +84,21 @@ export function deriveOysterChild(parent: HDKey, index: number): HDKey {
 }
 
 /** Caller owns and must wipe the returned key. Every intermediate private key is wiped. */
-export function deriveOysterPath(
+export function derivePath(
   seed: Uint8Array,
   network: Network,
   path: readonly number[],
+  derivation: "oyster" | "bip32" = "oyster",
 ): HDKey {
+  if (derivation !== "oyster" && derivation !== "bip32")
+    throw new Error("Unsupported Pearl derivation");
   let key = HDKey.fromMasterSeed(seed, networkParams(network).versions);
   try {
     for (const index of path) {
-      const next = deriveOysterChild(key, index);
+      const next =
+        derivation === "oyster"
+          ? deriveOysterChild(key, index)
+          : key.deriveChild(index);
       key.wipePrivateData();
       key = next;
     }
@@ -107,10 +113,11 @@ export function accountPath(
   network: Network,
   account = 0,
   purpose: 86 | 222 = 86,
+  coinType: number = networkParams(network).coinType,
 ): number[] {
   return [
     childIndex(purpose, true),
-    childIndex(networkParams(network).coinType, true),
+    childIndex(coinType, true),
     childIndex(account, true),
   ];
 }

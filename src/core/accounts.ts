@@ -9,12 +9,7 @@ import { tapLeafHash } from "@scure/btc-signer/payment";
 import { hkdf } from "@noble/hashes/hkdf";
 import { sha256 } from "@noble/hashes/sha256";
 import { bytesToHex } from "@noble/hashes/utils";
-import {
-  accountPath,
-  childIndex,
-  deriveOysterChild,
-  deriveOysterPath,
-} from "./hd";
+import { accountPath, childIndex, deriveOysterChild, derivePath } from "./hd";
 import { networkParams, type Network } from "./networks";
 import type { XmssPublicKeyProvider } from "./xmss";
 
@@ -22,7 +17,8 @@ export type AddressScheme = "plain" | "xmss";
 export interface AccountDescriptor {
   network: Network;
   accountIndex: number;
-  derivation: "oyster";
+  derivation: "oyster" | "bip32";
+  coinType?: number;
   scheme: AddressScheme;
 }
 export interface AccountAddress {
@@ -35,12 +31,13 @@ export interface AccountAddress {
 
 function checkAccount(account: AccountDescriptor): void {
   if (
-    account.derivation !== "oyster" ||
+    (account.derivation !== "oyster" && account.derivation !== "bip32") ||
     (account.scheme !== "plain" && account.scheme !== "xmss")
   )
     throw new Error("Unsupported Pearl account scheme");
   networkParams(account.network);
   childIndex(account.accountIndex);
+  if (account.coinType !== undefined) childIndex(account.coinType);
 }
 
 export function publicAccount(
@@ -48,10 +45,11 @@ export function publicAccount(
   account: AccountDescriptor,
 ): string {
   checkAccount(account);
-  const key = deriveOysterPath(
+  const key = derivePath(
     seed,
     account.network,
-    accountPath(account.network, account.accountIndex),
+    accountPath(account.network, account.accountIndex, 86, account.coinType),
+    account.derivation,
   );
   try {
     return key.publicExtendedKey;
@@ -107,22 +105,27 @@ export async function deriveAddress(
   checkAccount(account);
   if (branch !== 0 && branch !== 1) throw new Error("Invalid Pearl branch");
   const path = [
-    ...accountPath(account.network, account.accountIndex),
+    ...accountPath(account.network, account.accountIndex, 86, account.coinType),
     branch,
     childIndex(index),
   ];
-  const key = deriveOysterPath(seed, account.network, path);
+  const key = derivePath(seed, account.network, path, account.derivation);
   try {
     if (account.scheme === "plain")
       return addressForKey(key.publicKey!, networkParams(account.network).hrp);
     if (!xmss)
       throw new Error("Official XMSS module is required for this account");
     const pqPath = [
-      ...accountPath(account.network, account.accountIndex, 222),
+      ...accountPath(
+        account.network,
+        account.accountIndex,
+        222,
+        account.coinType,
+      ),
       branch,
       index,
     ];
-    const pq = deriveOysterPath(seed, account.network, pqPath);
+    const pq = derivePath(seed, account.network, pqPath, account.derivation);
     let expansion: Uint8Array | undefined;
     try {
       expansion = hkdf(

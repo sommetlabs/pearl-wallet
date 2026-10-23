@@ -2,7 +2,7 @@
 
 General-purpose Pearl wallet and dApp connector, developed in this repository on `feat/abyss-wallet-v2`. The first target is a standalone Chrome/Brave extension, using wallet logic ported from [Pearl Research Labs' official source](https://github.com/pearl-research-labs/pearl).
 
-The official-derived account/address core, bundled XMSS key generation and offline Taproot payment signing are implemented and tested against native reference fixtures. **The consumer extension is not ready yet.** See [implementation status, verification and settings/features](docs/V2-IMPLEMENTATION.txt).
+The **early-alpha consumer extension** includes encrypted accounts, phrase restoration, verified PRL balances, receive/send, transaction recovery, settings and a permissioned dApp provider. See [installation, API, security model and current limits](docs/extension.md). The existing Abyss swap UI still uses the hosted-wallet connector; extension swap integration remains separate work.
 
 The existing hosted Preview wallet remains on `feat/preview-wallet-connector`. Its documentation follows as reference while the v2 extension is built.
 

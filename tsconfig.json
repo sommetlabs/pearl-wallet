@@ -27,7 +27,8 @@
     "allowImportingTsExtensions": true,
     "types": [
       "vite/client",
-      "node"
+      "node",
+      "chrome"
     ],
     "baseUrl": ".",
     "paths": {
@@ -44,6 +45,7 @@
     "api",
     "tests/core",
     "tools/browser-core",
-    "vite.core.config.ts"
+    "vite.core.config.ts",
+    "vite.extension.config.ts"
   ]
 }
