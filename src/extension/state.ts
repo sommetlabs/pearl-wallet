@@ -9,7 +9,8 @@ export const ready = (async () => {
     accessLevel: "TRUSTED_CONTEXTS",
   });
   const persisted = (await chrome.storage.local.get("wallet")).wallet as
-    Store | undefined;
+    | Store
+    | undefined;
   if (persisted && persisted.version !== 2)
     throw new Error("This wallet data needs a compatible extension version");
   if (persisted) Object.assign(store, persisted);
@@ -58,12 +59,13 @@ export async function requireUnlocked() {
     throw new Error("Unlock your wallet to continue");
 }
 export async function checkUnlocked(): Promise<boolean> {
-  if (session.unlocked) session.unlocked = await cryptoCall("status", {});
+  if (!session.unlocked) return false;
+  session.unlocked = await cryptoCall("status", {});
   if (!session.unlocked) await resetCryptoHost();
   return session.unlocked;
 }
 export async function view(): Promise<View> {
-  await checkUnlocked();
+  if (session.unlocked) session.unlocked = await cryptoCall("status", {});
   return {
     ...store,
     unlocked: session.unlocked,

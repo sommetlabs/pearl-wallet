@@ -37,10 +37,12 @@ let address = "",
   failBroadcast = true,
   outage = false,
   slowNextTip = false,
-  slowStarted = false;
+  slowStarted = false,
+  requests = 0;
 const blockHash = "ab".repeat(32),
   genesis = "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96";
 const server = createServer(async (req, res) => {
+  requests++;
   const path = new URL(req.url, "http://localhost").pathname;
   const reply = (status, value) => {
     res.writeHead(status, { "Content-Type": "application/json" });
@@ -116,7 +118,7 @@ await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const origin = `http://localhost:${server.address().port}`;
 let context;
 const report = { checks: [] };
-try {
+async function check() {
   context = await chromium.launchPersistentContext(profile, {
     ...(process.env.PEARL_BROWSER_EXECUTABLE
       ? { executablePath: process.env.PEARL_BROWSER_EXECUTABLE }
@@ -170,20 +172,20 @@ try {
   report.checks.push(
     "12-word creation, randomized backup verification, official XMSS account and encrypted persistence",
   );
+  await expect
+    .poll(
+      async () => {
+        const state = (
+          await worker.evaluate(() => chrome.storage.local.get("wallet"))
+        ).wallet;
+        if (state.errors[state.selectedId])
+          throw new Error(state.errors[state.selectedId]);
+        return state.balances[state.selectedId]?.complete;
+      },
+      { timeout: 45_000 },
+    )
+    .toBe(true);
   if (liveRead) {
-    await expect
-      .poll(
-        async () => {
-          const state = (
-            await worker.evaluate(() => chrome.storage.local.get("wallet"))
-          ).wallet;
-          if (state.errors[state.selectedId])
-            throw new Error(state.errors[state.selectedId]);
-          return state.balances[state.selectedId]?.complete;
-        },
-        { timeout: 45_000 },
-      )
-      .toBe(true);
     const liveState = (
       await worker.evaluate(() => chrome.storage.local.get("wallet"))
     ).wallet;
@@ -223,7 +225,7 @@ try {
     .click();
   await page.getByRole("button", { name: "Refresh balance" }).click();
   await expect(page.locator(".balance-value")).toHaveText(/^1\s*PRL$/, {
-    timeout: 30_000,
+    timeout: 75_000,
   });
   report.checks.push("canonical parent verification and confirmed balance");
   if (reportDir) await page.screenshot({ path: join(reportDir, "wallet.png") });
@@ -239,6 +241,49 @@ try {
     ),
     "Connect this site to the selected account first",
   );
+  slowNextTip = true;
+  await page.getByRole("button", { name: "Refresh balance" }).click();
+  await expect.poll(() => slowStarted).toBe(true);
+  const parallel = await context.newPage();
+  await parallel.goto(base);
+  await expect(
+    parallel.getByRole("button", { name: "Send", exact: true }),
+  ).toBeVisible({ timeout: 2500 });
+  await expect(
+    parallel.getByText("Loading your wallet…", { exact: true }),
+  ).toHaveCount(0);
+  await parallel.close();
+  await expect(
+    page.getByRole("button", { name: "Refresh balance" }),
+  ).toBeEnabled({ timeout: 15_000 });
+  slowStarted = false;
+  report.checks.push(
+    "another wallet window opens promptly during a slow provider read",
+  );
+  const rejectedPage = context.waitForEvent("page");
+  await dapp.evaluate(() => {
+    window.rejectedConnection = window.abyssWallet
+      .connect({ network: "testnet2" })
+      .then(
+        () => "unexpected",
+        (error) => error.message,
+      );
+  });
+  const declined = await rejectedPage;
+  await declined.setViewportSize({ width: 420, height: 600 });
+  await declined.getByRole("button", { name: "Reject", exact: true }).click();
+  await expect(
+    declined.getByRole("heading", { name: "Connection declined", exact: true }),
+  ).toBeVisible();
+  assert.match(
+    await dapp.evaluate(() => window.rejectedConnection),
+    /rejected|expired/,
+  );
+  if (reportDir)
+    await declined.screenshot({
+      path: join(reportDir, "connection-declined.png"),
+    });
+  await declined.close();
   const nextApproval = context.waitForEvent("page");
   await dapp.evaluate(() => {
     window.connectionResult = window.abyssWallet.connect({
@@ -246,7 +291,50 @@ try {
     });
   });
   const approval = await nextApproval;
+  await approval.setViewportSize({ width: 420, height: 600 });
+  await expect(
+    approval.getByRole("heading", { name: "Connect this site?", exact: true }),
+  ).toBeVisible();
+  await expect(approval.locator(".overview")).toHaveCount(0);
+  await expect(approval.getByRole("navigation")).toHaveCount(0);
+  const beforeConsent = requests;
+  const pausedRefresh = await approval.evaluate(() =>
+    chrome.runtime.sendMessage({
+      channel: "wallet-ui",
+      method: "refresh",
+      params: { force: true },
+    }),
+  );
+  assert.equal(pausedRefresh.error, undefined);
+  assert.equal(requests, beforeConsent);
+  if (reportDir) {
+    await approval.screenshot({
+      path: join(reportDir, "connection-request.png"),
+    });
+    await approval.locator(".connection-origin").evaluate((element) => {
+      element.textContent =
+        "https://example-app-git-feature-wallet-integration-preview.example";
+    });
+    await approval.screenshot({
+      path: join(reportDir, "connection-request-long-origin-fixture.png"),
+    });
+    await approval.locator(".connection-origin").evaluate((element, origin) => {
+      element.textContent = origin;
+    }, origin);
+    await approval.setViewportSize({ width: 1280, height: 900 });
+    await approval.screenshot({
+      path: join(reportDir, "connection-request-desktop.png"),
+    });
+    await approval.setViewportSize({ width: 420, height: 600 });
+  }
   await approval.getByRole("button", { name: "Connect", exact: true }).click();
+  await expect(
+    approval.getByRole("heading", { name: "Connected", exact: true }),
+  ).toBeVisible();
+  if (reportDir)
+    await approval.screenshot({
+      path: join(reportDir, "connection-complete.png"),
+    });
   assert.equal(
     (await dapp.evaluate(() => window.connectionResult)).account.address,
     address,
@@ -256,8 +344,9 @@ try {
     "100000000",
   );
   report.checks.push(
-    "origin-bound connection approval and public balance reads",
+    "focused connection approval/rejection, paused discovery and explicit outcomes preserve origin-bound public balance reads",
   );
+  if (process.argv.includes("--connection-only")) return;
   const forbidden = await dapp.evaluate(
     () =>
       new Promise((resolve) => {
@@ -559,6 +648,10 @@ try {
   report.checks.push(
     "phrase-based password recovery preserves the signed transaction journal and account",
   );
+}
+try {
+  await check();
+  report.browser ??= context?.browser()?.version();
   if (reportDir)
     writeFileSync(
       join(reportDir, "checks.json"),
@@ -566,7 +659,35 @@ try {
     );
   console.log(JSON.stringify(report, null, 2));
 } catch (error) {
-  console.error(JSON.stringify(browserFailure(error, report.checks)));
+  const worker = context?.serviceWorkers()[0];
+  const state =
+    worker &&
+    (await worker
+      .evaluate(async () => {
+        const wallet = (await chrome.storage.local.get("wallet")).wallet;
+        const balance = wallet?.balances[wallet.selectedId];
+        const issue = wallet?.errors[wallet.selectedId] ?? "";
+        return {
+          accountCount: wallet?.accounts.length,
+          addressCount: wallet?.accounts.find(
+            (account) => account.id === wallet.selectedId,
+          )?.addresses.length,
+          balancePresent: !!balance,
+          balanceComplete: balance?.complete,
+          expectedFixtureBalance: balance?.spendable === "100000000",
+          issue: /429|too many/i.test(issue)
+            ? "rate-limit"
+            : /canonical|reorganiz/i.test(issue)
+              ? "chain-check"
+              : issue
+                ? "other"
+                : "none",
+        };
+      })
+      .catch(() => undefined));
+  console.error(
+    JSON.stringify({ ...browserFailure(error, report.checks), state }),
+  );
   process.exitCode = 1;
 } finally {
   await context?.close();

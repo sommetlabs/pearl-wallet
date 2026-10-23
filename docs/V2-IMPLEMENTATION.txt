@@ -36,7 +36,7 @@ for forced refresh, reduce provider load. Empty histories avoid redundant UTXO
 lookups; canonical input verification remains.
 
 Abyss-derived Base UI/shadcn Button/Input controls use an extension-scoped
-Tailwind compiler. Readable type, three-column words, manual copy/paste and a
+Tailwind compiler. Readable type, responsive numbered words, manual copy/paste and a
 content-sized desktop workspace replace the prior compact-only treatment.
 Creation follows backup, verification, then the local password. Version remains
 0.1.0 until an actual release.

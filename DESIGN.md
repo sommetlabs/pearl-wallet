@@ -34,6 +34,11 @@ typography:
     fontSize: "12px"
     fontWeight: 400
     lineHeight: 1.5
+  recovery-word:
+    fontFamily: "\"JetBrains Mono\", monospace"
+    fontSize: "15px"
+    fontWeight: 400
+    lineHeight: 1.5
   alpha:
     fontFamily: "Inter, sans-serif"
     fontSize: "12px"
@@ -80,12 +85,6 @@ typography:
     fontWeight: 400
     lineHeight: 1.35
     letterSpacing: "0em"
-  connection-title:
-    fontFamily: "Inter, sans-serif"
-    fontSize: "20px"
-    fontWeight: 600
-    lineHeight: 1.4
-    letterSpacing: "-0.02em"
   review-title:
     fontFamily: "Inter, sans-serif"
     fontSize: "22px"
@@ -234,7 +233,7 @@ components:
     backgroundColor: "color-mix(in oklch, oklch(0.36 0.03 264), transparent 50%)"
     textColor: "{colors.foreground}"
     rounded: "{rounded.word}"
-    padding: "6px 10px"
+    padding: "8px 12px"
 ---
 
 # Design System: Abyss Wallet
@@ -245,7 +244,7 @@ components:
 
 The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and restrained dot field. The extension reuses Abyss's shadcn-based Base UI button and input patterns, adapted to its existing React 18 and Tailwind 3 build. Inter is an intentional incumbent choice, retained from the user-pinned product.
 
-The interface gives amounts, account identity and the current task priority. Body text and ordinary controls are readable at the same size; support copy recedes without becoming miniature. The coherent wordmark, Wallet name and quiet Early alpha badge identify the product. Desktop uses a content-sized workspace; the popup keeps the compact task layout.
+The interface gives amounts, account identity and the current task priority. Body text and ordinary controls are readable at the same size; support copy recedes without becoming miniature. The coherent wordmark, Wallet name and quiet Early alpha badge identify the product. Desktop uses a content-sized workspace with a left navigation rail; popup and intermediate widths keep bottom navigation. Site connection consent and its outcome use a focused single task surface.
 
 **Key Characteristics:**
 
@@ -288,13 +287,13 @@ Both variable fonts are self-hosted and ship with their OFL licenses in `src/ext
 ### Hierarchy
 
 - **Balance:** `display` in the popup and `display-wide` from the full-page breakpoint, with tabular numerals and tight tracking.
-- **Task titles:** `headline` for guided setup and ordinary screens; `review-title`, `connection-title`, `unlock-title` and `welcome-title` identify their named contexts. Welcome uses `welcome-title-wide` on desktop.
+- **Task titles:** `headline` for guided setup, connection consent and ordinary screens; `review-title`, `unlock-title` and `welcome-title` identify their named contexts. Welcome uses `welcome-title-wide` on desktop.
 - **Amounts:** `amount` records payment review; amount entry shares its size with regular weight. `balance-unit` labels the denomination.
-- **Body and controls:** `body`, `label`, `action` and `section` establish the readable base. Recovery-word inputs use the body size.
+- **Body and controls:** `body`, `label`, `action` and `section` establish the readable base. Recovery-word inputs and revealed words use the body size in JetBrains Mono.
 - **Support and data:** `helper` and `status` cover instructions, notices, navigation and metadata; `data` describes wrapping addresses. Line height varies with context.
 - **Indices and alpha:** `word-index` and `alpha` are restricted to numbered recovery cells and the release badge. They do not set body or action text.
 
-Role sizes come from the source, not a modular scale. Shared control spacing is resolved against the root size (15px): Tailwind's rem dimensions produce a standard minimum height (41.25px), button padding (9.375px 18.75px), and input padding (9.375px 15px). Larger native selects/textareas retain their CSS minimum (44px).
+Role sizes come from the source, not a modular scale. The body explicitly inherits root typography (`font: inherit`), preserving actual Inter (15px) against Chromium extension user-agent sizing; verify the computed body font, not only the root declaration. Shared control spacing is resolved against the root size (15px): Tailwind's rem dimensions produce a standard minimum height (41.25px), button padding (9.375px 18.75px), and input padding (9.375px 15px). Larger native selects/textareas retain their CSS minimum (44px).
 
 **The Data Before Decoration Rule.** Use JetBrains Mono for balances, amounts and addresses; retain Inter for instructions and action labels.
 
@@ -304,9 +303,9 @@ The compact wallet is (420px) wide, with a (360px) body minimum width, a (600px)
 
 From (640px), the surface becomes content-sized up to (760px), within page padding (32px 24px). Height is automatic, with no desktop minimum or maximum. The shell retains rounded corners and a border, while setup, recovery and welcome content is constrained to (560px). Main padding becomes (12px 32px 28px); setup body and actions flow with the page. The dot field uses a (20px) grid.
 
-From (900px), the unlocked workspace grows to (960px), with navigation above the main task. The balance and actions occupy the left column; fund details occupy the right, at (1.15fr / 1fr) with a (24px) gap. Activity and failure notices span both columns. Ordinary forms remain constrained to (560px). Below this breakpoint navigation stays beneath the task.
+From (900px), the unlocked workspace grows to (1060px), with a (176px) left sidebar for Wallet, Activity and Settings. The header spans the workspace; account and network sit above the content column. The balance and actions occupy the left content column; fund details occupy the right, at (1.15fr / 1fr) with a (24px) gap. Activity and failure notices span both content columns. Ordinary forms remain constrained to (560px); the setup shell remains (760px). Below this breakpoint navigation stays beneath the task. Pending site connection and its completion temporarily use a single-column (760px) shell with (560px) content, account/network above the task and no wallet navigation or balance content. Compact consent content scrolls independently while the action row stays below it. From (900px), consent content flows naturally without a clipped inner viewport; the content row has a (420px) minimum height.
 
-Recovery input and revealed creation words use three equal columns at every width, with larger spacing on desktop. Word number and input stack vertically inside each cell. Long addresses and origins wrap completely; ordinary detail rows allow values up to (66%) width. Spacing uses observed even steps for dense controls and larger task separation.
+Recovery input and revealed creation words use two equal columns below the full-page breakpoint and three from (640px). Each cell aligns a quiet index beside the monospaced word or input, has a (48px) minimum height and uses (12px) corners. The phrase grid has no enclosing card. Setup Back sits at the top left before the title with a (40px) minimum height; the primary action remains in the footer with a (44px) minimum height. Long addresses and origins wrap completely; ordinary detail rows allow values up to (66%) width. Spacing uses observed even steps for dense controls and larger task separation.
 
 ## Elevation & Depth
 
@@ -338,17 +337,23 @@ The balance card combines panel geometry, a thin border and a subtle blue gradie
 
 Use the shared Base UI Input with visible labels, associated help, translucent Input Tint and inset focus. Invalid fields receive an error border; disabled fields reduce opacity. Password inputs reserve space for the eye control and show Caps Lock feedback. Native textareas and selects retain their CSS field treatment.
 
-Recovery-word fields stack a readable index above the input. The focused parent has one (2px) outline offset inward (-2px); the inner input has no outline, box shadow or focus border. This keeps the full indicator visible at the edges of a scrolling body. Invalid words mark the parent border.
+Recovery-word fields align a readable index beside the monospaced input. The focused parent has one (2px) outline offset inward (-2px); the inner input has no outline, box shadow or focus border. This keeps the full indicator visible at the edges of a scrolling body. Invalid words mark the parent border.
 
 ### Navigation
 
-Wallet, Activity and Settings use secondary tonal pills for the active destination and muted text for inactive destinations. Navigation sits below the task in the popup and above the desktop task from the wide breakpoint. Settings opens individual sections from icon-led rows.
+Wallet, Activity and Settings use secondary tonal pills for the active destination and muted text for inactive destinations. Navigation sits below the task in popup and intermediate widths, and in the left sidebar from the wide breakpoint. Wide navigation uses body-size labels and left-aligned icons. Child screens retain their selected parent: send/receive select Wallet, payment review selects Activity, and setting sections select Settings. Hash routes honor browser Back and Forward. Settings opens individual sections from ghost icon-led rows with tonal hover; changing sections resets temporary secrets.
 
 ### Guided setup and recovery
 
-Creation steps are Backup, Confirm and Password. Twelve words are the default with a twenty-four-word choice. The hidden state is a deliberate lock/message panel. Reveal exposes the three-column words and a Copy recovery phrase action. Copy requires a click and reports success or denial; it does not acknowledge the backup or promise automatic clipboard clearing. Saved-backup acknowledgement and a random three-word challenge precede the password and vault creation.
+Creation steps are Backup, Confirm and Password. Twelve words are the default with a twenty-four-word choice. The hidden state is a deliberate lock/message panel. Reveal exposes the responsive word cells and a Copy recovery phrase action. Copy requires a click and reports success or denial; it does not acknowledge the backup or promise automatic clipboard clearing. Saved-backup acknowledgement and a random three-word challenge precede the password and vault creation.
 
-Restore uses masked three-column inputs, a deliberate Paste action, native whole-phrase paste into any field, word counts and validation. Denied clipboard access explains how to continue. Account candidates show full addresses, original format and lookup outcome. Format selection precedes password setup.
+Restore uses masked responsive word cells, a deliberate Paste action, native whole-phrase paste into any field, word counts and validation. Denied clipboard access explains how to continue. Account candidates show full addresses, original format and lookup outcome. Format selection precedes password setup. Back appears before the title; returning from confirmation hides the phrase again, and continuing from backup creates a fresh challenge.
+
+### Site connection consent
+
+A dedicated consent screen shows the full requesting origin in a tonal block and two readable permission rows: public account/receive address and PRL balance. Account and network remain above the task. Reject and Connect share the bottom action row; the active action changes to Declining… or Connecting…, both buttons disable while pending, and errors stay with the request. A network mismatch explains which account to select and disables Connect.
+
+Completion explicitly says Connected or Connection declined, retains the origin and provides Continue to wallet. Payment permission remains separate. The request and outcome replace ordinary wallet content while open. Initial wallet loading text appears only after (400ms), avoiding flashes on quick reads; updates keep the current surface visible.
 
 ### Payment review and uncertain transactions
 

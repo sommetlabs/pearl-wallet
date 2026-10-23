@@ -8,22 +8,41 @@ import { Activity, Receive, Review, Send } from "./payments";
 import { Settings } from "./settings";
 import { type Operation, type View } from "../model";
 import { Overview } from "./overview";
+import {
+  Connection,
+  ConnectionComplete,
+  type ConnectionOutcome,
+} from "./connection";
+import { navigate, routeHash, routeParent, useWalletRoute } from "./navigation";
 import "./wallet.css";
 
-type Page = "home" | "receive" | "send" | "activity" | "settings" | "review";
 function Wallet() {
   const [view, setView] = useState<View>();
-  const [page, setPage] = useState<Page>("home");
-  const [reviewId, setReviewId] = useState(
-    new URLSearchParams(location.search).get("review") ?? "",
-  );
+  const route = useWalletRoute();
+  const page = route.page;
+  const reviewId = route.page === "review" ? route.id : "";
+  const parent = routeParent(route);
+  const settingsSection = route.page === "settings" ? route.section : undefined;
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showOpening, setShowOpening] = useState(false);
+  const opening = !view;
+  const [outcome, setOutcome] = useState<ConnectionOutcome>();
+  const connection =
+    view?.connections.find((c) => c.id === reviewId) ?? view?.connections[0];
+  const approvalOpen = !!connection || !!outcome;
+  useEffect(() => {
+    if (!opening) return;
+    const timer = setTimeout(() => setShowOpening(true), 400);
+    return () => clearTimeout(timer);
+  }, [opening]);
   const load = useCallback(async () => {
     try {
       setView(await command("view"));
+      setLoadError("");
     } catch (e) {
-      setError((e as Error).message);
+      setLoadError((e as Error).message);
     }
   }, []);
   useEffect(() => {
@@ -69,18 +88,18 @@ function Wallet() {
     }
   }
   useEffect(() => {
-    if (!view?.unlocked || !view.selectedId) return;
+    if (!view?.unlocked || !view.selectedId || approvalOpen) return;
     void refresh();
     const timer = setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
     }, 30_000);
     return () => clearInterval(timer);
-  }, [view?.unlocked, view?.selectedId]);
+  }, [view?.unlocked, view?.selectedId, approvalOpen]);
   const account = view?.accounts.find((a) => a.id === view.selectedId);
   const balance = account && view?.balances[account.id];
   const retryAt = account ? (view?.retryAt?.[account.network] ?? 0) : 0;
   useEffect(() => {
-    if (!view?.unlocked || retryAt <= Date.now()) return;
+    if (!view?.unlocked || approvalOpen || retryAt <= Date.now()) return;
     const timer = setTimeout(
       () => {
         void refresh();
@@ -88,18 +107,20 @@ function Wallet() {
       retryAt - Date.now() + 100,
     );
     return () => clearTimeout(timer);
-  }, [view?.unlocked, view?.selectedId, retryAt]);
+  }, [view?.unlocked, view?.selectedId, retryAt, approvalOpen]);
   const op = view?.operations.find(
-    (op) => op.id === reviewId && op.status === "review",
+    (op) =>
+      op.id === reviewId &&
+      op.accountId === view.selectedId &&
+      op.status === "review",
   );
-  const connection =
-    view?.connections.find((c) => c.id === reviewId) ?? view?.connections[0];
   function review(operation: Operation) {
-    setReviewId(operation.id);
-    setPage("review");
+    navigate({ page: "review", id: operation.id });
   }
   return (
-    <div className={`wallet${view?.unlocked ? " is-unlocked" : ""}`}>
+    <div
+      className={`wallet${view?.unlocked ? " is-unlocked" : ""}${approvalOpen ? " is-connecting" : ""}`}
+    >
       <header>
         <div className="brand-group">
           <Brand />
@@ -112,7 +133,9 @@ function Wallet() {
             aria-label="Open full page"
             onClick={() =>
               chrome.tabs.create({
-                url: chrome.runtime.getURL("extension/wallet.html"),
+                url: chrome.runtime.getURL(
+                  `extension/wallet.html${routeHash(route)}`,
+                ),
               })
             }
             variant="ghost"
@@ -127,7 +150,8 @@ function Wallet() {
               aria-label="Lock wallet"
               onClick={async () => {
                 setView(await command("lock"));
-                setPage("home");
+                setOutcome(undefined);
+                navigate({ page: "home" });
               }}
               variant="ghost"
               size="icon"
@@ -138,9 +162,9 @@ function Wallet() {
         </div>
       </header>
       {!view ? (
-        <main>
-          <p role="status">Opening wallet…</p>
-          {error && <Notice error>{error}</Notice>}
+        <main aria-busy="true">
+          {showOpening && <p role="status">Loading your wallet…</p>}
+          {loadError && <Notice error>{loadError}</Notice>}
         </main>
       ) : !view.encrypted ? (
         <main>
@@ -161,8 +185,8 @@ function Wallet() {
                 onChange={async (e) => {
                   try {
                     await command("select", { id: e.target.value });
-                    setPage("home");
-                    setReviewId("");
+                    setOutcome(undefined);
+                    navigate({ page: "home" });
                     await load();
                   } catch (e) {
                     setError((e as Error).message);
@@ -182,64 +206,45 @@ function Wallet() {
             </span>
           </div>
           <main>
-            {page !== "home" && page !== "settings" && !op && (
+            {page !== "home" && page !== "settings" && !op && !approvalOpen && (
               <Button
                 className="back"
-                onClick={() => setPage("home")}
+                onClick={() => navigate({ page: "home" })}
                 variant="ghost"
               >
                 <Icon name="back" /> Wallet
               </Button>
             )}
-            {error && <Notice error>{error}</Notice>}
-            {connection && (
-              <section className="connection">
-                <h2>Connect this site?</h2>
-                <p className="origin">{connection.origin}</p>
-                <p className="muted">
-                  Read your public account and PRL balance on{" "}
-                  {connection.network}. Payments always need separate approval.
-                </p>
-                {account.network !== connection.network && (
-                  <Notice>
-                    Select an account on {connection.network} to connect.
-                  </Notice>
-                )}
-                <div className="actions">
-                  <Button
-                    disabled={account.network !== connection.network}
-                    onClick={async () => {
-                      try {
-                        await command("connectApproval", { id: connection.id });
-                        await load();
-                      } catch (e) {
-                        setError((e as Error).message);
-                      }
-                    }}
-                  >
-                    Connect
-                  </Button>
-                  <Button
-                    className="secondary"
-                    onClick={async () => {
-                      await command("cancel", { id: connection.id });
-                      await load();
-                    }}
-                    variant="outline"
-                  >
-                    Reject
-                  </Button>
-                </div>
-              </section>
+            {(error || loadError) && (
+              <Notice error>{error || loadError}</Notice>
             )}
-            {op ? (
+            {outcome ? (
+              <ConnectionComplete
+                outcome={outcome}
+                done={() => {
+                  setOutcome(undefined);
+                  navigate({ page: "home" });
+                }}
+              />
+            ) : connection ? (
+              <Connection
+                key={connection.id}
+                request={connection}
+                account={account}
+                resolved={(result) => {
+                  setOutcome(result);
+                  navigate({ page: "home" });
+                  void load();
+                }}
+              />
+            ) : op ? (
               <Review
                 key={op.id}
                 op={op}
                 account={account}
                 changed={async () => {
                   await load();
-                  setPage("activity");
+                  navigate({ page: "activity" });
                 }}
               />
             ) : page === "home" ? (
@@ -252,11 +257,11 @@ function Wallet() {
                 busy={busy || view.refreshing}
                 retryAt={retryAt}
                 error={view.errors[account.id]}
-                onSend={() => setPage("send")}
-                onReceive={() => setPage("receive")}
+                onSend={() => navigate({ page: "send" })}
+                onReceive={() => navigate({ page: "receive" })}
                 onRefresh={() => refresh(true)}
                 onReview={review}
-                onActivity={() => setPage("activity")}
+                onActivity={() => navigate({ page: "activity" })}
               />
             ) : page === "receive" ? (
               <Receive account={account} balance={balance || undefined} />
@@ -268,7 +273,12 @@ function Wallet() {
                 done={review}
               />
             ) : page === "settings" ? (
-              <Settings key={account.id} view={view} changed={load} />
+              <Settings
+                key={`${account.id}:${settingsSection ?? "menu"}`}
+                section={settingsSection}
+                view={view}
+                changed={load}
+              />
             ) : (
               <Activity
                 accounts={view.accounts}
@@ -280,37 +290,36 @@ function Wallet() {
               />
             )}
           </main>
-          <nav aria-label="Wallet navigation">
-            {(
-              [
-                ["home", "Wallet"],
-                ["activity", "Activity"],
-                ["settings", "Settings"],
-              ] as const
-            ).map(([id, label]) => (
-              <Button
-                variant="ghost"
-                key={id}
-                className={page === id ? "active" : ""}
-                aria-current={page === id ? "page" : undefined}
-                onClick={() => {
-                  setPage(id);
-                  setReviewId("");
-                }}
-              >
-                <Icon
-                  name={
-                    id === "home"
-                      ? "wallet"
-                      : id === "activity"
-                        ? "activity"
-                        : "settings"
-                  }
-                />
-                {label}
-              </Button>
-            ))}
-          </nav>
+          {!approvalOpen && (
+            <nav aria-label="Wallet navigation">
+              {(
+                [
+                  ["home", "Wallet"],
+                  ["activity", "Activity"],
+                  ["settings", "Settings"],
+                ] as const
+              ).map(([id, label]) => (
+                <Button
+                  variant="ghost"
+                  key={id}
+                  className={parent === id ? "active" : ""}
+                  aria-current={parent === id ? "page" : undefined}
+                  onClick={() => navigate({ page: id })}
+                >
+                  <Icon
+                    name={
+                      id === "home"
+                        ? "wallet"
+                        : id === "activity"
+                          ? "activity"
+                          : "settings"
+                    }
+                  />
+                  {label}
+                </Button>
+              ))}
+            </nav>
+          )}
         </>
       ) : (
         <main>

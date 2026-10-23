@@ -14,6 +14,10 @@ function api(account: Account) {
   );
 }
 export async function refresh(account: Account, force = false) {
+  if (store.connections.length)
+    throw new Error(
+      "Finish the connection request in your wallet before refreshing",
+    );
   const cached = store.balances[account.id];
   if (
     !force &&
@@ -30,6 +34,7 @@ export async function refresh(account: Account, force = false) {
       account,
       store.settings.endpoints[account.network],
       store.operations,
+      cached,
     );
     for (
       let round = 0;
@@ -56,6 +61,7 @@ export async function refresh(account: Account, force = false) {
         account,
         store.settings.endpoints[account.network],
         store.operations,
+        balance,
       );
     }
     store.balances[account.id] = balance;
@@ -79,6 +85,16 @@ export async function refresh(account: Account, force = false) {
   }
 }
 export async function observe() {
+  for (const op of store.operations)
+    if (op.status === "review" && Date.now() - op.createdAt > 10 * 60_000)
+      op.status = "cancelled";
+  store.connections = store.connections.filter(
+    (c) => Date.now() - c.createdAt < 10 * 60_000,
+  );
+  if (store.connections.length) {
+    await save();
+    return;
+  }
   for (const op of store.operations.filter(
     (op) =>
       op.signed &&
@@ -105,12 +121,6 @@ export async function observe() {
       }
     }
   }
-  for (const op of store.operations)
-    if (op.status === "review" && Date.now() - op.createdAt > 10 * 60_000)
-      op.status = "cancelled";
-  store.connections = store.connections.filter(
-    (c) => Date.now() - c.createdAt < 10 * 60_000,
-  );
   for (const account of store.accounts) {
     const balance = store.balances[account.id];
     if (balance)

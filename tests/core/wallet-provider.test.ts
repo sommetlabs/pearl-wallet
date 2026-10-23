@@ -34,7 +34,7 @@ describe("shared Pearl reads", () => {
     await Promise.all(reads);
     expect(
       calls.filter((c) => c.origin === "https://a.example").map((c) => c.at),
-    ).toEqual([1000, 1250, 1500]);
+    ).toEqual([1000, 1500, 2000]);
     expect(calls.find((c) => c.origin === "https://b.example")?.at).toBe(1000);
   });
 
@@ -96,6 +96,36 @@ describe("shared Pearl reads", () => {
     vi.setSystemTime(first.retryAt);
     const second = await queue.read("https://default.example/").catch((e) => e);
     expect(second.retryAt - Date.now()).toBe(60_000);
+  });
+  it("keeps adaptive pacing and backoff after intermittent successful reads", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1000);
+    const calls: number[] = [];
+    let limited = true;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        calls.push(Date.now());
+        return limited
+          ? new Response("busy", { status: 429 })
+          : Response.json({ ok: true });
+      }),
+    );
+    const queue = new PearlReadQueue();
+    const first = await queue.read("https://mixed.example/").catch((e) => e);
+    vi.setSystemTime(first.retryAt);
+    limited = false;
+    const recovery = Promise.all([
+      queue.read("https://mixed.example/one"),
+      queue.read("https://mixed.example/two"),
+    ]);
+    await vi.runAllTimersAsync();
+    await recovery;
+    expect(calls.slice(-2)).toEqual([31_000, 32_000]);
+    limited = true;
+    const next = queue.read("https://mixed.example/three").catch((e) => e);
+    await vi.runAllTimersAsync();
+    expect((await next).retryAt - Date.now()).toBe(60_000);
   });
 });
 
@@ -163,4 +193,127 @@ describe("wallet discovery request budget", () => {
     expect((await pending).message).toContain("incomplete address history");
     expect(fetcher).toHaveBeenCalledTimes(3);
   });
+});
+
+async function finishScan(pending: ReturnType<typeof scan>) {
+  const result = pending.then(
+    (value) => ({ value }),
+    (error) => ({ error }),
+  );
+  await vi.runAllTimersAsync();
+  return result;
+}
+
+it("resumes after a partial rate-limited scan without repeatedly reading the same empty prefix", async () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(100_000);
+  const histories: string[] = [];
+  const provider = emptyProvider({ txs: 0, unconfirmedTxs: 0 });
+  let failed = false;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      if (url.includes("/address/")) {
+        histories.push(url.split("/address/")[1].split("?")[0]);
+        if (!failed && histories.length === 16) {
+          failed = true;
+          return new Response("busy", {
+            status: 429,
+            headers: { "Retry-After": "3" },
+          });
+        }
+      }
+      return provider(url);
+    }),
+  );
+  const first = await finishScan(
+    scan(account, "https://resume.example/api/v2", []),
+  );
+  expect("error" in first && first.error).toBeInstanceOf(PearlRateLimitError);
+  vi.advanceTimersByTime(3000);
+  const retry = await finishScan(
+    scan(account, "https://resume.example/api/v2", []),
+  );
+  expect("value" in retry && retry.value.complete).toBe(true);
+  expect(
+    histories.filter((a) => a === account.addresses[0].address),
+  ).toHaveLength(2);
+  expect(
+    histories.filter((a) => a === account.addresses[1].address),
+  ).toHaveLength(1);
+  expect(
+    histories.filter((a) => a === account.addresses[15].address),
+  ).toHaveLength(2);
+  expect(histories).toHaveLength(42);
+});
+
+it("rechecks active receive/change addresses, expires empty history, and invalidates it on a changed tip", async () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(100_000);
+  const provider = emptyProvider({ txs: 0, unconfirmedTxs: 0 });
+  const used = new Set<string>();
+  let tipHash = "aa".repeat(32);
+  let tipHeight = 200;
+  const fetcher = vi.fn(async (url: string) => {
+    if (url.includes("/address/"))
+      return Response.json({
+        txs: used.has(url.split("/address/")[1].split("?")[0]) ? 1 : 0,
+        unconfirmedTxs: 0,
+      });
+    if (url.includes("/utxo/")) return Response.json([]);
+    if (new URL(url).pathname === "/api/v2")
+      return Response.json({
+        backend: {
+          chain: "testnet2",
+          blocks: tipHeight,
+          headers: tipHeight,
+          bestBlockHash: tipHash,
+        },
+        blockbook: { inSync: true, initialSync: false },
+      });
+    return provider(url);
+  });
+  vi.stubGlobal("fetch", fetcher);
+  const base = "https://tip-cache.example/api/v2";
+  const first = await finishScan(scan(account, base, []));
+  expect("value" in first && first.value.complete).toBe(true);
+  fetcher.mockClear();
+  used.add(account.addresses[0].address);
+  used.add(account.addresses[20].address);
+  const funded = await finishScan(scan(account, base, []));
+  if (!("value" in funded)) throw funded.error;
+  expect(funded.value.used).toEqual([
+    account.addresses[0].address,
+    account.addresses[20].address,
+  ]);
+  expect(
+    fetcher.mock.calls.filter(([url]) => url.includes("/address/")),
+  ).toHaveLength(4);
+  for (const changeTip of [
+    () => {
+      tipHash = "bb".repeat(32);
+    },
+    () => {
+      tipHeight++;
+    },
+    () => {
+      vi.advanceTimersByTime(300_001);
+    },
+  ]) {
+    changeTip();
+    fetcher.mockClear();
+    const result = await finishScan(scan(account, base, [], funded.value));
+    expect("value" in result && result.value.height).toBe(tipHeight);
+    expect(
+      fetcher.mock.calls.filter(([url]) => url.includes("/address/")),
+    ).toHaveLength(40);
+  }
+  fetcher.mockClear();
+  const otherAccount = await finishScan(
+    scan({ ...account, id: "other", accountIndex: 1 }, base, []),
+  );
+  expect("value" in otherAccount && otherAccount.value.height).toBe(tipHeight);
+  expect(
+    fetcher.mock.calls.filter(([url]) => url.includes("/address/")),
+  ).toHaveLength(40);
 });

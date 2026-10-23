@@ -21,7 +21,7 @@ interface ProviderState {
 
 export class PearlReadQueue {
   private readonly providers = new Map<string, ProviderState>();
-  constructor(private readonly spacingMs = 250) {}
+  constructor(private readonly spacingMs = 500) {}
 
   private state(base: string): ProviderState {
     const origin = new URL(base).origin;
@@ -60,10 +60,11 @@ export class PearlReadQueue {
       if (Date.now() < state.retryAt)
         throw new PearlRateLimitError(state.retryAt);
       init?.signal?.throwIfAborted();
-      state.nextAt = Date.now() + this.spacingMs;
+      state.nextAt =
+        Date.now() + this.spacingMs * 2 ** Math.min(state.failures, 2);
       const response = await fetch(input, init);
       if (response.status === 429) {
-        state.failures++;
+        state.failures = Math.min(state.failures + 1, 8);
         const header = response.headers.get("Retry-After");
         const seconds = header && /^\d+$/.test(header) ? Number(header) : NaN;
         const date =
@@ -77,7 +78,6 @@ export class PearlReadQueue {
         await response.body?.cancel().catch(() => {});
         throw new PearlRateLimitError(state.retryAt);
       }
-      state.failures = 0;
       return response;
     } finally {
       release();

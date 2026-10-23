@@ -296,6 +296,16 @@ export function Onboarding({ done }: { done: () => void }) {
   return (
     <section className="onboarding flow">
       <div className="flow-heading">
+        <Button
+          type="button"
+          className="setup-back"
+          disabled={busy}
+          onClick={back}
+          variant="ghost"
+        >
+          <Icon name="back" />
+          Back
+        </Button>
         <h1 ref={heading} tabIndex={-1}>
           {copy[step].title}
         </h1>
@@ -433,15 +443,6 @@ export function Onboarding({ done }: { done: () => void }) {
             type="submit"
           >
             {action}
-          </Button>
-          <Button
-            type="button"
-            className="ghost"
-            disabled={busy}
-            onClick={back}
-            variant="ghost"
-          >
-            Back
           </Button>
         </div>
       </form>

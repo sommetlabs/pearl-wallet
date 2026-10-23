@@ -82,16 +82,59 @@ export function summarize(
     spendable: spendable.toString(),
   };
 }
+const emptyHistory = new Map<
+  string,
+  { height: number; hash: string; addresses: Map<string, number> }
+>();
+
 export async function scan(
   account: Account,
   base: string,
   operations: Operation[],
+  previous?: Balance,
 ): Promise<Balance> {
   const api = pearlProvider(endpoint(base), account.network);
   const tip = await api.tip(),
     coins: Coin[] = [],
     used: string[] = [];
+  const cacheKey = JSON.stringify([
+    endpoint(base),
+    account.network,
+    account.id,
+    account.xpub,
+    account.derivation,
+    account.scheme,
+    account.coinType,
+    account.accountIndex,
+  ]);
+  let snapshot = emptyHistory.get(cacheKey);
+  if (
+    !snapshot ||
+    snapshot.height !== tip.height ||
+    snapshot.hash !== tip.hash
+  ) {
+    snapshot = { ...tip, addresses: new Map() };
+    emptyHistory.set(cacheKey, snapshot);
+    if (emptyHistory.size > 64)
+      emptyHistory.delete(emptyHistory.keys().next().value!);
+  }
+  // Reuse only empty history at this tip; live addresses and inputs are rechecked.
+  const knownUsed = new Set(previous?.used ?? []);
+  const firstUnused = (branch: 0 | 1) =>
+    account.addresses.find(
+      (address) => address.branch === branch && !knownUsed.has(address.address),
+    )?.address;
+  const active = { 0: firstUnused(0), 1: firstUnused(1) };
   for (const address of account.addresses) {
+    const checkedAt = snapshot.addresses.get(address.address);
+    if (
+      checkedAt !== undefined &&
+      Date.now() >= checkedAt &&
+      Date.now() - checkedAt < 5 * 60_000 &&
+      !knownUsed.has(address.address) &&
+      active[address.branch] !== address.address
+    )
+      continue;
     const history = (await api.read(
       `/address/${address.address}?details=basic`,
     )) as {
@@ -105,8 +148,15 @@ export async function scan(
       Number(history.unconfirmedTxs) < 0
     )
       throw new Error("Pearl returned incomplete address history");
-    if (Number(history.txs) === 0 && Number(history.unconfirmedTxs) === 0)
+    if (Number(history.txs) === 0 && Number(history.unconfirmedTxs) === 0) {
+      snapshot.addresses.set(address.address, Date.now());
+      knownUsed.delete(address.address);
+      active[address.branch] = firstUnused(address.branch);
       continue;
+    }
+    snapshot.addresses.delete(address.address);
+    knownUsed.add(address.address);
+    active[address.branch] = firstUnused(address.branch);
     used.push(address.address);
     const utxos = await api.utxos(
       address.address,

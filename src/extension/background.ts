@@ -82,6 +82,7 @@ async function internal(request: UiCommand) {
         await cryptoCall("touch", { minutes: store.settings.autoLockMinutes });
       return true;
     case "refresh":
+      if (store.connections.length) return view();
       await refresh(selected(store), params.force);
       await observe();
       return view();
@@ -152,6 +153,11 @@ async function internal(request: UiCommand) {
       return approve(params.id);
     case "cancel": {
       const op = store.operations.find((op) => op.id === params.id);
+      if (
+        op?.status !== "review" &&
+        !store.connections.some((c) => c.id === params.id)
+      )
+        throw new Error("This request has already been handled or expired");
       if (op?.status === "review") op.status = "cancelled";
       store.connections = store.connections.filter((c) => c.id !== params.id);
       await save();
@@ -225,7 +231,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return external(message.method, message.params ?? {}, url.origin);
   };
   const task =
-    message.channel === "wallet-ui" && message.method === "lock"
+    message.channel === "wallet-ui" &&
+    ["lock", "view", "touch"].includes(message.method)
       ? ready.then(run)
       : serial(run);
   task.then(
@@ -242,6 +249,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   void serial(async () => {
     if (session.unlocked) session.unlocked = await cryptoCall("status", {});
     await observe();
+    if (store.connections.length) return;
     if (
       store.operations.some((op) => activeOperation(op) && op.signed) &&
       store.selectedId

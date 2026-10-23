@@ -75,6 +75,7 @@
   scrollbar-color: var(--border) transparent;
 }
 body {
+  font: inherit;
   margin: 0;
   min-width: 360px;
   min-height: 600px;
@@ -804,7 +805,7 @@ form > button {
   padding: 12px 0;
 }
 .onboarding h1 {
-  font-size: 27px;
+  font-size: 24px;
   margin: 4px 0 16px;
 }
 .onboarding > p.muted {
@@ -842,15 +843,14 @@ form > button {
   margin: 16px 0 0;
 }
 .phrase {
-  padding: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
+  padding: 0;
+  margin: 16px 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   list-style: none;
-  gap: 12px 10px;
-  font-size: 13px;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 15px;
 }
 .phrase li {
   display: flex;
@@ -965,23 +965,60 @@ form > button {
   min-height: 32px;
   padding: 6px 12px;
 }
-.connection {
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
+.connection-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  gap: 24px;
+}
+.wallet > main:has(> .connection-page) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.connection-page > div:first-child {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.connection-page > .approval-actions,
+.connection-page > button {
+  flex: none;
+  margin-top: auto;
+}
+.connection-origin {
+  font-size: 15px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--surface);
   margin-bottom: 24px;
 }
-.connection h2 {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  letter-spacing: -0.02em;
+.connection-permissions {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
 }
-.connection .muted {
-  font-size: 13px;
+.connection-permissions li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
 }
-.connection .origin {
-  font-size: 15px;
-  font-weight: 500;
+.connection-permissions svg {
+  flex: none;
+  color: var(--muted);
+}
+.connection-result-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--secondary);
+  margin-bottom: 20px;
 }
 .wallet > nav {
   display: flex;
@@ -1168,24 +1205,24 @@ fieldset:disabled textarea {
 .flow-actions {
   padding-top: 16px;
   flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
 }
 .flow-actions > button {
-  width: 100%;
   margin: 0;
 }
-.flow-actions > .ghost {
-  margin-top: 3px;
-  min-height: 32px;
-}
 .flow .phrase li {
-  gap: 2px;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 8px 10px;
-  font-size: 15px;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--input), transparent 65%);
 }
 .flow .phrase li > span:first-child {
-  min-width: 11px;
+  min-width: 18px;
 }
 .flow .check {
   font-size: 13px;
@@ -1334,13 +1371,6 @@ fieldset:disabled textarea {
   min-height: 36px;
   font-size: 13px;
 }
-.flow .phrase {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  font-size: 13px;
-  margin: 12px 0 0;
-  gap: 10px 6px;
-  padding: 12px;
-}
 .review-page h1 {
   font-size: 22px;
   margin: 0 0 10px;
@@ -1472,29 +1502,30 @@ fieldset:disabled textarea {
 }
 .phrase-entry {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 .phrase-word {
   display: flex;
-  align-items: stretch;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
   border: 1px solid transparent;
   border-radius: 12px;
   background: color-mix(in oklch, var(--input), transparent 50%);
   min-width: 0;
-  padding: 6px 10px;
-  flex-direction: column;
+  padding: 8px 12px;
+  min-height: 48px;
 }
 .phrase-word > span {
   font-family: var(--mono);
   font-size: 12px;
   color: var(--muted);
-  min-width: 10px;
+  min-width: 18px;
   flex: none;
-  align-self: flex-start;
 }
 .phrase-word > input {
+  font-family: var(--mono);
+  min-width: 0;
   min-height: 28px;
   padding: 0;
   background: transparent !important;
@@ -1526,13 +1557,6 @@ fieldset:disabled textarea {
   color: var(--error);
   margin: 10px 0 0;
 }
-@media (min-width: 400px) {
-  .phrase-entry {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
-}
-
 .identity label {
   flex: 1;
   min-width: 0;
@@ -1702,32 +1726,17 @@ fieldset:disabled textarea {
     padding: 4px 2px;
   }
   .flow-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
     padding-top: 24px;
-  }
-  .flow-actions > button:not(.ghost) {
-    flex: 1;
-    order: 2;
-    width: auto;
-  }
-  .flow-actions > .ghost {
-    flex: 0 0 112px;
-    order: 1;
-    width: auto;
-    margin: 0;
-  }
-  .flow-actions > .notice,
-  .flow-actions > .backup-saved {
-    flex-basis: 100%;
-    order: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
   .balance-value {
     font-size: 40px;
   }
   .phrase-entry,
   .flow .phrase {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
   }
   .phrase-word {
@@ -1739,26 +1748,40 @@ fieldset:disabled textarea {
 }
 @media (min-width: 900px) {
   .wallet.is-unlocked {
-    width: min(960px, calc(100vw - 48px));
+    width: min(1060px, calc(100vw - 48px));
+    display: grid;
+    grid-template-columns: 176px minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(360px, auto);
+    grid-template-areas: "header header" "nav identity" "nav main";
+  }
+  .wallet.is-unlocked > header {
+    grid-area: header;
+    border-bottom: 1px solid var(--border);
   }
   .wallet.is-unlocked > .identity {
-    order: 1;
+    grid-area: identity;
+    padding: 20px 28px 0;
+    min-width: 0;
   }
   .wallet.is-unlocked > nav {
-    order: 2;
+    grid-area: nav;
+    flex-direction: column;
     justify-content: flex-start;
-    border-bottom: 1px solid var(--border);
-    padding: 0 28px 16px;
+    align-items: stretch;
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
     gap: 8px;
   }
   .wallet.is-unlocked > nav > button {
     flex: 0 0 auto;
-    min-width: 112px;
-    padding: 10px 20px;
+    justify-content: flex-start;
+    padding: 12px 16px;
+    font-size: 15px;
   }
   .wallet.is-unlocked > main {
-    order: 3;
-    padding: 28px;
+    grid-area: main;
+    padding: 24px 28px 32px;
+    min-width: 0;
   }
   .overview {
     display: grid;
@@ -1788,5 +1811,34 @@ fieldset:disabled textarea {
     max-width: 560px;
     margin-left: auto;
     margin-right: auto;
+  }
+}
+
+.flow-heading > .setup-back {
+  width: auto;
+  justify-content: flex-start;
+  min-height: 40px;
+  padding: 8px 12px 8px 8px;
+  margin: 0 0 16px -8px;
+  color: var(--muted);
+}
+.flow-actions > button[type="submit"] {
+  width: 100%;
+  min-height: 44px;
+}
+
+@media (min-width: 900px) {
+  .wallet.is-unlocked.is-connecting {
+    width: min(760px, calc(100vw - 48px));
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(420px, auto);
+    grid-template-areas: "header" "identity" "main";
+  }
+  .wallet.is-connecting > main,
+  .wallet.is-connecting .connection-page > div:first-child {
+    overflow: visible;
+  }
+  .wallet.is-connecting .connection-page {
+    height: auto;
   }
 }

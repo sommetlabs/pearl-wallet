@@ -5,8 +5,8 @@ import { command } from "./client";
 import { Field, Icon, Notice } from "./primitives";
 import type { View, Settings as Preferences } from "../model";
 import { WALLET_VERSION } from "../version";
+import { navigate, type SettingsSection } from "./navigation";
 
-type Section = "general" | "network" | "accounts" | "sites" | "security";
 const sections = [
   {
     id: "general",
@@ -41,13 +41,14 @@ const sections = [
 ] as const;
 
 export function Settings({
+  section,
   view,
   changed,
 }: {
+  section?: SettingsSection;
   view: View;
   changed: () => void;
 }) {
-  const [section, setSection] = useState<Section>();
   const [prefs, setPrefs] = useState<Preferences>(view.settings);
   const [label, setLabel] = useState(
     view.accounts.find((a) => a.id === view.selectedId)!.label,
@@ -60,14 +61,6 @@ export function Settings({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  function navigate(next?: Section) {
-    setSection(next);
-    setPhrase("");
-    setPassword("");
-    setNewPassword("");
-    setError("");
-    setMessage("");
-  }
   async function run(task: () => Promise<unknown>, success: string) {
     setBusy(true);
     setError("");
@@ -104,7 +97,11 @@ export function Settings({
   return (
     <section className="settings-page">
       {section && (
-        <Button className="back" onClick={() => navigate()} variant="ghost">
+        <Button
+          className="back"
+          onClick={() => navigate({ page: "settings" })}
+          variant="ghost"
+        >
           <Icon name="back" />
           Settings
         </Button>
@@ -119,10 +116,11 @@ export function Settings({
           <div className="settings-menu">
             {sections.map((item) => (
               <Button
+                variant="ghost"
                 className="settings-menu-item"
                 key={item.id}
                 aria-label={item.title}
-                onClick={() => navigate(item.id)}
+                onClick={() => navigate({ page: "settings", section: item.id })}
               >
                 <Icon name={item.icon} />
                 <span>

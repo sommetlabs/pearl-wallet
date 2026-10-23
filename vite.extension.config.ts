@@ -1,7 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "tailwindcss";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   WALLET_VERSION,
   WALLET_VERSION_NAME,
@@ -127,41 +128,33 @@ export default defineConfig({
             fileName: file,
             source: readFileSync(new URL(file, import.meta.url)),
           });
-        for (const name of [
-          "@babel/runtime",
-          "@floating-ui/core",
-          "@floating-ui/dom",
-          "@floating-ui/react-dom",
-          "@floating-ui/utils",
-          "reselect",
-          "@base-ui/react",
-          "@base-ui/utils",
-          "class-variance-authority",
-          "clsx",
-          "cnfast",
-          "@noble/curves",
-          "@phosphor-icons/react",
-          "@noble/hashes",
-          "@scure/base",
-          "@scure/bip32",
-          "@scure/bip39",
-          "@scure/btc-signer",
-          "micro-packed",
-          "react",
-          "react-dom",
-          "qrcode",
-          "zod",
-        ])
+        const packages = new Set<string>();
+        for (const id of this.getModuleIds()) {
+          const match = /^(.*\/node_modules\/)((?:@[^/]+\/)?[^/]+)\//.exec(id);
+          if (match) packages.add(`${match[1]}${match[2]}`);
+        }
+        for (const directory of packages) {
+          const { name, version } = JSON.parse(
+            readFileSync(join(directory, "package.json"), "utf8"),
+          );
+          const license = [
+            "LICENSE",
+            "LICENSE.txt",
+            "LICENSE.md",
+            "license",
+            "license.md",
+            "COPYING",
+          ]
+            .map((file) => join(directory, file))
+            .find((file) => existsSync(file));
+          if (!license)
+            throw new Error(`Missing license for bundled package ${name}`);
           this.emitFile({
             type: "asset",
-            fileName: `licenses/${name.replace(/^@/, "").replaceAll("/", "-")}.txt`,
-            source: readFileSync(
-              new URL(
-                `node_modules/${name}/${["qrcode", "clsx"].includes(name) ? "license" : "LICENSE"}`,
-                import.meta.url,
-              ),
-            ),
+            fileName: `licenses/${name.replace(/^@/, "").replaceAll("/", "-")}-${version}.txt`,
+            source: readFileSync(license),
           });
+        }
       },
     },
   ],

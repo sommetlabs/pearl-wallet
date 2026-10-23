@@ -97,6 +97,12 @@ export async function createWallet(
   page,
   { password, reportDir, wordCount = 12 },
 ) {
+  const bodyType = await page.evaluate(() => ({
+    size: getComputedStyle(document.body).fontSize,
+    family: getComputedStyle(document.body).fontFamily,
+  }));
+  if (bodyType.size !== "15px" || !bodyType.family.startsWith("Inter"))
+    throw new Error("Wallet body must retain its readable brand typography");
   await page
     .getByRole("button", { name: "Create a wallet", exact: true })
     .click();
@@ -110,6 +116,13 @@ export async function createWallet(
   await expect(
     page.getByRole("button", { name: "Reveal recovery phrase", exact: true }),
   ).toBeVisible({ timeout: 30_000 });
+  const back = page.getByRole("button", { name: "Back", exact: true });
+  const backBox = await back.boundingBox();
+  const titleBox = await page
+    .getByRole("heading", { name: "Save your recovery phrase" })
+    .boundingBox();
+  if (!backBox || !titleBox || backBox.y + backBox.height > titleBox.y)
+    throw new Error("Setup Back must precede the title");
   if (reportDir)
     await captureWallet(page, {
       path: join(reportDir, "setup-backup-hidden.png"),
@@ -178,11 +191,18 @@ export async function createWallet(
     await captureWallet(page, {
       path: join(reportDir, "setup-backup-check.png"),
     });
-  const labels = await page.locator(".backup-answers label").allTextContents();
+  let labels = await page.locator(".backup-answers label").allTextContents();
   for (const label of labels)
     await page.getByLabel(label, { exact: true }).fill("incorrect");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("don’t match");
+  await back.click();
+  await expect(
+    page.getByText("Recovery phrase hidden", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".phrase li")).toHaveCount(0);
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  labels = await page.locator(".backup-answers label").allTextContents();
   for (const label of labels)
     await page
       .getByLabel(label, { exact: true })

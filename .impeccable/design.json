@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-23T22:15:44.944668+00:00",
+  "generatedAt": "2026-10-23T23:45:09.892913+00:00",
   "title": "Design System: Abyss Wallet",
   "extensions": {
     "colorMeta": {
@@ -422,7 +422,7 @@
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Ordinary instructions and input text."
+        "purpose": "Ordinary instructions and input text; body explicitly inherits root Inter at 15px against extension user-agent sizing."
       },
       "section": {
         "displayName": "Section",
@@ -436,17 +436,13 @@
         "displayName": "Balance Unit",
         "purpose": "Balance denomination."
       },
-      "connection-title": {
-        "displayName": "Connection Title",
-        "purpose": "Connection approval title."
-      },
       "review-title": {
         "displayName": "Review Title",
         "purpose": "Payment approval title."
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Guided setup and task titles."
+        "purpose": "Guided setup, connection consent and task titles."
       },
       "unlock-title": {
         "displayName": "Unlock Title",
@@ -471,6 +467,10 @@
       "display-wide": {
         "displayName": "Display Wide",
         "purpose": "Full-page spendable balance."
+      },
+      "recovery-word": {
+        "displayName": "Recovery Word",
+        "purpose": "Inline monospaced recovery words and inputs."
       }
     },
     "shadows": [
@@ -543,9 +543,9 @@
       "name": "Wallet Navigation",
       "kind": "nav",
       "refersTo": "nav-selected",
-      "description": "Popup destinations; wide desktop moves this row above the task.",
+      "description": "Bottom navigation at compact and intermediate widths; left sidebar from 900px. Child screens retain their selected parent.",
       "html": "<nav class=\"ds-nav\" aria-label=\"Wallet navigation\"><button aria-current=\"page\">Wallet</button><button>Activity</button><button>Settings</button></nav>",
-      "css": ".ds-nav{display:flex;gap:4px;padding:8px 12px 12px;background:var(--bg, oklch(0.145 0.015 264));}.ds-nav button{flex:1;min-height:40px;padding:10px 6px;border:1px solid transparent;border-radius:999px;background:transparent;color:var(--muted, oklch(0.708 0.02 264));font:500 13px/1.5 Inter,sans-serif;cursor:pointer;outline:none;transition:color 150ms cubic-bezier(.4,0,.2,1),background-color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1);}.ds-nav button:hover{background:color-mix(in oklch, var(--secondary, oklch(0.27 0.03 264)), transparent 60%);color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button[aria-current]{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button:focus-visible{box-shadow:inset 0 0 0 2px var(--primary, oklch(0.62 0.21 264));}@media(prefers-reduced-motion:reduce){.ds-nav button{transition:none;}}"
+      "css": ".ds-nav{display:flex;gap:4px;padding:8px 12px 12px;background:var(--bg, oklch(0.145 0.015 264));}.ds-nav button{flex:1;min-height:40px;padding:10px 6px;border:1px solid transparent;border-radius:999px;background:transparent;color:var(--muted, oklch(0.708 0.02 264));font:500 13px/1.5 Inter,sans-serif;cursor:pointer;outline:none;transition:color 150ms cubic-bezier(.4,0,.2,1),background-color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1);}.ds-nav button:hover{background:color-mix(in oklch, var(--secondary, oklch(0.27 0.03 264)), transparent 60%);color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button[aria-current]{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button:focus-visible{box-shadow:inset 0 0 0 2px var(--primary, oklch(0.62 0.21 264));}@media(prefers-reduced-motion:reduce){.ds-nav button{transition:none;}}@media(min-width:900px){.ds-nav{width:176px;flex-direction:column;align-items:stretch;gap:8px;padding:20px 12px;border-right:1px solid var(--border, oklch(0.32 0.03 264));}.ds-nav button{flex:0 0 auto;text-align:left;padding:12px 16px;font-size:15px;}}"
     },
     {
       "name": "Network Badge",
@@ -575,14 +575,14 @@
       "name": "Recovery Word",
       "kind": "input",
       "refersTo": "recovery-word",
-      "description": "Stacked masked word with one inset parent focus indicator.",
+      "description": "Inline index and monospaced masked word with one inset parent focus indicator.",
       "html": "<label class=\"ds-word\"><span aria-hidden=\"true\">1</span><input type=\"password\" aria-label=\"Recovery word 1\" placeholder=\"word\" autocomplete=\"off\" spellcheck=\"false\"></label>",
-      "css": ".ds-word{display:flex;flex-direction:column;align-items:stretch;gap:2px;border:1px solid transparent;border-radius:12px;background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 50%);padding:6px 10px;min-width:0;}.ds-word>span{font:400 12px/1.5 \"JetBrains Mono\",monospace;color:var(--muted, oklch(0.708 0.02 264));min-width:10px;align-self:flex-start;}.ds-word>input{width:100%;min-width:0;min-height:28px;padding:0;background:transparent;border:0;border-radius:0;color:var(--fg, oklch(0.985 0.01 264));font:400 15px/1.5 Inter,sans-serif;outline:none;}.ds-word>input::placeholder{color:var(--muted, oklch(0.708 0.02 264));}.ds-word>input:focus-visible{outline:none;box-shadow:none;border-color:transparent;}.ds-word:has(input:focus-visible){outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:-2px;}.ds-word:has(input[aria-invalid=\"true\"]){border-color:var(--error, oklch(0.704 0.191 22.216));}"
+      "css": ".ds-word{display:flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:12px;background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 50%);padding:8px 12px;min-width:0;min-height:48px;}.ds-word>span{font:400 12px/1.5 \"JetBrains Mono\",monospace;color:var(--muted, oklch(0.708 0.02 264));min-width:18px;flex:none;}.ds-word>input{width:100%;min-width:0;min-height:28px;padding:0;background:transparent;border:0;border-radius:0;color:var(--fg, oklch(0.985 0.01 264));font:400 15px/1.5 \"JetBrains Mono\",monospace;outline:none;}.ds-word>input::placeholder{color:var(--muted, oklch(0.708 0.02 264));}.ds-word>input:focus-visible{outline:none;box-shadow:none;border-color:transparent;}.ds-word:has(input:focus-visible){outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:-2px;}.ds-word:has(input[aria-invalid=\"true\"]){border-color:var(--error, oklch(0.704 0.191 22.216));}"
     }
   ],
   "narrative": {
     "northStar": "The Abyss wallet",
-    "overview": "The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and restrained dot field. The extension reuses Abyss's shadcn-based Base UI button and input patterns, adapted to its existing React 18 and Tailwind 3 build. Inter is an intentional incumbent choice, retained from the user-pinned product.\n\nThe interface gives amounts, account identity and the current task priority. Body text and ordinary controls are readable at the same size; support copy recedes without becoming miniature. The coherent wordmark, Wallet name and quiet Early alpha badge identify the product. Desktop uses a content-sized workspace; the popup keeps the compact task layout.",
+    "overview": "The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and restrained dot field. The extension reuses Abyss's shadcn-based Base UI button and input patterns, adapted to its existing React 18 and Tailwind 3 build. Inter is an intentional incumbent choice, retained from the user-pinned product.\n\nThe interface gives amounts, account identity and the current task priority. Body text and ordinary controls are readable at the same size; support copy recedes without becoming miniature. The coherent wordmark, Wallet name and quiet Early alpha badge identify the product. Desktop uses a content-sized workspace with a left navigation rail; popup and intermediate widths keep bottom navigation. Site connection consent and its outcome use a focused single task surface.",
     "keyCharacteristics": [
       "Established Abyss wordmarks, self-hosted type and Phosphor icons.",
       "Shared Base UI controls within rounded tonal surfaces.",

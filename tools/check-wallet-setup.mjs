@@ -25,6 +25,7 @@ import {
 } from "./wallet-browser-helpers.mjs";
 
 const extension = resolve("dist-extension");
+const creationOnly = process.argv.includes("--creation-only");
 const temp = mkdtempSync(join(tmpdir(), "abyss-wallet-setup-"));
 const reportDir = process.env.PEARL_UI_REPORT_DIR;
 if (reportDir) mkdirSync(reportDir, { recursive: true });
@@ -147,7 +148,7 @@ async function capture(page, name, width = 420, height = 600) {
   });
 }
 try {
-  {
+  if (!creationOnly) {
     const { page, errors } = await launch("popup-setup");
     const popupUrl = `${page.url()}?popup=1`;
     for (const [button, kind, heading] of [
@@ -171,7 +172,7 @@ try {
     await context.close();
     context = undefined;
   }
-  for (const format of ["official", "web"]) {
+  for (const format of creationOnly ? [] : ["official", "web"]) {
     const { page, worker, errors } = await launch(
       `restore-${format}`,
       format === "official",
@@ -325,7 +326,7 @@ try {
           ).wallet;
           return state.balances[state.selectedId]?.complete;
         },
-        { timeout: 45_000 },
+        { timeout: 65_000 },
       )
       .toBe(true);
     const initial = (
@@ -365,7 +366,51 @@ try {
       await page.getByRole("button", { name: "Receive", exact: true }).click();
       await expect(page.locator(".qr")).toBeVisible();
       await capture(page, "receive-dark");
+      await capture(page, "receive-desktop", 1280, 900);
+      await expect(
+        page
+          .getByRole("navigation")
+          .getByRole("button", { name: "Wallet", exact: true }),
+      ).toHaveAttribute("aria-current", "page");
+      await page
+        .getByRole("navigation")
+        .getByRole("button", { name: "Wallet", exact: true })
+        .click();
+      await page.getByRole("button", { name: "Send", exact: true }).click();
+      await capture(page, "send-desktop", 1280, 900);
+      await page.goBack();
+      await expect(
+        page.getByRole("button", { name: "Send", exact: true }),
+      ).toBeVisible();
+      await page.goForward();
+      await expect(
+        page.getByRole("heading", { name: "Send PRL", exact: true }),
+      ).toBeVisible();
+      await openSettings(page, "Recovery and security");
+      await page
+        .getByLabel("Password to reveal recovery phrase", { exact: true })
+        .fill(password);
+      await page.goBack();
+      await expect(page.locator(".settings-menu")).toBeVisible();
+      await page.goForward();
+      await expect(
+        page.getByLabel("Password to reveal recovery phrase", { exact: true }),
+      ).toHaveValue("");
       await openSettings(page);
+      const general = page
+        .locator(".settings-menu")
+        .getByRole("button", { name: "General", exact: true });
+      await general.hover();
+      await settleWallet(page);
+      report.contrast.darkMenuHover = await assertTextContrast(
+        general.locator("small"),
+      );
+      await capture(page, "settings-desktop", 1280, 900);
+      await capture(page, "settings-intermediate", 760, 900);
+      await page.setViewportSize({ width: 420, height: 600 });
+      report.checks.push(
+        "browser Back/Forward restores destinations, selected parent stays visible, Settings returns to its menu and navigation discards security inputs",
+      );
       await capture(page, "settings-dark");
       await openSettings(page, "General");
       await page.getByLabel("Appearance").selectOption("light");
@@ -412,7 +457,7 @@ try {
       await openSettings(page, "General");
       await page.getByLabel("Appearance").selectOption("dark");
       await page
-        .getByLabel("Account name")
+        .getByLabel("Account name", { exact: true })
         .fill("A deliberately long Pearl account name");
       await page
         .getByRole("button", { name: "Save settings", exact: true })
@@ -489,25 +534,29 @@ try {
     await context.close();
     context = undefined;
   }
-  const { page, worker, errors } = await launch("create-24");
-  const password = randomBytes(18).toString("base64");
-  const creationReport = reportDir && join(reportDir, "create-24");
-  if (creationReport) mkdirSync(creationReport, { recursive: true });
-  const phrase = await createWallet(page, {
-    password,
-    wordCount: 24,
-    reportDir: creationReport,
-  });
-  assert.equal(phrase.split(" ").length, 24);
-  const state = (
-    await worker.evaluate(() => chrome.storage.local.get("wallet"))
-  ).wallet;
-  assert(!JSON.stringify(state).includes(phrase));
-  assert.deepEqual(errors, []);
-  report.checks.push(
-    "24-word generation, hidden backup and randomized verification work end to end",
-  );
-  report.browser = context.browser()?.version();
+  for (const wordCount of creationOnly ? [12, 24] : [24]) {
+    const { page, worker, errors } = await launch(`create-${wordCount}`);
+    const password = randomBytes(18).toString("base64");
+    const creationReport = reportDir && join(reportDir, `create-${wordCount}`);
+    if (creationReport) mkdirSync(creationReport, { recursive: true });
+    const phrase = await createWallet(page, {
+      password,
+      wordCount,
+      reportDir: creationReport,
+    });
+    assert.equal(phrase.split(" ").length, wordCount);
+    const state = (
+      await worker.evaluate(() => chrome.storage.local.get("wallet"))
+    ).wallet;
+    assert(!JSON.stringify(state).includes(phrase));
+    assert.deepEqual(errors, []);
+    report.checks.push(
+      `${wordCount}-word generation, hidden backup, backward navigation and randomized verification work end to end`,
+    );
+    report.browser = context.browser()?.version();
+    await context.close();
+    context = undefined;
+  }
   if (reportDir)
     writeFileSync(
       join(reportDir, "setup-checks.json"),
