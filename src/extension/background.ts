@@ -24,15 +24,33 @@ import {
   releasePayment,
 } from "./payments";
 import { external, disconnectOrigin } from "./sites";
+import { inspectRecovery } from "./recovery";
 
 async function internal(request: UiCommand) {
   const { method, params } = request;
   switch (method) {
     case "view":
       return view();
+    case "inspectRecovery":
+      return inspectRecovery(params.mnemonic, params.checkActivity);
+    case "recoverAccess":
+      if (!store.encrypted)
+        throw new Error("There is no wallet to recover on this profile");
+      store.encrypted = await cryptoCall("recoverAccess", {
+        ...params,
+        accounts: store.accounts,
+        minutes: store.settings.autoLockMinutes,
+      });
+      session.unlocked = true;
+      store.grants = [];
+      store.connections = [];
+      for (const operation of store.operations)
+        if (operation.status === "review") operation.status = "cancelled";
+      await save();
+      return view();
     case "generate":
       if (store.encrypted) throw new Error("A wallet already exists");
-      return cryptoCall("generate", {});
+      return cryptoCall("generate", params);
     case "create": {
       if (store.encrypted) throw new Error("A wallet already exists");
       const result = await cryptoCall("create", {

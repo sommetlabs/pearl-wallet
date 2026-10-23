@@ -1,6 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { readFileSync } from "node:fs";
+import {
+  WALLET_VERSION,
+  WALLET_VERSION_NAME,
+} from "./src/extension/version.ts";
 
 export default defineConfig({
   base: "./",
@@ -14,8 +18,8 @@ export default defineConfig({
           manifest_version: 3,
           minimum_chrome_version: "120",
           name: "Abyss Wallet · Early alpha",
-          version: "0.1.0",
-          version_name: "0.1.0 early alpha",
+          version: WALLET_VERSION,
+          version_name: WALLET_VERSION_NAME,
           description:
             "Experimental Pearl wallet. Testnet milestone; keep independent recovery backups.",
           permissions: ["storage", "alarms", "offscreen"],
@@ -35,7 +39,7 @@ export default defineConfig({
           ],
           background: { service_worker: "background.js", type: "module" },
           action: {
-            default_popup: "extension/wallet.html",
+            default_popup: "extension/wallet.html?popup=1",
             default_title: "Abyss Wallet · Early alpha",
           },
           content_scripts: [
@@ -86,7 +90,8 @@ export default defineConfig({
           "native/xmss/Pearl-ISC.txt",
           "native/xmss/XMSS-CC0.txt",
           "native/xmss/btcsuite-ISC.txt",
-          "src/ui/assets/fonts/OFL.txt",
+          "src/extension/ui/assets/inter-OFL.txt",
+          "src/extension/ui/assets/jetbrains-mono-OFL.txt",
         ])
           this.emitFile({
             type: "asset",
@@ -95,6 +100,7 @@ export default defineConfig({
           });
         for (const name of [
           "@noble/curves",
+          "@phosphor-icons/react",
           "@noble/hashes",
           "@scure/base",
           "@scure/bip32",

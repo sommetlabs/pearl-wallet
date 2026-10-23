@@ -9,6 +9,7 @@ import {
 import { selected } from "./model";
 import { preparePayment, refresh } from "./payments";
 import { summarize } from "./network";
+import { WALLET_VERSION } from "./version";
 
 export async function disconnectOrigin(origin: string) {
   store.grants = store.grants.filter((g) => g.origin !== origin);
@@ -46,7 +47,7 @@ export async function external(
   if (method === "getInfo")
     return {
       name: "Abyss Wallet",
-      version: "0.1.0-alpha",
+      version: `${WALLET_VERSION}-alpha`,
       apiVersion: 1,
       networks: ["testnet2", "mainnet"],
       capabilities: [

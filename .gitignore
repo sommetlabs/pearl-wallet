@@ -32,3 +32,5 @@ pnpm-debug.log*
 lerna-debug.log*
 
 dist-extension/
+.impeccable/review/
+.impeccable/cache/

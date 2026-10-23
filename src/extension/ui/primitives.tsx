@@ -5,6 +5,94 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import {
+  ArrowClockwiseIcon,
+  ArrowDownLeftIcon,
+  ArrowSquareOutIcon,
+  ArrowUpRightIcon,
+  ArrowsOutSimpleIcon,
+  CaretLeftIcon,
+  CheckIcon,
+  ClockCounterClockwiseIcon,
+  CopyIcon,
+  GearSixIcon,
+  GlobeHemisphereWestIcon,
+  InfoIcon,
+  LockSimpleIcon,
+  WalletIcon,
+  WarningCircleIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from "@phosphor-icons/react";
+import darkLogo from "./assets/logotype-dark.svg?url";
+import lightLogo from "./assets/logotype-light.svg?url";
+
+export function Brand() {
+  return (
+    <div className="brand">
+      <img
+        className="logo-dark"
+        src={darkLogo}
+        alt="Abyss"
+        width="96"
+        height="20"
+      />
+      <img
+        className="logo-light"
+        src={lightLogo}
+        alt="Abyss"
+        width="96"
+        height="20"
+      />
+      <span className="brand-product">Wallet</span>
+    </div>
+  );
+}
+export function PasswordField({
+  label,
+  value,
+  onChange,
+  autoComplete = "current-password",
+  autoFocus = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete?: "new-password" | "current-password";
+  autoFocus?: boolean;
+}) {
+  const id = useId();
+  const [visible, setVisible] = useState(false);
+  const [capsLock, setCapsLock] = useState(false);
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <div className="password-control">
+        <input
+          id={id}
+          type={visible ? "text" : "password"}
+          autoComplete={autoComplete}
+          autoFocus={autoFocus}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyUp={(event) => setCapsLock(event.getModifierState("CapsLock"))}
+          required
+          maxLength={1024}
+        />
+        <button
+          type="button"
+          className="icon"
+          aria-label={`${visible ? "Hide" : "Show"} ${label.toLowerCase()}`}
+          aria-pressed={visible}
+          onClick={() => setVisible(!visible)}
+        >
+          <Icon name={visible ? "eyeOff" : "eye"} />
+        </button>
+      </div>
+      {capsLock && <small role="status">Caps Lock is on</small>}
+    </div>
+  );
+}
 
 export function Field({
   label,
@@ -35,12 +123,13 @@ export function Notice({
   error?: boolean;
 }) {
   return (
-    <p
+    <div
       className={error ? "notice error" : "notice"}
       role={error ? "alert" : "status"}
     >
-      {children}
-    </p>
+      <Icon name={error ? "warning" : "info"} />
+      <p>{children}</p>
+    </div>
   );
 }
 export function Copy({
@@ -60,34 +149,31 @@ export function Copy({
         setTimeout(() => setCopied(false), 2000);
       }}
     >
+      <Icon name={copied ? "check" : "copy"} />
       {copied ? "Copied" : label}
     </button>
   );
 }
-export function Icon({
-  name,
-}: {
-  name: "lock" | "expand" | "refresh" | "back";
-}) {
-  const paths = {
-    lock: "M5 10h14v11H5z M8 10V6a4 4 0 018 0v4",
-    expand: "M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6",
-    refresh: "M20 8a9 9 0 10.5 7M20 3v5h-5",
-    back: "M15 5l-7 7 7 7",
-  };
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d={paths[name]} />
-    </svg>
-  );
+const icons = {
+  lock: LockSimpleIcon,
+  expand: ArrowsOutSimpleIcon,
+  refresh: ArrowClockwiseIcon,
+  back: CaretLeftIcon,
+  wallet: WalletIcon,
+  activity: ClockCounterClockwiseIcon,
+  settings: GearSixIcon,
+  send: ArrowUpRightIcon,
+  receive: ArrowDownLeftIcon,
+  copy: CopyIcon,
+  check: CheckIcon,
+  network: GlobeHemisphereWestIcon,
+  external: ArrowSquareOutIcon,
+  info: InfoIcon,
+  warning: WarningCircleIcon,
+  eye: EyeIcon,
+  eyeOff: EyeSlashIcon,
+};
+export function Icon({ name }: { name: keyof typeof icons }) {
+  const Component = icons[name];
+  return <Component size={18} weight="regular" aria-hidden="true" />;
 }

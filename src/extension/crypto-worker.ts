@@ -21,6 +21,11 @@ import {
 } from "../crypto/mnemonic";
 import type { Account, Address, EncryptedVault, Vault } from "./model";
 import type { CryptoRequest } from "./crypto-protocol";
+import {
+  describeAccount,
+  nextAccount,
+  recoveredDescriptors,
+} from "../core/account-formats";
 
 let vault: Vault | undefined;
 let seed: Uint8Array | undefined;
@@ -70,7 +75,7 @@ function touch(minutes: number) {
   expires = Date.now() + minutes * 60_000;
 }
 async function seal(value: Vault, password: string) {
-  if (typeof password !== "string" || password.length < 12)
+  if (typeof password !== "string" || password.length < 12 || !password.trim())
     throw new Error("Use a password with at least 12 characters");
   const bytes = new TextEncoder().encode(JSON.stringify(value));
   try {
@@ -144,8 +149,54 @@ async function handle(request: CryptoRequest): Promise<unknown> {
   const { method, params } = request;
   switch (method) {
     case "generate":
-      draft = generateMnemonic(256);
+      draft = generateMnemonic(params.wordCount === 12 ? 128 : 256);
       return draft;
+    case "previewRecovery": {
+      const mnemonic = params.mnemonic
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+      if (!validateMnemonic(mnemonic))
+        throw new Error("Check your recovery phrase");
+      const temporarySeed = await mnemonicToSeed(mnemonic);
+      try {
+        const result = [];
+        for (const format of ["official", "web"] as const) {
+          const derived = await deriveAddress(
+            temporarySeed,
+            describeAccount(format, "testnet2"),
+            0,
+            0,
+            await xmss,
+          );
+          result.push({ format, address: derived.address });
+        }
+        return result;
+      } finally {
+        temporarySeed.fill(0);
+      }
+    }
+    case "recoverAccess": {
+      const mnemonic = params.mnemonic
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+      if (!validateMnemonic(mnemonic))
+        throw new Error("Check your recovery phrase");
+      const temporarySeed = await mnemonicToSeed(mnemonic);
+      try {
+        const accounts = recoveredDescriptors(temporarySeed, params.accounts);
+        const value: Vault = { version: 2, mnemonic, accounts };
+        const encrypted = await seal(value, params.password);
+        lock();
+        vault = value;
+        seed = Uint8Array.from(temporarySeed);
+        touch(params.minutes);
+        return encrypted;
+      } finally {
+        temporarySeed.fill(0);
+      }
+    }
     case "lock":
       lock();
       return true;
@@ -162,13 +213,7 @@ async function handle(request: CryptoRequest): Promise<unknown> {
         : draft;
       if (!mnemonic || !validateMnemonic(mnemonic))
         throw new Error("Check your recovery phrase");
-      const descriptor: AccountDescriptor = {
-        network: "testnet2",
-        accountIndex: 0,
-        scheme: params.format === "web" ? "plain" : "xmss",
-        derivation: params.format === "web" ? "bip32" : "oyster",
-        ...(params.format === "web" && { coinType: 808276 }),
-      };
+      const descriptor = describeAccount(params.format, "testnet2");
       const value: Vault = { version: 2, mnemonic, accounts: [descriptor] };
       const encrypted = await seal(value, params.password);
       lock();
@@ -196,19 +241,11 @@ async function handle(request: CryptoRequest): Promise<unknown> {
       requireUnlocked();
       if (!["testnet2", "mainnet"].includes(params.network))
         throw new Error("Unsupported network");
-      const matching = value.accounts.filter(
-        (a) => a.network === params.network,
+      const descriptor = nextAccount(
+        value.accounts,
+        params.format,
+        params.network,
       );
-      const descriptor: AccountDescriptor = {
-        network: params.network,
-        accountIndex: matching.reduce(
-          (n, a) => Math.max(n, a.accountIndex + 1),
-          0,
-        ),
-        derivation: params.format === "web" ? "bip32" : "oyster",
-        scheme: params.format === "web" ? "plain" : "xmss",
-        ...(params.format === "web" && { coinType: 808276 }),
-      };
       value.accounts.push(descriptor);
       const encrypted = await seal(value, params.password);
       vault = value;

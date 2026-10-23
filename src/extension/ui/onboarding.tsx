@@ -1,50 +1,189 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { command } from "./client";
-import { Field, Notice } from "./primitives";
+import { Icon, Notice, PasswordField } from "./primitives";
+import {
+  PasswordSetup,
+  PhraseInput,
+  RecoveryAccounts,
+  RecoveryWords,
+  SetupProgress,
+  VerifyBackup,
+} from "./setup-components";
+import {
+  backupChallenge,
+  matchesBackup,
+  normalizePhrase,
+  passwordIssue,
+  phraseIssue,
+} from "./setup";
+import type { AccountFormat } from "../../core/account-formats";
+import type { RecoveryCandidate } from "../model";
+import { AccessRecovery } from "./access-recovery";
 
+type Step =
+  | "welcome"
+  | "password"
+  | "backup"
+  | "verify"
+  | "phrase"
+  | "accounts"
+  | "restore-password";
+const copy: Record<
+  Exclude<Step, "welcome">,
+  { title: string; description: string }
+> = {
+  password: {
+    title: "Protect your wallet",
+    description: "Create a password to unlock this wallet on this device.",
+  },
+  backup: {
+    title: "Save your recovery phrase",
+    description:
+      "Your words are the only way to recover your wallet if you lose access.",
+  },
+  verify: {
+    title: "Check your backup",
+    description: "Enter the requested words from the copy you saved.",
+  },
+  phrase: {
+    title: "Restore your wallet",
+    description:
+      "Enter your original recovery words. They stay within this extension.",
+  },
+  accounts: {
+    title: "Choose your account",
+    description: "Compare these receive addresses with your previous wallet.",
+  },
+  "restore-password": {
+    title: "Secure this device",
+    description:
+      "Set a local password. Your account addresses will stay the same.",
+  },
+};
 export function Onboarding({ done }: { done: () => void }) {
-  const [mode, setMode] = useState<"choose" | "create" | "import">("choose");
+  const [step, setStep] = useState<Step>(() => {
+    const initial = new URLSearchParams(location.search).get("setup");
+    return initial === "create"
+      ? "password"
+      : initial === "restore"
+        ? "phrase"
+        : "welcome";
+  });
   const [phrase, setPhrase] = useState("");
+  const [wordCount, setWordCount] = useState<12 | 24>(12);
+  const [lengthChanged, setLengthChanged] = useState(false);
+  const [restoreWords, setRestoreWords] = useState<string[]>(
+    Array(12).fill(""),
+  );
   const [password, setPassword] = useState("");
-  const [repeat, setRepeat] = useState("");
-  const [format, setFormat] = useState("official");
-  const [confirmed, setConfirmed] = useState(false);
-  const [words, setWords] = useState("");
+  const [repeated, setRepeated] = useState("");
+  const [revealed, setRevealed] = useState(false);
+  const [seenPhrase, setSeenPhrase] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [positions, setPositions] = useState<number[]>([]);
+  const [answers, setAnswers] = useState(["", "", ""]);
+  const [candidates, setCandidates] = useState<RecoveryCandidate[]>([]);
+  const [format, setFormat] = useState<AccountFormat>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  async function generate() {
+  const heading = useRef<HTMLHeadingElement>(null);
+  const restoring = ["phrase", "accounts", "restore-password"].includes(step);
+  const index = restoring
+    ? ["phrase", "accounts", "restore-password"].indexOf(step)
+    : ["password", "backup", "verify"].indexOf(step);
+  useEffect(() => {
+    heading.current?.focus({ preventScroll: true });
+  }, [step]);
+  function navigate(next: Step) {
+    setError("");
+    setStep(next);
+  }
+  function start(kind: "create" | "restore") {
+    if (new URLSearchParams(location.search).has("popup")) {
+      void chrome.tabs.create({
+        url: chrome.runtime.getURL(`extension/wallet.html?setup=${kind}`),
+      });
+      window.close();
+      return;
+    }
+    navigate(kind === "create" ? "password" : "phrase");
+  }
+  function reset() {
+    setPhrase("");
+    setWordCount(12);
+    setLengthChanged(false);
+    setRestoreWords(Array(12).fill(""));
+    setPassword("");
+    setRepeated("");
+    setRevealed(false);
+    setSeenPhrase(false);
+    setSaved(false);
+    setAnswers(["", "", ""]);
+    setCandidates([]);
+    setFormat(undefined);
+    navigate("welcome");
+  }
+  function chooseLength(count: 12 | 24) {
+    if (wordCount === count) return;
+    if (phrase) setLengthChanged(true);
+    setWordCount(count);
+    setPhrase("");
+    setSaved(false);
+    setSeenPhrase(false);
+    setRevealed(false);
+  }
+  function back() {
+    if (step === "password" || step === "phrase") reset();
+    else if (step === "backup") navigate("password");
+    else if (step === "verify") {
+      setRevealed(false);
+      navigate("backup");
+    } else if (step === "accounts") navigate("phrase");
+    else navigate("accounts");
+  }
+  async function inspect(checkActivity = true) {
+    if (restoreWords.some((word) => !word))
+      return setError(
+        `Fill in all ${restoreWords.length} recovery words before continuing.`,
+      );
+    const enteredPhrase = restoreWords.join(" ");
+    const issue = phraseIssue(enteredPhrase);
+    if (issue) return setError(issue);
     setBusy(true);
     setError("");
     try {
-      setPhrase(await command<string>("generate"));
-      setMode("create");
+      const normalized = normalizePhrase(enteredPhrase);
+      const found = await command<RecoveryCandidate[]>("inspectRecovery", {
+        mnemonic: normalized,
+        checkActivity,
+      });
+      setPhrase(normalized);
+      setCandidates(found);
+      const active = found.filter(
+        (candidate) => candidate.activity === "found",
+      );
+      setFormat(active.length === 1 ? active[0].format : undefined);
+      navigate("accounts");
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
     }
   }
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    setError("");
-    if (password !== repeat) return setError("The passwords don’t match");
-    if (
-      mode === "create" &&
-      words.trim().toLowerCase().replace(/\s+/g, " ") !==
-        [0, 7, 15].map((i) => phrase.split(" ")[i]).join(" ")
-    )
-      return setError("Check recovery words 1, 8 and 16");
+  async function finish(accountFormat: AccountFormat) {
     setBusy(true);
+    setError("");
     try {
       await command("create", {
         mnemonic: phrase,
         password,
-        format: mode === "create" ? "official" : format,
-        backedUp: confirmed,
+        format: accountFormat,
+        backedUp: true,
       });
       setPhrase("");
       setPassword("");
-      setRepeat("");
+      setRepeated("");
+      setAnswers(["", "", ""]);
       done();
     } catch (e) {
       setError((e as Error).message);
@@ -52,160 +191,263 @@ export function Onboarding({ done }: { done: () => void }) {
       setBusy(false);
     }
   }
-  return (
-    <section className="onboarding">
-      <span className="eyebrow">Pearl, in your browser</span>
-      <h1>
-        {mode === "choose"
-          ? "Your keys. Your wallet."
-          : mode === "create"
-            ? "Save your recovery phrase"
-            : "Restore your Pearl account"}
-      </h1>
-      {mode === "choose" ? (
-        <>
-          <p className="muted">
-            Create a Pearl account or restore the one you already use. Approve
-            payments and site connections here.
-          </p>
-          <Notice>
-            Early alpha · Start with testnet funds. Keep a recovery backup
-            outside this browser.
-          </Notice>
-          <button disabled={busy} onClick={generate}>
-            {busy ? "Preparing wallet…" : "Create a wallet"}
+  async function advance(event: FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    setError("");
+    if (step === "password") {
+      const issue = passwordIssue(password, repeated);
+      if (issue) return setError(issue);
+      setBusy(true);
+      try {
+        if (!phrase) {
+          const generated = await command<string>("generate", { wordCount });
+          if (
+            generated.split(" ").length !== wordCount ||
+            phraseIssue(generated)
+          )
+            throw new Error(
+              "Phrase generation could not be verified. Please retry.",
+            );
+          setPhrase(generated);
+        }
+        setLengthChanged(false);
+        navigate("backup");
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setBusy(false);
+      }
+    } else if (step === "backup") {
+      if (!saved || !seenPhrase)
+        return setError(
+          "Reveal the phrase and save every word before continuing.",
+        );
+      setPositions(backupChallenge(wordCount));
+      setAnswers(["", "", ""]);
+      setRevealed(false);
+      navigate("verify");
+    } else if (step === "verify") {
+      if (!matchesBackup(phrase, positions, answers))
+        return setError(
+          "The words don’t match your backup. Check them, or go back to view the phrase.",
+        );
+      await finish("official");
+    } else if (step === "phrase") await inspect();
+    else if (step === "accounts") {
+      if (!format)
+        return setError(
+          "Choose the account that matches your previous wallet.",
+        );
+      navigate("restore-password");
+    } else {
+      const issue = passwordIssue(password, repeated);
+      if (issue) return setError(issue);
+      if (!format) return setError("Choose your account before continuing.");
+      await finish(format);
+    }
+  }
+  if (step === "welcome")
+    return (
+      <section className="onboarding welcome">
+        <h1>Your Pearl wallet</h1>
+        <p className="muted">
+          Create an account or bring the Pearl wallet you already use.
+        </p>
+        <div className="setup-panel">
+          <button onClick={() => start("create")}>
+            Create a wallet
+            <Icon name="send" />
           </button>
-          <button className="secondary" onClick={() => setMode("import")}>
+          <button className="secondary" onClick={() => start("restore")}>
             I have a recovery phrase
           </button>
-        </>
-      ) : (
-        <form onSubmit={submit}>
-          {mode === "create" ? (
-            <>
-              <p className="muted">
-                Write all 24 words down in order. Anyone with them can spend
-                your funds.
-              </p>
-              <ol className="phrase">
-                {phrase.split(" ").map((word, i) => (
-                  <li key={i}>
-                    <span>{i + 1}</span>
-                    {word}
-                  </li>
+          <p className="setup-note">
+            Early alpha · Pearl Testnet2
+            <br />
+            Start with test funds and keep an independent recovery backup.
+          </p>
+        </div>
+      </section>
+    );
+  const action = busy
+    ? step === "phrase"
+      ? "Checking wallet formats…"
+      : step === "password"
+        ? "Generating your phrase…"
+        : "Creating your wallet…"
+    : step === "verify"
+      ? "Create wallet"
+      : step === "phrase"
+        ? "Find my account"
+        : step === "restore-password"
+          ? "Restore wallet"
+          : "Continue";
+  return (
+    <section className="onboarding flow">
+      <div className="flow-heading">
+        <h1 ref={heading} tabIndex={-1}>
+          {copy[step].title}
+        </h1>
+        <p className="muted">
+          {step === "backup"
+            ? `Write down all ${wordCount} words in order.`
+            : copy[step].description}
+        </p>
+        <SetupProgress
+          labels={
+            restoring
+              ? ["Phrase", "Account", "Password"]
+              : ["Password", "Backup", "Confirm"]
+          }
+          current={index}
+        />
+      </div>
+      <form className="flow-form" onSubmit={advance}>
+        <fieldset className="flow-body" key={step} disabled={busy}>
+          {step === "password" && (
+            <div className="phrase-length-choice">
+              <span>Recovery phrase length</span>
+              <div role="group" aria-label="Create recovery phrase length">
+                {([12, 24] as const).map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    className={wordCount === count ? "selected" : "ghost"}
+                    aria-pressed={wordCount === count}
+                    onClick={() => chooseLength(count)}
+                  >
+                    {count} words
+                  </button>
                 ))}
-              </ol>
-              <Field label="Confirm words 1, 8 and 16">
-                <input
-                  autoComplete="off"
-                  spellCheck={false}
-                  value={words}
-                  onChange={(e) => setWords(e.target.value)}
-                  placeholder="Three words, separated by spaces"
-                  required
-                />
-              </Field>
-            </>
-          ) : (
+              </div>
+              {lengthChanged && (
+                <small>A new phrase will be generated for this choice.</small>
+              )}
+            </div>
+          )}
+          {(step === "password" || step === "restore-password") && (
+            <PasswordSetup
+              password={password}
+              repeated={repeated}
+              onPassword={setPassword}
+              onRepeat={setRepeated}
+            />
+          )}
+          {step === "backup" && (
+            <RecoveryWords
+              phrase={phrase}
+              revealed={revealed}
+              onReveal={() => {
+                setRevealed(!revealed);
+                setSeenPhrase(true);
+              }}
+            />
+          )}
+          {step === "verify" && (
+            <VerifyBackup
+              positions={positions}
+              answers={answers}
+              onAnswer={(index, value) =>
+                setAnswers((current) =>
+                  current.map((answer, position) =>
+                    position === index ? value : answer,
+                  ),
+                )
+              }
+            />
+          )}
+          {step === "phrase" && (
             <>
-              <Field label="Recovery phrase">
-                <textarea
-                  rows={4}
-                  autoComplete="off"
-                  spellCheck={false}
-                  value={phrase}
-                  onChange={(e) => setPhrase(e.target.value)}
-                  required
-                />
-              </Field>
-              <Field
-                label="Account format"
-                help="Choose the wallet that originally created this phrase. Different formats can produce different addresses."
+              <PhraseInput
+                words={restoreWords}
+                onChange={(value) => {
+                  setRestoreWords(value);
+                  setCandidates([]);
+                  setFormat(undefined);
+                }}
+              />
+              <details className="compatibility-note">
+                <summary>Wallet compatibility</summary>
+                <p>
+                  Supports English BIP-39 phrases from the official Pearl
+                  desktop wallet and the previous Pearl web wallet. Extra BIP-39
+                  passphrases (a 13th or 25th word) are not supported in this
+                  alpha; keep using your original wallet if you set one.
+                </p>
+              </details>
+              <p className="footnote privacy-note">
+                Find my account checks the first receive address for each
+                supported wallet format on the public Pearl indexer. Your phrase
+                is never sent there.
+              </p>
+              <button
+                type="button"
+                className="text-button"
+                disabled={busy}
+                onClick={() => inspect(false)}
               >
-                <select
-                  value={format}
-                  onChange={(e) => setFormat(e.target.value)}
-                >
-                  <option value="official">
-                    Official Pearl / Oyster · XMSS
-                  </option>
-                  <option value="web">
-                    Previous Pearl web wallet · plain Taproot
-                  </option>
-                </select>
-              </Field>
+                Compare addresses without a network lookup
+              </button>
             </>
           )}
-          <Field
-            label="Wallet password"
-            help="At least 12 characters. This encrypts your local wallet."
+          {step === "accounts" && (
+            <RecoveryAccounts
+              candidates={candidates}
+              selected={format}
+              onSelect={setFormat}
+            />
+          )}
+        </fieldset>
+        <div className="flow-actions">
+          {error && <Notice error>{error}</Notice>}
+          {step === "backup" && (
+            <label className="check backup-saved">
+              <input
+                type="checkbox"
+                checked={saved}
+                onChange={(event) => setSaved(event.target.checked)}
+                disabled={busy || !seenPhrase}
+              />
+              I saved all {wordCount} words somewhere private.
+            </label>
+          )}
+          <button
+            disabled={
+              busy ||
+              (step === "backup" && (!saved || !seenPhrase)) ||
+              (step === "accounts" && !format)
+            }
           >
-            <input
-              type="password"
-              autoComplete="new-password"
-              minLength={12}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </Field>
-          <Field label="Confirm password">
-            <input
-              type="password"
-              autoComplete="new-password"
-              minLength={12}
-              value={repeat}
-              onChange={(e) => setRepeat(e.target.value)}
-              required
-            />
-          </Field>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={confirmed}
-              onChange={(e) => setConfirmed(e.target.checked)}
-              required
-            />
-            I have a secure copy of my recovery phrase.
-          </label>
-          <button disabled={busy || !confirmed}>
-            {busy
-              ? "Deriving your Pearl addresses…"
-              : mode === "create"
-                ? "Create wallet"
-                : "Restore wallet"}
+            {action}
           </button>
           <button
             type="button"
             className="ghost"
             disabled={busy}
-            onClick={() => {
-              setPhrase("");
-              setMode("choose");
-            }}
+            onClick={back}
           >
             Back
           </button>
-        </form>
-      )}
-      {error && <Notice error>{error}</Notice>}
+        </div>
+      </form>
     </section>
   );
 }
 export function Unlock({ done }: { done: () => void }) {
+  const [recovering, setRecovering] = useState(false);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  if (recovering)
+    return <AccessRecovery done={done} back={() => setRecovering(false)} />;
   return (
-    <section className="onboarding">
-      <span className="eyebrow">Pearl wallet</span>
+    <section className="onboarding unlock">
       <h1>Welcome back</h1>
-      <p className="muted">
-        Unlock to view your accounts and approve requests.
-      </p>
+      <p className="muted">Unlock your Pearl accounts.</p>
       <form
-        onSubmit={async (e) => {
-          e.preventDefault();
+        onSubmit={async (event) => {
+          event.preventDefault();
           setBusy(true);
           setError("");
           try {
@@ -219,21 +461,24 @@ export function Unlock({ done }: { done: () => void }) {
           }
         }}
       >
-        <Field label="Wallet password">
-          <input
-            autoFocus
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </Field>
+        <PasswordField
+          label="Wallet password"
+          value={password}
+          onChange={setPassword}
+          autoFocus
+        />
         <button disabled={busy}>{busy ? "Unlocking…" : "Unlock wallet"}</button>
       </form>
+      <button
+        className="text-button forgot-password"
+        onClick={() => setRecovering(true)}
+      >
+        Forgot password?
+      </button>
       {error && <Notice error>{error}</Notice>}
       <p className="footnote">
-        Your encrypted wallet stays on this device. Sites cannot unlock it.
+        This password unlocks this device. Keep your recovery phrase for
+        restoring your accounts.
       </p>
     </section>
   );

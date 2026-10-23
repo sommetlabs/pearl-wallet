@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { command, short } from "./client";
-import { Icon, Notice } from "./primitives";
+import { command } from "./client";
+import { Brand, Icon, Notice } from "./primitives";
 import { Onboarding, Unlock } from "./onboarding";
 import { Activity, Receive, Review, Send } from "./payments";
 import { Settings } from "./settings";
-import { format, type Operation, type View } from "../model";
+import { type Operation, type View } from "../model";
+import { Overview } from "./overview";
 import "./wallet.css";
 
 type Page = "home" | "receive" | "send" | "activity" | "settings" | "review";
@@ -81,10 +82,6 @@ function Wallet() {
   );
   const connection =
     view?.connections.find((c) => c.id === reviewId) ?? view?.connections[0];
-  const stale =
-    !balance ||
-    Date.now() - balance.updatedAt > 90_000 ||
-    (account && !!view?.errors[account.id]);
   function review(operation: Operation) {
     setReviewId(operation.id);
     setPage("review");
@@ -92,17 +89,8 @@ function Wallet() {
   return (
     <div className="wallet">
       <header>
-        <div className="brand">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 64 64"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M64 0V64H42.667V26.8799H21.333V64H0V0H64Z" />
-          </svg>
-          <strong>Abyss Wallet</strong>
+        <div className="brand-group">
+          <Brand />
           <span className="alpha">Early alpha</span>
         </div>
         <div className="tools">
@@ -149,6 +137,7 @@ function Wallet() {
       ) : account ? (
         <>
           <div className="identity">
+            <Icon name="wallet" />
             <label>
               <span className="sr-only">Selected account</span>
               <select
@@ -171,12 +160,13 @@ function Wallet() {
                 ))}
               </select>
             </label>
-            <span title={account.addresses[0].address}>
-              {short(account.addresses[0].address)}
+            <span className="network-badge">
+              <Icon name="network" />
+              {account.network === "testnet2" ? "Testnet2" : "Mainnet"}
             </span>
           </div>
           <main>
-            {page !== "home" && (
+            {page !== "home" && page !== "settings" && !op && (
               <button className="back" onClick={() => setPage("home")}>
                 <Icon name="back" /> Wallet
               </button>
@@ -232,90 +222,20 @@ function Wallet() {
                 }}
               />
             ) : page === "home" ? (
-              <>
-                <section className="balance">
-                  <div className="row">
-                    <span className="muted">Spendable balance</span>
-                    <button
-                      className="icon"
-                      aria-label="Refresh balance"
-                      disabled={busy}
-                      onClick={() => refresh(true)}
-                    >
-                      <Icon name="refresh" />
-                    </button>
-                  </div>
-                  <h1>
-                    {balance ? format(balance.spendable) : "—"} <span>PRL</span>
-                  </h1>
-                  <p className="footnote" role="status">
-                    {busy
-                      ? "Checking Pearl…"
-                      : balance
-                        ? `${stale ? "Last known · " : ""}Block ${balance.height.toLocaleString()} · ${new Date(balance.updatedAt).toLocaleTimeString()}`
-                        : "Reading your Pearl addresses…"}
-                  </p>
-                  <div className="actions">
-                    <button onClick={() => setPage("send")}>Send</button>
-                    <button
-                      className="secondary"
-                      onClick={() => setPage("receive")}
-                    >
-                      Receive
-                    </button>
-                  </div>
-                </section>
-                {account.network === "testnet2" && (
-                  <p className="testnet">
-                    Testnet2 · Test PRL has no monetary value.
-                  </p>
+              <Overview
+                account={account}
+                balance={balance || undefined}
+                operations={view.operations.filter(
+                  (operation) => operation.accountId === account.id,
                 )}
-                {view.errors[account.id] && (
-                  <Notice error>
-                    {view.errors[account.id]} Your last known balance is kept;
-                    retry with Refresh.
-                  </Notice>
-                )}
-                {balance && (
-                  <dl className="balances">
-                    <div>
-                      <dt>Confirmed</dt>
-                      <dd>{format(balance.confirmed)} PRL</dd>
-                    </div>
-                    <div>
-                      <dt>Pending confirmations</dt>
-                      <dd>{format(balance.pending)} PRL</dd>
-                    </div>
-                    <div>
-                      <dt>Reserved by transactions</dt>
-                      <dd>{format(balance.reserved)} PRL</dd>
-                    </div>
-                    {balance.immature !== "0" && (
-                      <div>
-                        <dt>Immature mining rewards</dt>
-                        <dd>{format(balance.immature)} PRL</dd>
-                      </div>
-                    )}
-                  </dl>
-                )}
-                {view.operations
-                  .filter(
-                    (o) => o.status === "review" && o.accountId === account.id,
-                  )
-                  .map((o) => (
-                    <button
-                      className="secondary"
-                      key={o.id}
-                      onClick={() => review(o)}
-                    >
-                      Review {format(o.amountGrains)} PRL request
-                    </button>
-                  ))}
-                <p className="footnote">
-                  Keys stay on this device. Connected sites can request access;
-                  each payment has its own review.
-                </p>
-              </>
+                busy={busy}
+                error={view.errors[account.id]}
+                onSend={() => setPage("send")}
+                onReceive={() => setPage("receive")}
+                onRefresh={() => refresh(true)}
+                onReview={review}
+                onActivity={() => setPage("activity")}
+              />
             ) : page === "receive" ? (
               <Receive account={account} balance={balance || undefined} />
             ) : page === "send" ? (
@@ -349,11 +269,21 @@ function Wallet() {
               <button
                 key={id}
                 className={page === id ? "active" : ""}
+                aria-current={page === id ? "page" : undefined}
                 onClick={() => {
                   setPage(id);
                   setReviewId("");
                 }}
               >
+                <Icon
+                  name={
+                    id === "home"
+                      ? "wallet"
+                      : id === "activity"
+                        ? "activity"
+                        : "settings"
+                  }
+                />
                 {label}
               </button>
             ))}

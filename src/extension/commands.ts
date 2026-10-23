@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 export const password = z.string().min(1).max(1024);
+const newPassword = password
+  .min(12)
+  .refine(
+    (value) => value.trim().length > 0,
+    "Use a password containing more than spaces",
+  );
 export const payment = z.object({
   to: z.string().min(20).max(90),
   amountGrains: z.string().regex(/^[1-9]\d{0,18}$/),
@@ -20,17 +26,35 @@ const id = z.object({ id: z.string().uuid() });
 export const uiCommand = z.discriminatedUnion("method", [
   z.object({ method: z.literal("view"), params: z.object({}) }),
   z.object({
+    method: z.literal("generate"),
+    params: z.object({ wordCount: z.union([z.literal(12), z.literal(24)]) }),
+  }),
+  z.object({
+    method: z.literal("inspectRecovery"),
+    params: z.object({
+      mnemonic: z.string().min(1).max(1000),
+      checkActivity: z.boolean().default(true),
+    }),
+  }),
+  z.object({
+    method: z.literal("recoverAccess"),
+    params: z.object({
+      mnemonic: z.string().min(1).max(1000),
+      password: newPassword,
+    }),
+  }),
+  z.object({
     method: z.literal("refresh"),
     params: z.object({ force: z.boolean().optional() }),
   }),
-  ...(["generate", "lock", "touch"] as const).map((method) =>
+  ...(["lock", "touch"] as const).map((method) =>
     z.object({ method: z.literal(method), params: z.object({}) }),
   ),
   z.object({
     method: z.literal("create"),
     params: z.object({
       mnemonic: z.string().max(1000).optional(),
-      password: password.min(12),
+      password: newPassword,
       format: z.enum(["official", "web"]),
       backedUp: z.literal(true),
     }),
@@ -55,7 +79,7 @@ export const uiCommand = z.discriminatedUnion("method", [
   z.object({ method: z.literal("export"), params: z.object({ password }) }),
   z.object({
     method: z.literal("password"),
-    params: z.object({ password, newPassword: password.min(12) }),
+    params: z.object({ password, newPassword }),
   }),
   z.object({ method: z.literal("settings"), params: settings }),
   z.object({ method: z.literal("prepare"), params: payment }),

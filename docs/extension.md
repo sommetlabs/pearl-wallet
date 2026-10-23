@@ -2,6 +2,8 @@
 
 The extension runs locally in Chrome or Brave. It does not need Vercel, a native companion, or a remote signer. The existing hosted wallet remains a separate build of this repository.
 
+Version 0.2.0 adds guided setup and recovery using Abyss's existing design. See the [implementation review and remaining limits](reviews/extension-0.2.0.md).
+
 ## Build and install
 
 ```sh
@@ -11,18 +13,25 @@ npm run build:extension
 
 Open `chrome://extensions` or `brave://extensions`, enable Developer mode, choose **Load unpacked**, and select `dist-extension`. Use **Reload** after rebuilding. Keep the same directory when updating an installed unpacked extension.
 
-Create a wallet or import a BIP-39 recovery phrase. New accounts use the official Oyster derivation and XMSS Taproot commitment. For a phrase created by the previous web wallet, select **Previous Pearl web wallet** during import: that wallet uses standard BIP-32 and coin type 808276 on testnet as well as mainnet. Confirm the receive address before funding a restored account.
+The toolbar opens setup in a regular extension tab so clicking away does not dismiss an unfinished backup. Creation offers 12 words (the official Pearl wallet's default) or 24 words. Reveal and save the phrase, then verify three randomly selected positions before the encrypted wallet is saved. Changing the word count before creation discards the unsaved phrase.
+
+Restore accepts English BIP-39 words in numbered, masked fields. Paste the complete phrase into any field; checksum and spelling validation happen locally. Both supported wallet formats are previewed before import. **Find my account** checks only their first receive addresses on the public indexer; the offline comparison action makes no indexer request. Activity at the first address is a hint, not proof that other addresses are empty. Confirm the format and receive address against the original wallet.
+
+New accounts use the official Oyster derivation and XMSS Taproot commitment. **Pearl web wallet** uses standard BIP-32 and coin type 808276 on testnet as well as mainnet, matching the previous hosted wallet. Full receive/change gap discovery starts after restoration. Additional accounts keep separate indices for each network and account format.
+
+Import supports 12 or 24 words and also detects 15-, 18- and 21-word phrases when pasted. Extra BIP-39 passphrases and raw hexadecimal seeds are not supported by this alpha. Keep using the original wallet for those accounts.
 
 The first milestone is testnet2. The mainnet configuration is available, but live mainnet payments have not been validated for this alpha. Testnet funds are appropriate for initial testing. Save the recovery phrase outside the browser; deleting an extension/profile deletes its local vault and journal.
 
 ## Included
 
-- Wallet creation and phrase restoration; separate receive and change branches with gap discovery.
+- Guided creation, backup verification and address-based phrase restoration; separate receive and change branches with gap discovery.
 - Account selection, labels and additional accounts; explicit Pearl network identity.
 - Verified confirmed/pending/immature balances, reserved inputs and spendable funds.
 - Receive addresses and QR codes; payment review with recipient, exact fee, change and requesting origin.
 - Durable signed transaction journal, observation, exact-byte rebroadcast and explicit guarded release.
-- Manual/idle locking, password reauthentication for recovery and password changes.
+- Manual/idle locking, password reauthentication for phrase export and password changes.
+- Forgotten-password recovery using the original phrase, proving every existing account before replacing the password. Accounts and signed transaction records are retained; site permissions are revoked and unsigned reviews cancelled.
 - Appearance, auto-lock, custom Blockbook endpoints and connected-site revocation.
 - A general browser provider with account/balance reads and separately reviewed payments.
 
@@ -58,14 +67,20 @@ The provider is `window.abyssWallet`; discovery also emits `abyss-wallet-ready`.
 
 `crypto-host.ts` accepts a private port only from the bundled offscreen document. That document owns a dedicated crypto worker. Content scripts never receive secrets. The background transiently relays authenticated setup, unlock and recovery requests; it does not retain the decrypted vault or signing keys. Seed bytes and signing stay in the crypto worker. A vault uses the existing WebCrypto AES-256-GCM keystore with a fresh 16-byte salt, 12-byte nonce and PBKDF2-HMAC-SHA256 at 600,000 iterations. Passwords are not persisted. While unlocked, the worker holds the seed and recovery data; locking clears references, wipes owned seed bytes and terminates the worker. JavaScript strings cannot promise deterministic memory erasure.
 
-All executable code and Wasm are bundled. The indexer is trusted for observation; this is not an SPV client. Mainnet use and independent security review remain outside this testnet alpha milestone. Pearl-derived code, licenses and exact upstream provenance are in `native/NOTICE` and `native/xmss/provenance.json`.
+All executable code, fonts and Wasm are bundled. The indexer is trusted for observation; this is not an SPV client. Mainnet use and independent security review remain outside this testnet alpha milestone. Pearl-derived code, licenses and exact upstream provenance are in `native/NOTICE` and `native/xmss/provenance.json`.
 
 ## Verification
 
 ```sh
 VITE_PEARL_NETWORK=mainnet npm test
 npm run check:extension
+node tools/check-wallet-setup.mjs
 PEARL_BROWSER_EXECUTABLE=/path/to/brave npm run check:extension
+node tools/check-wallet-extension.mjs --live
 ```
 
-The extension check uses a temporary browser profile, reads a fresh unfunded account on public testnet2, and uses a controlled Blockbook fixture for payments. It never opens a personal wallet. It covers account creation, encrypted storage, canonical parent reads, connection consent, balance access, internal-method refusal, payment review/signing, uncertain broadcast reservations, exact-byte rebroadcast, locking, reauthentication, revocation and restart persistence. Fixture signing is not a live payment. `check:core:reference` additionally checks core transfers against the pinned official Go script engine when its documented environment variables are supplied.
+The default extension check uses a temporary profile and controlled Blockbook fixture. It never opens a personal wallet. It covers creation, encrypted storage, canonical parent reads, connection consent, internal-method refusal, visible fees before signing, uncertain broadcast reservations, guarded release during an outage, exact-byte rebroadcast, manual/idle locking, export reauthentication, revocation, restart persistence and password recovery preserving signed bytes. Add `--live` for an initial public testnet2 discovery of a fresh unfunded account; payments still use fixtures.
+
+The extension check exercises default 12-word creation; the setup check adds 24-word creation, persistent setup tabs, invalid phrases, official/web address compatibility, offline comparison without indexer requests and wrong-phrase recovery that leaves the vault untouched. Set `PEARL_UI_REPORT_DIR` for screenshots and a JSON check report. Generated recovery words are not captured.
+
+For native signature verification, set `PEARL_SOURCE` to the pinned official checkout and `PEARL_GO` to the required Go executable, build its XMSS library with `make -C xmss lib`, then run `node tools/check-wallet-extension.mjs --native`. The official script engine must accept the signed fixture and reject a tampered copy. Fixture signing is not a live payment. `check:core:reference` separately covers native address and transfer vectors.

@@ -15,6 +15,12 @@ import { join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
+import {
+  createWallet,
+  browserFailure,
+  enterRecoveryPhrase,
+  openSettings,
+} from "./wallet-browser-helpers.mjs";
 
 const temp = mkdtempSync(join(tmpdir(), "abyss-wallet-check-"));
 const reportDir = process.env.PEARL_UI_REPORT_DIR;
@@ -126,31 +132,35 @@ try {
     (await context.waitForEvent("serviceworker"));
   const id = new URL(worker.url()).hostname,
     base = `chrome-extension://${id}/extension/wallet.html`;
+  const liveRead = process.argv.includes("--live");
+  if (!liveRead)
+    await worker.evaluate(
+      ({ origin }) => {
+        const original = fetch;
+        globalThis.fetch = (input, options) => {
+          const url = new URL(typeof input === "string" ? input : input.url);
+          return original(
+            url.hostname.endsWith("pearlresearch.ai")
+              ? `${origin}${url.pathname}${url.search}`
+              : input,
+            options,
+          );
+        };
+      },
+      { origin },
+    );
   const page = await context.newPage(),
     errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(base);
-  await page
-    .getByRole("button", { name: "Create a wallet", exact: true })
-    .click();
-  await expect(page.locator(".phrase li")).toHaveCount(24, { timeout: 30_000 });
-  const words = (await page.locator(".phrase li").allTextContents()).map((v) =>
-    v.replace(/^\d+/, ""),
-  );
-  const phrase = words.join(" "),
-    password = randomBytes(18).toString("base64");
-  await page
-    .getByLabel("Confirm words 1, 8 and 16")
-    .fill([words[0], words[7], words[15]].join(" "));
-  await page.getByLabel("Wallet password", { exact: true }).fill(password);
-  await page.getByLabel("Confirm password", { exact: true }).fill(password);
-  await page.getByLabel("I have a secure copy").check();
-  await page
-    .getByRole("button", { name: "Create wallet", exact: true })
-    .click();
+  await page.setViewportSize({ width: 420, height: 600 });
   await expect(
-    page.getByRole("button", { name: "Send", exact: true }),
-  ).toBeVisible({ timeout: 180_000 });
+    page.getByRole("button", { name: "Create a wallet", exact: true }),
+  ).toBeVisible();
+  if (reportDir)
+    await page.screenshot({ path: join(reportDir, "welcome-popup.png") });
+  const password = randomBytes(18).toString("base64");
+  const phrase = await createWallet(page, { password, reportDir });
   const stored = await worker.evaluate(() =>
     chrome.storage.local.get("wallet"),
   );
@@ -158,27 +168,31 @@ try {
   assert(!JSON.stringify(stored).includes(password));
   assert.equal(stored.wallet.accounts[0].scheme, "xmss");
   report.checks.push(
-    "24-word creation, official XMSS account, encrypted persistence",
+    "12-word creation, randomized backup verification, official XMSS account and encrypted persistence",
   );
-  await expect
-    .poll(
-      async () => {
-        const state = (
-          await worker.evaluate(() => chrome.storage.local.get("wallet"))
-        ).wallet;
-        return state.balances[state.selectedId]?.complete;
-      },
-      { timeout: 45_000 },
-    )
-    .toBe(true);
-  const liveState = (
-    await worker.evaluate(() => chrome.storage.local.get("wallet"))
-  ).wallet;
-  assert.equal(liveState.errors[liveState.selectedId], undefined);
-  assert.equal(liveState.balances[liveState.selectedId].confirmed, "0");
-  report.checks.push(
-    "live public testnet2 discovery for a fresh, unfunded account",
-  );
+  if (liveRead) {
+    await expect
+      .poll(
+        async () => {
+          const state = (
+            await worker.evaluate(() => chrome.storage.local.get("wallet"))
+          ).wallet;
+          if (state.errors[state.selectedId])
+            throw new Error(state.errors[state.selectedId]);
+          return state.balances[state.selectedId]?.complete;
+        },
+        { timeout: 45_000 },
+      )
+      .toBe(true);
+    const liveState = (
+      await worker.evaluate(() => chrome.storage.local.get("wallet"))
+    ).wallet;
+    assert.equal(liveState.errors[liveState.selectedId], undefined);
+    assert.equal(liveState.balances[liveState.selectedId].confirmed, "0");
+    report.checks.push(
+      "live public testnet2 discovery for a fresh, unfunded account",
+    );
+  }
   address = stored.wallet.accounts[0].addresses[0].address;
   const decoded = bech32m.decode(address),
     outputKey = bech32m.fromWords(decoded.words.slice(1));
@@ -195,7 +209,7 @@ try {
     index: 0xffffffff,
     finalScriptSig: new Uint8Array([1, 1]),
   });
-  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await openSettings(page, "Network services");
   await page.getByLabel("testnet2 Blockbook API").fill(`${origin}/api/v2`);
   await page
     .getByRole("button", { name: "Save settings", exact: true })
@@ -208,7 +222,7 @@ try {
     .getByRole("button", { name: "Wallet", exact: true })
     .click();
   await page.getByRole("button", { name: "Refresh balance" }).click();
-  await expect(page.locator(".balance h1")).toHaveText("1 PRL", {
+  await expect(page.locator(".balance-value")).toHaveText(/^1\s*PRL$/, {
     timeout: 30_000,
   });
   report.checks.push("canonical parent verification and confirmed balance");
@@ -276,6 +290,8 @@ try {
   ).toBeVisible({ timeout: 30_000 });
   if (reportDir)
     await page.screenshot({ path: join(reportDir, "payment-review.png") });
+  await expect(page.getByText("Network fee", { exact: true })).toBeInViewport();
+  await expect(page.getByText("Total debit", { exact: true })).toBeInViewport();
   await page.getByRole("button", { name: "Approve and send" }).click();
   await expect(
     page.getByText("Broadcast needs observation", { exact: true }),
@@ -338,6 +354,42 @@ try {
       "official Pearl script engine accepts the payment and rejects tampering",
     );
   }
+  if (reportDir)
+    await page.screenshot({ path: join(reportDir, "uncertain-broadcast.png") });
+  await page
+    .getByRole("button", { name: "Check and release inputs…", exact: true })
+    .click();
+  const release = page.getByRole("group", {
+    name: "Release reserved coins",
+    exact: true,
+  });
+  await expect(
+    release.getByRole("button", { name: "Check and release", exact: true }),
+  ).toBeDisabled();
+  await release
+    .getByLabel("I understand the saved transaction could still be broadcast.")
+    .check();
+  if (reportDir)
+    await page.screenshot({ path: join(reportDir, "release-review.png") });
+  outage = true;
+  await release
+    .getByRole("button", { name: "Check and release", exact: true })
+    .click();
+  await expect(
+    page.locator(".notice.error").filter({ hasText: "503" }).first(),
+  ).toBeVisible({ timeout: 30_000 });
+  assert.equal(
+    (await worker.evaluate(() => chrome.storage.local.get("wallet"))).wallet
+      .operations[0].status,
+    "unknown",
+  );
+  outage = false;
+  await release
+    .getByRole("button", { name: "Keep reserved", exact: true })
+    .click();
+  report.checks.push(
+    "explicit release acknowledgement and provider failure keep uncertain inputs reserved",
+  );
   failBroadcast = false;
   await page
     .getByRole("button", { name: "Rebroadcast saved transaction" })
@@ -389,7 +441,7 @@ try {
   report.checks.push(
     "manual lock, locked dApp refusal, wrong-password rejection and unlock",
   );
-  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await openSettings(page, "Connected sites");
   await page.getByRole("button", { name: "Disconnect", exact: true }).click();
   assert.match(
     await dapp.evaluate(() =>
@@ -401,6 +453,7 @@ try {
     /Connect/,
   );
   report.checks.push("revoked permissions prevent balance access");
+  await openSettings(page, "Recovery and security");
   await page.getByLabel("Password to reveal recovery phrase").fill(password);
   await page
     .getByRole("button", { name: "Reveal recovery phrase", exact: true })
@@ -429,7 +482,7 @@ try {
   await expect(
     page.getByRole("button", { name: "Send", exact: true }),
   ).toBeVisible({ timeout: 30_000 });
-  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await openSettings(page, "General");
   await page.getByLabel("Automatically lock after").selectOption("1");
   await page
     .getByRole("button", { name: "Save settings", exact: true })
@@ -477,12 +530,43 @@ try {
   report.checks.push(
     "browser restart locks keys and preserves account, journal and revocation",
   );
+  await restored.getByRole("button", { name: "Lock wallet" }).click();
+  await restored
+    .getByRole("button", { name: "Forgot password?", exact: true })
+    .click();
+  await enterRecoveryPhrase(restored, phrase);
+  const recoveredPassword = randomBytes(18).toString("base64");
+  await restored
+    .getByLabel("Wallet password", { exact: true })
+    .fill(recoveredPassword);
+  await restored
+    .getByLabel("Confirm password", { exact: true })
+    .fill(recoveredPassword);
+  await restored
+    .getByRole("button", { name: "Reset password and unlock", exact: true })
+    .click();
+  await expect(
+    restored.getByRole("button", { name: "Send", exact: true }),
+  ).toBeVisible({ timeout: 30_000 });
+  const recovered = (
+    await restoredWorker.evaluate(() => chrome.storage.local.get("wallet"))
+  ).wallet;
+  assert.equal(recovered.operations[0].signed.rawHex, signed.rawHex);
+  assert.equal(recovered.accounts[0].addresses[0].address, address);
+  assert(!JSON.stringify(recovered).includes(phrase));
+  assert(!JSON.stringify(recovered).includes(recoveredPassword));
+  report.checks.push(
+    "phrase-based password recovery preserves the signed transaction journal and account",
+  );
   if (reportDir)
     writeFileSync(
       join(reportDir, "checks.json"),
       JSON.stringify(report, null, 2),
     );
   console.log(JSON.stringify(report, null, 2));
+} catch (error) {
+  console.error(JSON.stringify(browserFailure(error, report.checks)));
+  process.exitCode = 1;
 } finally {
   await context?.close();
   await new Promise((resolve) => server.close(resolve));

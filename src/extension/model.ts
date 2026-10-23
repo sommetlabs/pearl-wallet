@@ -5,6 +5,13 @@ import type {
   SignedTransfer,
 } from "../core/transactions";
 import type { Network } from "../core/networks";
+import type { AccountFormat } from "../core/account-formats";
+
+export interface RecoveryCandidate {
+  format: AccountFormat;
+  address: string;
+  activity: "found" | "none" | "unavailable" | "not-checked";
+}
 
 export interface Address extends AccountAddress {
   branch: 0 | 1;

@@ -7,7 +7,14 @@ interface Credentials {
   password: string;
 }
 export interface CryptoParams {
-  generate: Record<string, never>;
+  generate: { wordCount: 12 | 24 };
+  previewRecovery: { mnemonic: string };
+  recoverAccess: {
+    mnemonic: string;
+    password: string;
+    accounts: Account[];
+    minutes: number;
+  };
   lock: Record<string, never>;
   status: Record<string, never>;
   touch: { minutes: number };
@@ -30,6 +37,8 @@ export interface CryptoParams {
 }
 export interface CryptoResults {
   generate: string;
+  previewRecovery: { format: "official" | "web"; address: string }[];
+  recoverAccess: EncryptedVault;
   lock: boolean;
   status: boolean;
   touch: boolean;

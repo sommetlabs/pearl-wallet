@@ -1,4 +1,4 @@
-ABYSS WALLET V2 — EARLY ALPHA 0.1.0
+ABYSS WALLET V2 — EARLY ALPHA 0.2.0
 
 Repository: sommetlabs/pearl-wallet
 Branch: feat/abyss-wallet-v2
@@ -7,10 +7,17 @@ Consumer installation, API and security model: docs/extension.md
 IMPLEMENTED
 
 Standalone Chrome/Brave extension with no Vercel host, daemon or remote signer.
-Abyss styling and a visible early-alpha label. Pearl accounts only; Midnight stays
+Abyss Inter/JetBrains Mono typography, Phosphor icons, rounded controls, dark/light
+themes and a visible early-alpha label. Pearl accounts only; Midnight stays
 in its existing wallet.
 
-Account creation/import, encrypted vault, official Oyster/XMSS address derivation,
+Guided creation with 12 words by default or 24 by choice, hidden backup and three
+random-word verification before saving. Numbered masked import, paste/checksum
+validation, official/web address previews and optional public activity lookup.
+Password recovery verifies every existing account and preserves signed records,
+revoking site grants and cancelling unsigned reviews.
+
+Encrypted vault, official Oyster/XMSS address derivation,
 explicit previous-web-wallet import format, receive/change discovery, canonical
 prevout verification, confirmed/pending/immature/reserved/spendable balances,
 receive QR, reviewed payments, durable signed journal and exact-byte rebroadcast.
@@ -32,13 +39,18 @@ persisted. Public account metadata, balances and transaction records are local.
 
 VERIFICATION
 
-The existing suite plus wallet ownership/import tests passes 1668 tests; six
+The existing suite plus wallet ownership/import tests passes 1674 tests; six
 pre-existing live checks remain skipped. Type checking and both extension and
 existing testnet web builds pass. Disposable Chrome/Brave profiles cover creation,
 encrypted storage, canonical balance reads, connection approval, internal-method
 refusal, reviewed signing, uncertain broadcast reservation, exact-byte rebroadcast,
 locking, wrong-password rejection, recovery reauthentication, revocation and
-browser restart. Synthetic signing does not prove live mempool acceptance.
+browser restart and phrase-based password recovery preserving the signed journal.
+Both supported formats restore to native/reference addresses; wrong recovery
+phrases leave the vault untouched. Popup setup continues in a normal tab. Public
+testnet2 discovery for a fresh unfunded account passed in Brave. The official Go
+script engine accepted the extension payment fixture and rejected tampering.
+Synthetic signing does not prove live mempool acceptance.
 
 Official Pearl source: 99b95ac5e77450f4deebcc23ec2d30f86a885c26.
 64 native account/address fixtures, four XMSS commitments and native script-engine
@@ -49,7 +61,9 @@ official XMSS Taproot commitment.
 
 Build/test: npm run build:extension, npm run check:extension, and
 VITE_PEARL_NETWORK=mainnet npm test. The extension browser check uses an isolated
-profile. Set PEARL_BROWSER_EXECUTABLE to a standalone Brave executable if needed.
+profile and controlled observation fixture. Add --live to the browser script for
+public testnet2 discovery. tools/check-wallet-setup.mjs checks onboarding and
+restoration. Set PEARL_BROWSER_EXECUTABLE to a standalone Brave executable if needed.
 For official native signature verification, set PEARL_SOURCE to the pinned Pearl
 checkout, PEARL_GO to its required Go executable, then add --native when invoking
 tools/check-wallet-extension.mjs. Build its XMSS library with make -C xmss lib.
@@ -59,7 +73,8 @@ REMAINING
 Abyss swap-screen transport integration and fundSwap/claimSwap/refundSwap support
 in the extension, live extension swap/refund acceptance, arbitrary PSBT or message
 signing, hardware/watch-only/multisig, contacts/coin-control and independent security
-review. The mainnet configuration exists; live mainnet payments are not validated
+review. Extra BIP-39 passphrases and hexadecimal seed imports are unsupported.
+The mainnet configuration exists; live mainnet payments are not validated
 for this testnet milestone. Do not describe the alpha as audited or fully complete.
 
 REFERENCES
@@ -76,3 +91,10 @@ https://sparrowwallet.com/features/
 
 Local 1AM regular 6.4.6 distribution: inspected settings, provider, content relay
 and origin/account/network permission handling. No 1AM code or assets copied.
+
+Official Pearl mnemonic defaults and BIP-39 word counts:
+https://github.com/pearl-research-labs/pearl/blob/99b95ac5e77450f4deebcc23ec2d30f86a885c26/wallet/walletsetup.go
+https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
+
+Impeccable design guidance (Abyss remains the visual authority):
+https://github.com/pbakaus/impeccable/tree/7e51b1e1aa61c0ca60e9d7a510b77c57029f7d98

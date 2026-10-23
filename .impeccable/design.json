@@ -1,0 +1,592 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T21:37:23.772787+00:00",
+  "title": "Design System: Abyss Wallet",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Background",
+        "tonalRamp": [
+          "oklch(0.150 0.0037 264)",
+          "oklch(0.260 0.0075 264)",
+          "oklch(0.380 0.0120 264)",
+          "oklch(0.500 0.0150 264)",
+          "oklch(0.620 0.0150 264)",
+          "oklch(0.740 0.0120 264)",
+          "oklch(0.850 0.0075 264)",
+          "oklch(0.950 0.0030 264)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Foreground",
+        "tonalRamp": [
+          "oklch(0.150 0.0025 264)",
+          "oklch(0.260 0.0050 264)",
+          "oklch(0.380 0.0080 264)",
+          "oklch(0.500 0.0100 264)",
+          "oklch(0.620 0.0100 264)",
+          "oklch(0.740 0.0080 264)",
+          "oklch(0.850 0.0050 264)",
+          "oklch(0.950 0.0020 264)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card",
+        "tonalRamp": [
+          "oklch(0.150 0.0050 264)",
+          "oklch(0.260 0.0100 264)",
+          "oklch(0.380 0.0160 264)",
+          "oklch(0.500 0.0200 264)",
+          "oklch(0.620 0.0200 264)",
+          "oklch(0.740 0.0160 264)",
+          "oklch(0.850 0.0100 264)",
+          "oklch(0.950 0.0040 264)"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary",
+        "tonalRamp": [
+          "oklch(0.150 0.0525 264)",
+          "oklch(0.260 0.1050 264)",
+          "oklch(0.380 0.1680 264)",
+          "oklch(0.500 0.2100 264)",
+          "oklch(0.620 0.2100 264)",
+          "oklch(0.740 0.1680 264)",
+          "oklch(0.850 0.1050 264)",
+          "oklch(0.950 0.0420 264)"
+        ]
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "Action",
+        "tonalRamp": [
+          "oklch(0.150 0.0525 264)",
+          "oklch(0.260 0.1050 264)",
+          "oklch(0.380 0.1680 264)",
+          "oklch(0.500 0.2100 264)",
+          "oklch(0.620 0.2100 264)",
+          "oklch(0.740 0.1680 264)",
+          "oklch(0.850 0.1050 264)",
+          "oklch(0.950 0.0420 264)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Secondary",
+        "tonalRamp": [
+          "oklch(0.150 0.0075 264)",
+          "oklch(0.260 0.0150 264)",
+          "oklch(0.380 0.0240 264)",
+          "oklch(0.500 0.0300 264)",
+          "oklch(0.620 0.0300 264)",
+          "oklch(0.740 0.0240 264)",
+          "oklch(0.850 0.0150 264)",
+          "oklch(0.950 0.0060 264)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(0.150 0.0050 264)",
+          "oklch(0.260 0.0100 264)",
+          "oklch(0.380 0.0160 264)",
+          "oklch(0.500 0.0200 264)",
+          "oklch(0.620 0.0200 264)",
+          "oklch(0.740 0.0160 264)",
+          "oklch(0.850 0.0100 264)",
+          "oklch(0.950 0.0040 264)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(0.150 0.0075 264)",
+          "oklch(0.260 0.0150 264)",
+          "oklch(0.380 0.0240 264)",
+          "oklch(0.500 0.0300 264)",
+          "oklch(0.620 0.0300 264)",
+          "oklch(0.740 0.0240 264)",
+          "oklch(0.850 0.0150 264)",
+          "oklch(0.950 0.0060 264)"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Input",
+        "tonalRamp": [
+          "oklch(0.150 0.0075 264)",
+          "oklch(0.260 0.0150 264)",
+          "oklch(0.380 0.0240 264)",
+          "oklch(0.500 0.0300 264)",
+          "oklch(0.620 0.0300 264)",
+          "oklch(0.740 0.0240 264)",
+          "oklch(0.850 0.0150 264)",
+          "oklch(0.950 0.0060 264)"
+        ]
+      },
+      "warning": {
+        "role": "warning",
+        "displayName": "Warning",
+        "tonalRamp": [
+          "oklch(0.150 0.0473 84.429)",
+          "oklch(0.260 0.0945 84.429)",
+          "oklch(0.380 0.1512 84.429)",
+          "oklch(0.500 0.1890 84.429)",
+          "oklch(0.620 0.1890 84.429)",
+          "oklch(0.740 0.1512 84.429)",
+          "oklch(0.850 0.0945 84.429)",
+          "oklch(0.950 0.0378 84.429)"
+        ]
+      },
+      "error": {
+        "role": "error",
+        "displayName": "Error",
+        "tonalRamp": [
+          "oklch(0.150 0.0478 22.216)",
+          "oklch(0.260 0.0955 22.216)",
+          "oklch(0.380 0.1528 22.216)",
+          "oklch(0.500 0.1910 22.216)",
+          "oklch(0.620 0.1910 22.216)",
+          "oklch(0.740 0.1528 22.216)",
+          "oklch(0.850 0.0955 22.216)",
+          "oklch(0.950 0.0382 22.216)"
+        ]
+      },
+      "success": {
+        "role": "success",
+        "displayName": "Success",
+        "tonalRamp": [
+          "oklch(0.150 0.0522 151.711)",
+          "oklch(0.260 0.1045 151.711)",
+          "oklch(0.380 0.1672 151.711)",
+          "oklch(0.500 0.2090 151.711)",
+          "oklch(0.620 0.2090 151.711)",
+          "oklch(0.740 0.1672 151.711)",
+          "oklch(0.850 0.1045 151.711)",
+          "oklch(0.950 0.0418 151.711)"
+        ]
+      },
+      "dot": {
+        "role": "primary",
+        "displayName": "Dot",
+        "tonalRamp": [
+          "oklch(0.150 0.0444 268.398)",
+          "oklch(0.260 0.0888 268.398)",
+          "oklch(0.380 0.1420 268.398)",
+          "oklch(0.500 0.1775 268.398)",
+          "oklch(0.620 0.1775 268.398)",
+          "oklch(0.740 0.1420 268.398)",
+          "oklch(0.850 0.0888 268.398)",
+          "oklch(0.950 0.0355 268.398)"
+        ]
+      },
+      "light-background": {
+        "role": "neutral",
+        "displayName": "Light Background",
+        "tonalRamp": [
+          "oklch(0.150 0.0063 264)",
+          "oklch(0.260 0.0125 264)",
+          "oklch(0.380 0.0200 264)",
+          "oklch(0.500 0.0250 264)",
+          "oklch(0.620 0.0250 264)",
+          "oklch(0.740 0.0200 264)",
+          "oklch(0.850 0.0125 264)",
+          "oklch(0.950 0.0050 264)"
+        ]
+      },
+      "light-foreground": {
+        "role": "neutral",
+        "displayName": "Light Foreground",
+        "tonalRamp": [
+          "oklch(0.150 0.0050 264)",
+          "oklch(0.260 0.0100 264)",
+          "oklch(0.380 0.0160 264)",
+          "oklch(0.500 0.0200 264)",
+          "oklch(0.620 0.0200 264)",
+          "oklch(0.740 0.0160 264)",
+          "oklch(0.850 0.0100 264)",
+          "oklch(0.950 0.0040 264)"
+        ]
+      },
+      "light-card": {
+        "role": "neutral",
+        "displayName": "Light Card",
+        "tonalRamp": [
+          "oklch(0.150 0.0015 264)",
+          "oklch(0.260 0.0030 264)",
+          "oklch(0.380 0.0048 264)",
+          "oklch(0.500 0.0060 264)",
+          "oklch(0.620 0.0060 264)",
+          "oklch(0.740 0.0048 264)",
+          "oklch(0.850 0.0030 264)",
+          "oklch(0.950 0.0012 264)"
+        ]
+      },
+      "light-primary": {
+        "role": "primary",
+        "displayName": "Light Primary",
+        "tonalRamp": [
+          "oklch(0.150 0.0450 264)",
+          "oklch(0.260 0.0900 264)",
+          "oklch(0.380 0.1440 264)",
+          "oklch(0.500 0.1800 264)",
+          "oklch(0.620 0.1800 264)",
+          "oklch(0.740 0.1440 264)",
+          "oklch(0.850 0.0900 264)",
+          "oklch(0.950 0.0360 264)"
+        ]
+      },
+      "light-action": {
+        "role": "primary",
+        "displayName": "Light Action",
+        "tonalRamp": [
+          "oklch(0.150 0.0450 264)",
+          "oklch(0.260 0.0900 264)",
+          "oklch(0.380 0.1440 264)",
+          "oklch(0.500 0.1800 264)",
+          "oklch(0.620 0.1800 264)",
+          "oklch(0.740 0.1440 264)",
+          "oklch(0.850 0.0900 264)",
+          "oklch(0.950 0.0360 264)"
+        ]
+      },
+      "light-secondary": {
+        "role": "neutral",
+        "displayName": "Light Secondary",
+        "tonalRamp": [
+          "oklch(0.150 0.0075 264)",
+          "oklch(0.260 0.0150 264)",
+          "oklch(0.380 0.0240 264)",
+          "oklch(0.500 0.0300 264)",
+          "oklch(0.620 0.0300 264)",
+          "oklch(0.740 0.0240 264)",
+          "oklch(0.850 0.0150 264)",
+          "oklch(0.950 0.0060 264)"
+        ]
+      },
+      "light-muted": {
+        "role": "neutral",
+        "displayName": "Light Muted",
+        "tonalRamp": [
+          "oklch(0.150 0.0050 264)",
+          "oklch(0.260 0.0100 264)",
+          "oklch(0.380 0.0160 264)",
+          "oklch(0.500 0.0200 264)",
+          "oklch(0.620 0.0200 264)",
+          "oklch(0.740 0.0160 264)",
+          "oklch(0.850 0.0100 264)",
+          "oklch(0.950 0.0040 264)"
+        ]
+      },
+      "light-border": {
+        "role": "neutral",
+        "displayName": "Light Border",
+        "tonalRamp": [
+          "oklch(0.150 0.0075 264)",
+          "oklch(0.260 0.0150 264)",
+          "oklch(0.380 0.0240 264)",
+          "oklch(0.500 0.0300 264)",
+          "oklch(0.620 0.0300 264)",
+          "oklch(0.740 0.0240 264)",
+          "oklch(0.850 0.0150 264)",
+          "oklch(0.950 0.0060 264)"
+        ]
+      },
+      "light-input": {
+        "role": "neutral",
+        "displayName": "Light Input",
+        "tonalRamp": [
+          "oklch(0.150 0.0075 264)",
+          "oklch(0.260 0.0150 264)",
+          "oklch(0.380 0.0240 264)",
+          "oklch(0.500 0.0300 264)",
+          "oklch(0.620 0.0300 264)",
+          "oklch(0.740 0.0240 264)",
+          "oklch(0.850 0.0150 264)",
+          "oklch(0.950 0.0060 264)"
+        ]
+      },
+      "light-warning": {
+        "role": "warning",
+        "displayName": "Light Warning",
+        "tonalRamp": [
+          "oklch(0.150 0.0375 84.429)",
+          "oklch(0.260 0.0750 84.429)",
+          "oklch(0.380 0.1200 84.429)",
+          "oklch(0.500 0.1500 84.429)",
+          "oklch(0.620 0.1500 84.429)",
+          "oklch(0.740 0.1200 84.429)",
+          "oklch(0.850 0.0750 84.429)",
+          "oklch(0.950 0.0300 84.429)"
+        ]
+      },
+      "light-error": {
+        "role": "error",
+        "displayName": "Light Error",
+        "tonalRamp": [
+          "oklch(0.150 0.0550 22.216)",
+          "oklch(0.260 0.1100 22.216)",
+          "oklch(0.380 0.1760 22.216)",
+          "oklch(0.500 0.2200 22.216)",
+          "oklch(0.620 0.2200 22.216)",
+          "oklch(0.740 0.1760 22.216)",
+          "oklch(0.850 0.1100 22.216)",
+          "oklch(0.950 0.0440 22.216)"
+        ]
+      },
+      "light-success": {
+        "role": "success",
+        "displayName": "Light Success",
+        "tonalRamp": [
+          "oklch(0.150 0.0400 151.711)",
+          "oklch(0.260 0.0800 151.711)",
+          "oklch(0.380 0.1280 151.711)",
+          "oklch(0.500 0.1600 151.711)",
+          "oklch(0.620 0.1600 151.711)",
+          "oklch(0.740 0.1280 151.711)",
+          "oklch(0.850 0.0800 151.711)",
+          "oklch(0.950 0.0320 151.711)"
+        ]
+      },
+      "light-dot": {
+        "role": "primary",
+        "displayName": "Light Dot",
+        "tonalRamp": [
+          "oklch(0.150 0.0444 268.407)",
+          "oklch(0.260 0.0888 268.407)",
+          "oklch(0.380 0.1421 268.407)",
+          "oklch(0.500 0.1776 268.407)",
+          "oklch(0.620 0.1776 268.407)",
+          "oklch(0.740 0.1421 268.407)",
+          "oklch(0.850 0.0888 268.407)",
+          "oklch(0.950 0.0355 268.407)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "word-index": {
+        "displayName": "Word Index",
+        "purpose": "Numbered recovery cells only."
+      },
+      "data-micro": {
+        "displayName": "Data Micro",
+        "purpose": "Short financial metadata only."
+      },
+      "status": {
+        "displayName": "Status",
+        "purpose": "Implemented status role."
+      },
+      "helper": {
+        "displayName": "Helper",
+        "purpose": "Implemented helper role."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Implemented label role."
+      },
+      "action": {
+        "displayName": "Action",
+        "purpose": "Standard action labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Implemented body role."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Implemented section role."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Implemented data role."
+      },
+      "balance-unit": {
+        "displayName": "Balance Unit",
+        "purpose": "Implemented balance unit role."
+      },
+      "connection-title": {
+        "displayName": "Connection Title",
+        "purpose": "Implemented connection title role."
+      },
+      "review-title": {
+        "displayName": "Review Title",
+        "purpose": "Implemented review title role."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Implemented headline role."
+      },
+      "unlock-title": {
+        "displayName": "Unlock Title",
+        "purpose": "Implemented unlock title role."
+      },
+      "welcome-title": {
+        "displayName": "Welcome Title",
+        "purpose": "Implemented welcome title role."
+      },
+      "amount": {
+        "displayName": "Amount",
+        "purpose": "Implemented amount role."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "Compact spendable balance."
+      },
+      "display-wide": {
+        "displayName": "Display Wide",
+        "purpose": "Full-page spendable balance."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "control-color",
+        "value": "background-color 150ms, color 150ms, border-color 150ms",
+        "purpose": "Control state changes; removed under prefers-reduced-motion."
+      },
+      {
+        "name": "press",
+        "value": "translateY(1px)",
+        "purpose": "Immediate enabled-button press feedback; not an animation."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "recovery-four-columns",
+        "value": "400px"
+      },
+      {
+        "name": "full-page",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main task action.",
+      "html": "<button class=\"ds-button-primary\">Continue</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid transparent;border-radius:999px;padding:10px 18px;font:500 13px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms,border-color 150ms;background:var(--action, oklch(0.55 0.21 264));color:oklch(0.985 0.01 264);}.ds-button-primary:hover{background:color-mix(in oklch, var(--action, oklch(0.55 0.21 264)), black 12%);color:oklch(0.985 0.01 264);}.ds-button-primary:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-button-primary:active:not(:disabled){transform:translateY(1px);}.ds-button-primary:disabled{opacity:.5;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none;}}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Bordered alternate action.",
+      "html": "<button class=\"ds-button-secondary\">Receive</button>",
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid transparent;border-radius:999px;padding:10px 18px;font:500 13px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms,border-color 150ms;background:transparent;color:var(--fg, oklch(0.985 0.01 264));border-color:var(--border, oklch(0.32 0.03 264));}.ds-button-secondary:hover{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-button-secondary:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-button-secondary:active:not(:disabled){transform:translateY(1px);}.ds-button-secondary:disabled{opacity:.5;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none;}}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet secondary action.",
+      "html": "<button class=\"ds-button-ghost\">Back</button>",
+      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid transparent;border-radius:999px;padding:10px 18px;font:500 13px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms,border-color 150ms;background:transparent;color:var(--muted, oklch(0.708 0.02 264));}.ds-button-ghost:hover{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-button-ghost:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-button-ghost:active:not(:disabled){transform:translateY(1px);}.ds-button-ghost:disabled{opacity:.5;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none;}}"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Explicit release confirmation.",
+      "html": "<button class=\"ds-button-destructive\">Check and release</button>",
+      "css": ".ds-button-destructive{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid transparent;border-radius:999px;padding:10px 18px;font:500 13px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms,border-color 150ms;background:color-mix(in oklch, var(--error, oklch(0.704 0.191 22.216)), transparent 88%);color:var(--error, oklch(0.704 0.191 22.216));}.ds-button-destructive:hover{background:color-mix(in oklch, var(--error, oklch(0.704 0.191 22.216)), transparent 78%);color:var(--error, oklch(0.704 0.191 22.216));}.ds-button-destructive:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-button-destructive:active:not(:disabled){transform:translateY(1px);}.ds-button-destructive:disabled{opacity:.5;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-button-destructive{transition:none;}}"
+    },
+    {
+      "name": "Labeled Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Visible label and translucent field.",
+      "html": "<label class=\"ds-field\">Account name<input class=\"ds-input\" value=\"Pearl account\"></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:8px;color:var(--fg, oklch(0.985 0.01 264));font:500 12px/1.5 Inter,sans-serif;}.ds-input{width:100%;min-width:0;min-height:44px;border:1px solid transparent;border-radius:24px;padding:11px 16px;background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 50%);color:var(--fg, oklch(0.985 0.01 264));font:400 14px/1.5 Inter,sans-serif;caret-color:var(--primary, oklch(0.62 0.21 264));transition:background-color 150ms,border-color 150ms;}.ds-input:hover{background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 35%);}.ds-input:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-input::placeholder{color:var(--muted, oklch(0.708 0.02 264));}@media(prefers-reduced-motion:reduce){.ds-input{transition:none;}}"
+    },
+    {
+      "name": "Wallet Navigation",
+      "kind": "nav",
+      "refersTo": "nav-selected",
+      "description": "Three destinations with a selected tonal pill.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Wallet navigation\"><button aria-current=\"page\">Wallet</button><button>Activity</button><button>Settings</button></nav>",
+      "css": ".ds-nav{display:flex;gap:4px;padding:8px 12px 12px;background:var(--bg, oklch(0.145 0.015 264));}.ds-nav button{flex:1;min-height:40px;padding:10px 6px;border:1px solid transparent;border-radius:999px;background:transparent;color:var(--muted, oklch(0.708 0.02 264));font:500 11px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms;}.ds-nav button:hover{background:color-mix(in oklch, var(--secondary, oklch(0.27 0.03 264)), transparent 60%);color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button[aria-current]{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-nav button:active{transform:translateY(1px);}@media(prefers-reduced-motion:reduce){.ds-nav button{transition:none;}}"
+    },
+    {
+      "name": "Network Badge",
+      "kind": "chip",
+      "refersTo": "network-badge",
+      "description": "Informational account-network marker.",
+      "html": "<span class=\"ds-network\">Testnet2</span>",
+      "css": ".ds-network{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:var(--surface, oklch(0.205 0.02 264));color:var(--muted, oklch(0.708 0.02 264));font:400 10px/1.5 Inter,sans-serif;}"
+    },
+    {
+      "name": "Balance Surface",
+      "kind": "card",
+      "refersTo": "balance-card",
+      "description": "Portfolio-inspired spendable balance surface; illustrative content only.",
+      "html": "<section class=\"ds-balance\" aria-label=\"Illustrative balance\"><div class=\"ds-balance-content\"><span>Spendable balance</span><p>—<small>PRL</small></p></div><div class=\"ds-balance-status\">Reading your addresses…</div></section>",
+      "css": ".ds-balance{border:1px solid var(--border, oklch(0.32 0.03 264));border-radius:26px;overflow:hidden;background:color-mix(in oklch, var(--surface, oklch(0.205 0.02 264)), transparent 25%);color:var(--fg, oklch(0.985 0.01 264));font:400 12px/1.5 Inter,sans-serif;}.ds-balance-content{padding:16px 20px 20px;background:linear-gradient(125deg,transparent,color-mix(in oklch, var(--secondary, oklch(0.27 0.03 264)), transparent 45%) 55%,color-mix(in oklch, var(--primary, oklch(0.62 0.21 264)), transparent 76%));}.ds-balance-content>span{color:var(--muted, oklch(0.708 0.02 264));}.ds-balance p{margin:12px 0 0;font:500 36px/1.35 \"JetBrains Mono\",monospace;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}.ds-balance small{margin-left:10px;color:var(--muted, oklch(0.708 0.02 264));font:400 16px/1.35 Inter,sans-serif;letter-spacing:0;}.ds-balance-status{padding:10px 20px;color:var(--muted, oklch(0.708 0.02 264));font-size:10px;}"
+    },
+    {
+      "name": "Setup Progress",
+      "kind": "custom",
+      "refersTo": "setup-current",
+      "description": "Current and pending steps of the guided task.",
+      "html": "<ol class=\"ds-progress\" aria-label=\"Wallet setup progress\"><li aria-current=\"step\"><span>1</span>Password</li><li><span>2</span>Backup</li><li><span>3</span>Confirm</li></ol>",
+      "css": ".ds-progress{display:flex;list-style:none;padding:0;margin:0;gap:8px;color:var(--muted, oklch(0.708 0.02 264));font:400 10px/1.5 Inter,sans-serif;}.ds-progress li{display:flex;align-items:center;gap:6px;flex:1;}.ds-progress li>span{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border, oklch(0.32 0.03 264));font-size:9px;}.ds-progress [aria-current]{color:var(--fg, oklch(0.985 0.01 264));}.ds-progress [aria-current]>span{background:var(--action, oklch(0.55 0.21 264));border-color:var(--action, oklch(0.55 0.21 264));color:white;}"
+    },
+    {
+      "name": "Recovery Word",
+      "kind": "input",
+      "refersTo": "recovery-word",
+      "description": "Masked numbered recovery entry with parent focus and invalid state.",
+      "html": "<label class=\"ds-word\"><span aria-hidden=\"true\">1</span><input type=\"password\" aria-label=\"Recovery word 1\" placeholder=\"word\" autocomplete=\"off\" spellcheck=\"false\"></label>",
+      "css": ".ds-word{display:flex;align-items:center;gap:5px;border:1px solid transparent;border-radius:12px;background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 50%);padding:0 8px;min-width:0;}.ds-word>span{font:400 8px/1.5 \"JetBrains Mono\",monospace;color:var(--muted, oklch(0.708 0.02 264));min-width:10px;}.ds-word>input{width:100%;min-width:0;min-height:38px;padding:7px 0;background:transparent;border:0;border-radius:0;color:var(--fg, oklch(0.985 0.01 264));font:400 11px/1.5 Inter,sans-serif;caret-color:var(--primary, oklch(0.62 0.21 264));}.ds-word>input::placeholder{color:var(--muted, oklch(0.708 0.02 264));}.ds-word>input:focus-visible{outline:none;}.ds-word:has(input:focus-visible){outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:2px;}.ds-word:has(input[aria-invalid=\"true\"]){border-color:var(--error, oklch(0.704 0.191 22.216));}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Abyss wallet",
+    "overview": "The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and restrained dot field. This extension adapts that identity to a compact financial task. Inter is an intentional incumbent choice, retained from the user-pinned product.\n\nThe interface is calm and compact. Amounts, account identity and the current task have priority; helper text and secondary actions recede. The early-alpha label stays visible without becoming the dominant color. The full-page background supplies atmosphere while the wallet surface remains stable and readable.",
+    "keyCharacteristics": [
+      "Established Abyss wordmarks and self-hosted type.",
+      "Rounded tonal surfaces with restrained borders.",
+      "Monospaced financial data and explicit state labels.",
+      "Persistent task actions with a separately scrolling body."
+    ],
+    "rules": [
+      {
+        "name": "Brand and Action",
+        "body": "Keep the established primary blue for brand, focus and selection. Use the darker action fill for white button labels and the current setup step.",
+        "section": "colors"
+      },
+      {
+        "name": "Data Before Decoration",
+        "body": "Use JetBrains Mono for balances, amounts and addresses; retain Inter for instructions and action labels.",
+        "section": "typography"
+      },
+      {
+        "name": "Tonal Depth",
+        "body": "Separate surfaces with tonal fills and subtle borders. Preserve the balance gradient and full-page dot field; controls and panels do not cast decorative shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do preserve the actual Abyss wordmarks, self-hosted fonts and single Phosphor icon family.",
+      "Do use action fill for white primary labels and keep keyboard focus visible.",
+      "Do keep account, network and requesting origin clear during approval.",
+      "Do show unavailable funds as unavailable and preserve pending, reserved and spendable distinctions.",
+      "Do verify compact and full-page layouts in both themes and honor reduced motion."
+    ],
+    "donts": [
+      "Don't replace the established identity with a palette-only approximation.",
+      "Don't add promotional eyebrows, decorative display type or generic security slogans.",
+      "Don't wrap every field in a decorative card or add control glows and panel shadows.",
+      "Don't fabricate activity, prices or balances, or hide complete addresses where users need to verify them."
+    ]
+  }
+}
