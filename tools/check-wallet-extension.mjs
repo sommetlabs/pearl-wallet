@@ -411,6 +411,7 @@ try {
       async () =>
         (await worker.evaluate(() => chrome.storage.local.get("wallet"))).wallet
           .operations[0].status,
+      { timeout: 45_000 },
     )
     .toBe("confirmed");
   await page.getByRole("button", { name: "Lock wallet" }).click();

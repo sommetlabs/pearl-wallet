@@ -1,3 +1,5 @@
+import { Input } from "./components/input";
+import { Button } from "./components/button";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import QRCode from "qrcode";
 import { command, explorer, short } from "./client";
@@ -118,7 +120,7 @@ export function Send({
       <h1>Send PRL</h1>
       <form className="task-form" onSubmit={submit}>
         <Field label="Recipient address">
-          <input
+          <Input
             className="data-input"
             value={to}
             onChange={(e) => setTo(e.target.value)}
@@ -132,7 +134,7 @@ export function Send({
           <label htmlFor={amountId}>Amount (PRL)</label>
           <div className="amount-entry">
             <span className="currency">PRL</span>
-            <input
+            <Input
               id={amountId}
               inputMode="decimal"
               value={amount}
@@ -152,7 +154,7 @@ export function Send({
           label="Fee rate (grains/vB)"
           help="Review the exact fee and change before approving."
         >
-          <input
+          <Input
             type="number"
             min={1}
             max={1000}
@@ -163,10 +165,10 @@ export function Send({
           />
         </Field>
         {error && <Notice error>{error}</Notice>}
-        <button disabled={busy}>
+        <Button disabled={busy} type="submit">
           {busy ? "Verifying inputs on Pearl…" : "Review payment"}
           <Icon name="send" />
-        </button>
+        </Button>
       </form>
     </section>
   );
@@ -261,20 +263,21 @@ export function Review({
         {error && <Notice error>{error}</Notice>}
       </div>
       <div className="approval-actions">
-        <button
+        <Button
           className="secondary"
           disabled={busy}
           onClick={() => run("cancel")}
+          variant="outline"
         >
           Reject
-        </button>
-        <button disabled={busy} onClick={() => run("approve")}>
+        </Button>
+        <Button disabled={busy} onClick={() => run("approve")}>
           {busy
             ? "Signing…"
             : op.signOnly
               ? "Approve signature"
               : "Approve and send"}
-        </button>
+        </Button>
       </div>
     </section>
   );
@@ -357,9 +360,13 @@ export function Activity({
             </a>
           )}
           {op.status === "review" && (
-            <button className="secondary" onClick={() => review(op)}>
+            <Button
+              className="secondary"
+              onClick={() => review(op)}
+              variant="outline"
+            >
               Review request
-            </button>
+            </Button>
           )}
           {["unknown", "signed"].includes(op.status) && (
             <>
@@ -367,25 +374,27 @@ export function Activity({
                 Its coins stay reserved. Check status before making another
                 payment.
               </Notice>
-              <button
+              <Button
                 className="secondary"
                 disabled={busy === op.id}
                 onClick={() => act(op, "retry")}
+                variant="outline"
               >
                 {busy === op.id && pendingAction === "retry"
                   ? "Rebroadcasting…"
                   : "Rebroadcast saved transaction"}
-              </button>
-              <button
+              </Button>
+              <Button
                 className="ghost"
                 disabled={busy === op.id}
                 onClick={() => {
                   setReleaseId(op.id);
                   setReleaseAcknowledged(false);
                 }}
+                variant="ghost"
               >
                 Check and release inputs…
-              </button>
+              </Button>
               {releaseId === op.id && (
                 <div
                   className="release-review"
@@ -410,25 +419,27 @@ export function Activity({
                     I understand the saved transaction could still be broadcast.
                   </label>
                   <div className="actions">
-                    <button
+                    <Button
                       className="secondary"
                       disabled={busy === op.id}
                       onClick={() => {
                         setReleaseId(undefined);
                         setReleaseAcknowledged(false);
                       }}
+                      variant="outline"
                     >
                       Keep reserved
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       className="destructive"
                       disabled={!releaseAcknowledged || busy === op.id}
                       onClick={() => act(op, "release")}
+                      variant="destructive"
                     >
                       {busy === op.id && pendingAction === "release"
                         ? "Verifying inputs…"
                         : "Check and release"}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

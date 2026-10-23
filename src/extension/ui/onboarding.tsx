@@ -1,3 +1,4 @@
+import { Button } from "./components/button";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { command } from "./client";
 import { Icon, Notice, PasswordField } from "./primitives";
@@ -64,7 +65,7 @@ export function Onboarding({ done }: { done: () => void }) {
   const [step, setStep] = useState<Step>(() => {
     const initial = new URLSearchParams(location.search).get("setup");
     return initial === "create"
-      ? "password"
+      ? "backup"
       : initial === "restore"
         ? "phrase"
         : "welcome";
@@ -90,7 +91,7 @@ export function Onboarding({ done }: { done: () => void }) {
   const restoring = ["phrase", "accounts", "restore-password"].includes(step);
   const index = restoring
     ? ["phrase", "accounts", "restore-password"].indexOf(step)
-    : ["password", "backup", "verify"].indexOf(step);
+    : ["backup", "verify", "password"].indexOf(step);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
   }, [step]);
@@ -106,7 +107,7 @@ export function Onboarding({ done }: { done: () => void }) {
       window.close();
       return;
     }
-    navigate(kind === "create" ? "password" : "phrase");
+    navigate(kind === "create" ? "backup" : "phrase");
   }
   function reset() {
     setPhrase("");
@@ -133,14 +134,38 @@ export function Onboarding({ done }: { done: () => void }) {
     setRevealed(false);
   }
   function back() {
-    if (step === "password" || step === "phrase") reset();
-    else if (step === "backup") navigate("password");
+    if (step === "backup" || step === "phrase") reset();
     else if (step === "verify") {
       setRevealed(false);
       navigate("backup");
-    } else if (step === "accounts") navigate("phrase");
+    } else if (step === "password") navigate("verify");
+    else if (step === "accounts") navigate("phrase");
     else navigate("accounts");
   }
+  useEffect(() => {
+    if (step !== "backup" || phrase) return;
+    let active = true;
+    setBusy(true);
+    command<string>("generate", { wordCount })
+      .then((generated) => {
+        if (!active) return;
+        if (generated.split(" ").length !== wordCount || phraseIssue(generated))
+          throw new Error(
+            "Phrase generation could not be verified. Please retry.",
+          );
+        setPhrase(generated);
+        setLengthChanged(false);
+      })
+      .catch((error) => {
+        if (active) setError(error.message);
+      })
+      .finally(() => {
+        if (active) setBusy(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [step, wordCount]);
   async function inspect(checkActivity = true) {
     if (restoreWords.some((word) => !word))
       return setError(
@@ -198,26 +223,7 @@ export function Onboarding({ done }: { done: () => void }) {
     if (step === "password") {
       const issue = passwordIssue(password, repeated);
       if (issue) return setError(issue);
-      setBusy(true);
-      try {
-        if (!phrase) {
-          const generated = await command<string>("generate", { wordCount });
-          if (
-            generated.split(" ").length !== wordCount ||
-            phraseIssue(generated)
-          )
-            throw new Error(
-              "Phrase generation could not be verified. Please retry.",
-            );
-          setPhrase(generated);
-        }
-        setLengthChanged(false);
-        navigate("backup");
-      } catch (e) {
-        setError((e as Error).message);
-      } finally {
-        setBusy(false);
-      }
+      await finish("official");
     } else if (step === "backup") {
       if (!saved || !seenPhrase)
         return setError(
@@ -232,7 +238,7 @@ export function Onboarding({ done }: { done: () => void }) {
         return setError(
           "The words don’t match your backup. Check them, or go back to view the phrase.",
         );
-      await finish("official");
+      navigate("password");
     } else if (step === "phrase") await inspect();
     else if (step === "accounts") {
       if (!format)
@@ -255,13 +261,17 @@ export function Onboarding({ done }: { done: () => void }) {
           Create an account or bring the Pearl wallet you already use.
         </p>
         <div className="setup-panel">
-          <button onClick={() => start("create")}>
+          <Button onClick={() => start("create")}>
             Create a wallet
             <Icon name="send" />
-          </button>
-          <button className="secondary" onClick={() => start("restore")}>
+          </Button>
+          <Button
+            className="secondary"
+            onClick={() => start("restore")}
+            variant="outline"
+          >
             I have a recovery phrase
-          </button>
+          </Button>
           <p className="setup-note">
             Early alpha · Pearl Testnet2
             <br />
@@ -273,10 +283,10 @@ export function Onboarding({ done }: { done: () => void }) {
   const action = busy
     ? step === "phrase"
       ? "Checking wallet formats…"
-      : step === "password"
+      : step === "backup"
         ? "Generating your phrase…"
         : "Creating your wallet…"
-    : step === "verify"
+    : step === "password"
       ? "Create wallet"
       : step === "phrase"
         ? "Find my account"
@@ -298,19 +308,20 @@ export function Onboarding({ done }: { done: () => void }) {
           labels={
             restoring
               ? ["Phrase", "Account", "Password"]
-              : ["Password", "Backup", "Confirm"]
+              : ["Backup", "Confirm", "Password"]
           }
           current={index}
         />
       </div>
       <form className="flow-form" onSubmit={advance}>
         <fieldset className="flow-body" key={step} disabled={busy}>
-          {step === "password" && (
+          {step === "backup" && (
             <div className="phrase-length-choice">
               <span>Recovery phrase length</span>
               <div role="group" aria-label="Create recovery phrase length">
                 {([12, 24] as const).map((count) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     key={count}
                     type="button"
                     className={wordCount === count ? "selected" : "ghost"}
@@ -318,7 +329,7 @@ export function Onboarding({ done }: { done: () => void }) {
                     onClick={() => chooseLength(count)}
                   >
                     {count} words
-                  </button>
+                  </Button>
                 ))}
               </div>
               {lengthChanged && (
@@ -334,7 +345,7 @@ export function Onboarding({ done }: { done: () => void }) {
               onRepeat={setRepeated}
             />
           )}
-          {step === "backup" && (
+          {step === "backup" && phrase && (
             <RecoveryWords
               phrase={phrase}
               revealed={revealed}
@@ -381,14 +392,15 @@ export function Onboarding({ done }: { done: () => void }) {
                 supported wallet format on the public Pearl indexer. Your phrase
                 is never sent there.
               </p>
-              <button
+              <Button
                 type="button"
                 className="text-button"
                 disabled={busy}
                 onClick={() => inspect(false)}
+                variant="ghost"
               >
                 Compare addresses without a network lookup
-              </button>
+              </Button>
             </>
           )}
           {step === "accounts" && (
@@ -412,23 +424,25 @@ export function Onboarding({ done }: { done: () => void }) {
               I saved all {wordCount} words somewhere private.
             </label>
           )}
-          <button
+          <Button
             disabled={
               busy ||
               (step === "backup" && (!saved || !seenPhrase)) ||
               (step === "accounts" && !format)
             }
+            type="submit"
           >
             {action}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             className="ghost"
             disabled={busy}
             onClick={back}
+            variant="ghost"
           >
             Back
-          </button>
+          </Button>
         </div>
       </form>
     </section>
@@ -467,14 +481,17 @@ export function Unlock({ done }: { done: () => void }) {
           onChange={setPassword}
           autoFocus
         />
-        <button disabled={busy}>{busy ? "Unlocking…" : "Unlock wallet"}</button>
+        <Button disabled={busy} type="submit">
+          {busy ? "Unlocking…" : "Unlock wallet"}
+        </Button>
       </form>
-      <button
+      <Button
         className="text-button forgot-password"
         onClick={() => setRecovering(true)}
+        variant="ghost"
       >
         Forgot password?
-      </button>
+      </Button>
       {error && <Notice error>{error}</Notice>}
       <p className="footnote">
         This password unlocks this device. Keep your recovery phrase for

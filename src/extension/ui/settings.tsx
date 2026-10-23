@@ -1,3 +1,5 @@
+import { Input } from "./components/input";
+import { Button } from "./components/button";
 import { useState, type FormEvent } from "react";
 import { command } from "./client";
 import { Field, Icon, Notice } from "./primitives";
@@ -102,10 +104,10 @@ export function Settings({
   return (
     <section className="settings-page">
       {section && (
-        <button className="back" onClick={() => navigate()}>
+        <Button className="back" onClick={() => navigate()} variant="ghost">
           <Icon name="back" />
           Settings
-        </button>
+        </Button>
       )}
       <h1>
         {sections.find((item) => item.id === section)?.title ?? "Settings"}
@@ -116,7 +118,7 @@ export function Settings({
         <>
           <div className="settings-menu">
             {sections.map((item) => (
-              <button
+              <Button
                 className="settings-menu-item"
                 key={item.id}
                 aria-label={item.title}
@@ -130,7 +132,7 @@ export function Settings({
                 <span className="menu-chevron">
                   <Icon name="back" />
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
           <footer className="about-wallet">
@@ -142,7 +144,7 @@ export function Settings({
       ) : section === "general" ? (
         <form className="task-form" onSubmit={save}>
           <Field label="Account name">
-            <input
+            <Input
               value={label}
               maxLength={40}
               onChange={(e) => setLabel(e.target.value)}
@@ -178,7 +180,9 @@ export function Settings({
               ))}
             </select>
           </Field>
-          <button disabled={busy}>Save settings</button>
+          <Button disabled={busy} type="submit">
+            Save settings
+          </Button>
         </form>
       ) : section === "network" ? (
         <form className="task-form" onSubmit={save}>
@@ -188,7 +192,7 @@ export function Settings({
           </p>
           {(["testnet2", "mainnet"] as const).map((net) => (
             <Field key={net} label={`${net} Blockbook API`}>
-              <input
+              <Input
                 className="data-input"
                 type="url"
                 value={prefs.endpoints[net]}
@@ -206,7 +210,9 @@ export function Settings({
             A new service must match the selected Pearl network before it is
             accepted.
           </p>
-          <button disabled={busy}>Save settings</button>
+          <Button disabled={busy} type="submit">
+            Save settings
+          </Button>
         </form>
       ) : section === "accounts" ? (
         <form
@@ -238,7 +244,7 @@ export function Settings({
             </select>
           </Field>
           <Field label="Current password">
-            <input
+            <Input
               type="password"
               autoComplete="current-password"
               value={password}
@@ -246,7 +252,9 @@ export function Settings({
               required
             />
           </Field>
-          <button disabled={busy}>Add account</button>
+          <Button disabled={busy} type="submit">
+            Add account
+          </Button>
         </form>
       ) : section === "sites" ? (
         <>
@@ -267,7 +275,7 @@ export function Settings({
             <div className="site" key={grant.origin}>
               <Icon name="network" />
               <span className="origin">{grant.origin}</span>
-              <button
+              <Button
                 className="secondary"
                 disabled={busy}
                 onClick={() =>
@@ -276,9 +284,10 @@ export function Settings({
                     "Site disconnected",
                   )
                 }
+                variant="outline"
               >
                 Disconnect
-              </button>
+              </Button>
             </div>
           ))}
         </>
@@ -300,7 +309,7 @@ export function Settings({
             }}
           >
             <Field label="Password to reveal recovery phrase">
-              <input
+              <Input
                 type="password"
                 autoComplete="current-password"
                 value={password}
@@ -308,16 +317,25 @@ export function Settings({
                 required
               />
             </Field>
-            <button className="secondary" disabled={busy}>
+            <Button
+              className="secondary"
+              disabled={busy}
+              variant="outline"
+              type="submit"
+            >
               Reveal recovery phrase
-            </button>
+            </Button>
           </form>
           {phrase && (
             <>
               <p className="secret">{phrase}</p>
-              <button className="ghost" onClick={() => setPhrase("")}>
+              <Button
+                className="ghost"
+                onClick={() => setPhrase("")}
+                variant="ghost"
+              >
                 Hide phrase
-              </button>
+              </Button>
             </>
           )}
           <details className="security-details">
@@ -332,7 +350,7 @@ export function Settings({
               }}
             >
               <Field label="Current password to change password">
-                <input
+                <Input
                   type="password"
                   autoComplete="current-password"
                   value={password}
@@ -341,7 +359,7 @@ export function Settings({
                 />
               </Field>
               <Field label="New password">
-                <input
+                <Input
                   type="password"
                   autoComplete="new-password"
                   minLength={12}
@@ -350,7 +368,9 @@ export function Settings({
                   required
                 />
               </Field>
-              <button disabled={busy}>Change password</button>
+              <Button disabled={busy} type="submit">
+                Change password
+              </Button>
             </form>
           </details>
         </>

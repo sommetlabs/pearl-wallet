@@ -1,17 +1,16 @@
-import {
-  PearlBlockbook,
-  PearlTransactionNotFound,
-} from "../../packages/connector/src/blockbook";
+import { PearlTransactionNotFound } from "../../packages/connector/src/blockbook";
 import { cryptoCall } from "./crypto-host";
 import { payment } from "./commands";
 import { store, session, save, requireUnlocked, view } from "./state";
 import { selected, outpoint, type Account, type Operation } from "./model";
 import { prepare, scan, summarize } from "./network";
+import { pearlProvider, PearlRateLimitError } from "./provider";
 
 function api(account: Account) {
-  return new PearlBlockbook(
+  return pearlProvider(
     store.settings.endpoints[account.network],
     account.network,
+    store.retryAt[account.network],
   );
 }
 export async function refresh(account: Account, force = false) {
@@ -25,6 +24,8 @@ export async function refresh(account: Account, force = false) {
     return cached;
   session.refreshing = true;
   try {
+    const retryAt = store.retryAt[account.network] ?? 0;
+    if (retryAt > Date.now()) throw new PearlRateLimitError(retryAt);
     let balance = await scan(
       account,
       store.settings.endpoints[account.network],
@@ -59,11 +60,14 @@ export async function refresh(account: Account, force = false) {
     }
     store.balances[account.id] = balance;
     delete store.errors[account.id];
+    delete store.retryAt[account.network];
     if (!balance.complete)
       store.errors[account.id] =
         "Address discovery is incomplete. Unlock and refresh before sending.";
     return balance;
   } catch (error) {
+    if (error instanceof PearlRateLimitError)
+      store.retryAt[account.network] = error.retryAt;
     store.errors[account.id] =
       error instanceof Error
         ? error.message
@@ -91,6 +95,10 @@ export async function observe() {
           ? "confirmed"
           : "broadcast";
     } catch (error) {
+      if (error instanceof PearlRateLimitError) {
+        store.retryAt[account.network] = error.retryAt;
+        break;
+      }
       if (op.status === "confirmed") {
         op.status = "unknown";
         op.confirmations = 0;

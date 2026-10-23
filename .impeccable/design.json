@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-23T21:37:23.772787+00:00",
+  "generatedAt": "2026-10-23T22:15:44.944668+00:00",
   "title": "Design System: Abyss Wallet",
   "extensions": {
     "colorMeta": {
@@ -16,7 +16,8 @@
           "oklch(0.740 0.0120 264)",
           "oklch(0.850 0.0075 264)",
           "oklch(0.950 0.0030 264)"
-        ]
+        ],
+        "canonical": "oklch(0.145 0.015 264)"
       },
       "foreground": {
         "role": "neutral",
@@ -30,7 +31,8 @@
           "oklch(0.740 0.0080 264)",
           "oklch(0.850 0.0050 264)",
           "oklch(0.950 0.0020 264)"
-        ]
+        ],
+        "canonical": "oklch(0.985 0.01 264)"
       },
       "card": {
         "role": "neutral",
@@ -44,7 +46,8 @@
           "oklch(0.740 0.0160 264)",
           "oklch(0.850 0.0100 264)",
           "oklch(0.950 0.0040 264)"
-        ]
+        ],
+        "canonical": "oklch(0.205 0.02 264)"
       },
       "primary": {
         "role": "primary",
@@ -58,7 +61,8 @@
           "oklch(0.740 0.1680 264)",
           "oklch(0.850 0.1050 264)",
           "oklch(0.950 0.0420 264)"
-        ]
+        ],
+        "canonical": "oklch(0.62 0.21 264)"
       },
       "action": {
         "role": "primary",
@@ -72,7 +76,8 @@
           "oklch(0.740 0.1680 264)",
           "oklch(0.850 0.1050 264)",
           "oklch(0.950 0.0420 264)"
-        ]
+        ],
+        "canonical": "oklch(0.55 0.21 264)"
       },
       "secondary": {
         "role": "neutral",
@@ -86,7 +91,8 @@
           "oklch(0.740 0.0240 264)",
           "oklch(0.850 0.0150 264)",
           "oklch(0.950 0.0060 264)"
-        ]
+        ],
+        "canonical": "oklch(0.27 0.03 264)"
       },
       "muted": {
         "role": "neutral",
@@ -100,7 +106,8 @@
           "oklch(0.740 0.0160 264)",
           "oklch(0.850 0.0100 264)",
           "oklch(0.950 0.0040 264)"
-        ]
+        ],
+        "canonical": "oklch(0.708 0.02 264)"
       },
       "border": {
         "role": "neutral",
@@ -114,7 +121,8 @@
           "oklch(0.740 0.0240 264)",
           "oklch(0.850 0.0150 264)",
           "oklch(0.950 0.0060 264)"
-        ]
+        ],
+        "canonical": "oklch(0.32 0.03 264)"
       },
       "input": {
         "role": "neutral",
@@ -128,7 +136,8 @@
           "oklch(0.740 0.0240 264)",
           "oklch(0.850 0.0150 264)",
           "oklch(0.950 0.0060 264)"
-        ]
+        ],
+        "canonical": "oklch(0.36 0.03 264)"
       },
       "warning": {
         "role": "warning",
@@ -142,7 +151,8 @@
           "oklch(0.740 0.1512 84.429)",
           "oklch(0.850 0.0945 84.429)",
           "oklch(0.950 0.0378 84.429)"
-        ]
+        ],
+        "canonical": "oklch(0.828 0.189 84.429)"
       },
       "error": {
         "role": "error",
@@ -156,7 +166,8 @@
           "oklch(0.740 0.1528 22.216)",
           "oklch(0.850 0.0955 22.216)",
           "oklch(0.950 0.0382 22.216)"
-        ]
+        ],
+        "canonical": "oklch(0.704 0.191 22.216)"
       },
       "success": {
         "role": "success",
@@ -170,7 +181,8 @@
           "oklch(0.740 0.1672 151.711)",
           "oklch(0.850 0.1045 151.711)",
           "oklch(0.950 0.0418 151.711)"
-        ]
+        ],
+        "canonical": "oklch(0.792 0.209 151.711)"
       },
       "dot": {
         "role": "primary",
@@ -184,7 +196,8 @@
           "oklch(0.740 0.1420 268.398)",
           "oklch(0.850 0.0888 268.398)",
           "oklch(0.950 0.0355 268.398)"
-        ]
+        ],
+        "canonical": "#668aff"
       },
       "light-background": {
         "role": "neutral",
@@ -198,7 +211,8 @@
           "oklch(0.740 0.0200 264)",
           "oklch(0.850 0.0125 264)",
           "oklch(0.950 0.0050 264)"
-        ]
+        ],
+        "canonical": "oklch(0.93 0.025 264)"
       },
       "light-foreground": {
         "role": "neutral",
@@ -212,7 +226,8 @@
           "oklch(0.740 0.0160 264)",
           "oklch(0.850 0.0100 264)",
           "oklch(0.950 0.0040 264)"
-        ]
+        ],
+        "canonical": "oklch(0.145 0.02 264)"
       },
       "light-card": {
         "role": "neutral",
@@ -226,7 +241,8 @@
           "oklch(0.740 0.0048 264)",
           "oklch(0.850 0.0030 264)",
           "oklch(0.950 0.0012 264)"
-        ]
+        ],
+        "canonical": "oklch(0.99 0.006 264)"
       },
       "light-primary": {
         "role": "primary",
@@ -240,7 +256,8 @@
           "oklch(0.740 0.1440 264)",
           "oklch(0.850 0.0900 264)",
           "oklch(0.950 0.0360 264)"
-        ]
+        ],
+        "canonical": "oklch(0.485 0.18 264)"
       },
       "light-action": {
         "role": "primary",
@@ -254,7 +271,8 @@
           "oklch(0.740 0.1440 264)",
           "oklch(0.850 0.0900 264)",
           "oklch(0.950 0.0360 264)"
-        ]
+        ],
+        "canonical": "oklch(0.485 0.18 264)"
       },
       "light-secondary": {
         "role": "neutral",
@@ -268,7 +286,8 @@
           "oklch(0.740 0.0240 264)",
           "oklch(0.850 0.0150 264)",
           "oklch(0.950 0.0060 264)"
-        ]
+        ],
+        "canonical": "oklch(0.87 0.03 264)"
       },
       "light-muted": {
         "role": "neutral",
@@ -282,7 +301,8 @@
           "oklch(0.740 0.0160 264)",
           "oklch(0.850 0.0100 264)",
           "oklch(0.950 0.0040 264)"
-        ]
+        ],
+        "canonical": "oklch(0.4 0.02 264)"
       },
       "light-border": {
         "role": "neutral",
@@ -296,7 +316,8 @@
           "oklch(0.740 0.0240 264)",
           "oklch(0.850 0.0150 264)",
           "oklch(0.950 0.0060 264)"
-        ]
+        ],
+        "canonical": "oklch(0.78 0.03 264)"
       },
       "light-input": {
         "role": "neutral",
@@ -310,7 +331,8 @@
           "oklch(0.740 0.0240 264)",
           "oklch(0.850 0.0150 264)",
           "oklch(0.950 0.0060 264)"
-        ]
+        ],
+        "canonical": "oklch(0.78 0.03 264)"
       },
       "light-warning": {
         "role": "warning",
@@ -324,7 +346,8 @@
           "oklch(0.740 0.1200 84.429)",
           "oklch(0.850 0.0750 84.429)",
           "oklch(0.950 0.0300 84.429)"
-        ]
+        ],
+        "canonical": "oklch(0.4 0.15 84.429)"
       },
       "light-error": {
         "role": "error",
@@ -338,7 +361,8 @@
           "oklch(0.740 0.1760 22.216)",
           "oklch(0.850 0.1100 22.216)",
           "oklch(0.950 0.0440 22.216)"
-        ]
+        ],
+        "canonical": "oklch(0.5 0.22 22.216)"
       },
       "light-success": {
         "role": "success",
@@ -352,7 +376,8 @@
           "oklch(0.740 0.1280 151.711)",
           "oklch(0.850 0.0800 151.711)",
           "oklch(0.950 0.0320 151.711)"
-        ]
+        ],
+        "canonical": "oklch(0.45 0.16 151.711)"
       },
       "light-dot": {
         "role": "primary",
@@ -366,7 +391,8 @@
           "oklch(0.740 0.1421 268.407)",
           "oklch(0.850 0.0888 268.407)",
           "oklch(0.950 0.0355 268.407)"
-        ]
+        ],
+        "canonical": "#3854c4"
       }
     },
     "typographyMeta": {
@@ -374,65 +400,69 @@
         "displayName": "Word Index",
         "purpose": "Numbered recovery cells only."
       },
-      "data-micro": {
-        "displayName": "Data Micro",
-        "purpose": "Short financial metadata only."
+      "alpha": {
+        "displayName": "Alpha",
+        "purpose": "Quiet Early alpha release badge only."
       },
       "status": {
         "displayName": "Status",
-        "purpose": "Implemented status role."
+        "purpose": "Readable status, navigation and metadata."
       },
       "helper": {
         "displayName": "Helper",
-        "purpose": "Implemented helper role."
+        "purpose": "Support copy, field help and notices."
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Implemented label role."
+        "purpose": "Ordinary visible field labels."
       },
       "action": {
         "displayName": "Action",
-        "purpose": "Standard action labels."
+        "purpose": "Standard button labels."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Implemented body role."
+        "purpose": "Ordinary instructions and input text."
       },
       "section": {
         "displayName": "Section",
-        "purpose": "Implemented section role."
+        "purpose": "Section headings."
       },
       "data": {
         "displayName": "Data",
-        "purpose": "Implemented data role."
+        "purpose": "Complete wrapping addresses and financial metadata."
       },
       "balance-unit": {
         "displayName": "Balance Unit",
-        "purpose": "Implemented balance unit role."
+        "purpose": "Balance denomination."
       },
       "connection-title": {
         "displayName": "Connection Title",
-        "purpose": "Implemented connection title role."
+        "purpose": "Connection approval title."
       },
       "review-title": {
         "displayName": "Review Title",
-        "purpose": "Implemented review title role."
+        "purpose": "Payment approval title."
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Implemented headline role."
+        "purpose": "Guided setup and task titles."
       },
       "unlock-title": {
         "displayName": "Unlock Title",
-        "purpose": "Implemented unlock title role."
+        "purpose": "Unlock screen title."
       },
       "welcome-title": {
         "displayName": "Welcome Title",
-        "purpose": "Implemented welcome title role."
+        "purpose": "Compact welcome title."
+      },
+      "welcome-title-wide": {
+        "displayName": "Welcome Title Wide",
+        "purpose": "Desktop welcome title."
       },
       "amount": {
         "displayName": "Amount",
-        "purpose": "Implemented amount role."
+        "purpose": "Payment review amount."
       },
       "display": {
         "displayName": "Display",
@@ -443,27 +473,28 @@
         "purpose": "Full-page spendable balance."
       }
     },
-    "shadows": [],
+    "shadows": [
+      {
+        "name": "control-focus",
+        "value": "inset 0 0 0 2px var(--primary)",
+        "purpose": "Shared button and input keyboard focus; recovery cells use one inset parent outline instead."
+      }
+    ],
     "motion": [
       {
         "name": "control-color",
-        "value": "background-color 150ms, color 150ms, border-color 150ms",
-        "purpose": "Control state changes; removed under prefers-reduced-motion."
-      },
-      {
-        "name": "press",
-        "value": "translateY(1px)",
-        "purpose": "Immediate enabled-button press feedback; not an animation."
+        "value": "color, background-color, border-color, text-decoration-color, fill, stroke 150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Shared control state transitions; disabled under prefers-reduced-motion."
       }
     ],
     "breakpoints": [
       {
-        "name": "recovery-four-columns",
-        "value": "400px"
-      },
-      {
         "name": "full-page",
         "value": "640px"
+      },
+      {
+        "name": "wide-workspace",
+        "value": "900px"
       }
     ]
   },
@@ -472,49 +503,49 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Main task action.",
+      "description": "Continue.",
       "html": "<button class=\"ds-button-primary\">Continue</button>",
-      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid transparent;border-radius:999px;padding:10px 18px;font:500 13px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms,border-color 150ms;background:var(--action, oklch(0.55 0.21 264));color:oklch(0.985 0.01 264);}.ds-button-primary:hover{background:color-mix(in oklch, var(--action, oklch(0.55 0.21 264)), black 12%);color:oklch(0.985 0.01 264);}.ds-button-primary:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-button-primary:active:not(:disabled){transform:translateY(1px);}.ds-button-primary:disabled{opacity:.5;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none;}}"
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:7.5px;min-height:41.25px;padding:9.375px 18.75px;border:1px solid transparent;border-radius:9999px;background:var(--action, oklch(0.55 0.21 264));color:oklch(0.985 0.01 264);font:500 15px/1.5 Inter,sans-serif;cursor:pointer;outline:none;transition:color 150ms cubic-bezier(.4,0,.2,1),background-color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1);}.ds-button-primary:hover{background:color-mix(in oklch, var(--action, oklch(0.55 0.21 264)), black 12%);}.ds-button-primary:focus-visible{box-shadow:inset 0 0 0 2px var(--primary, oklch(0.62 0.21 264));}.ds-button-primary:disabled{pointer-events:none;opacity:.5;}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none;}}"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Bordered alternate action.",
+      "description": "Receive.",
       "html": "<button class=\"ds-button-secondary\">Receive</button>",
-      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid transparent;border-radius:999px;padding:10px 18px;font:500 13px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms,border-color 150ms;background:transparent;color:var(--fg, oklch(0.985 0.01 264));border-color:var(--border, oklch(0.32 0.03 264));}.ds-button-secondary:hover{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-button-secondary:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-button-secondary:active:not(:disabled){transform:translateY(1px);}.ds-button-secondary:disabled{opacity:.5;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none;}}"
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:7.5px;min-height:41.25px;padding:9.375px 18.75px;border:1px solid var(--border, oklch(0.32 0.03 264));border-radius:9999px;background:transparent;color:var(--fg, oklch(0.985 0.01 264));font:500 15px/1.5 Inter,sans-serif;cursor:pointer;outline:none;transition:color 150ms cubic-bezier(.4,0,.2,1),background-color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1);}.ds-button-secondary:hover{background:var(--secondary, oklch(0.27 0.03 264));}.ds-button-secondary:focus-visible{box-shadow:inset 0 0 0 2px var(--primary, oklch(0.62 0.21 264));}.ds-button-secondary:disabled{pointer-events:none;opacity:.5;}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none;}}"
     },
     {
       "name": "Ghost Button",
       "kind": "button",
       "refersTo": "button-ghost",
-      "description": "Quiet secondary action.",
+      "description": "Back.",
       "html": "<button class=\"ds-button-ghost\">Back</button>",
-      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid transparent;border-radius:999px;padding:10px 18px;font:500 13px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms,border-color 150ms;background:transparent;color:var(--muted, oklch(0.708 0.02 264));}.ds-button-ghost:hover{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-button-ghost:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-button-ghost:active:not(:disabled){transform:translateY(1px);}.ds-button-ghost:disabled{opacity:.5;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none;}}"
+      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:7.5px;min-height:41.25px;padding:9.375px 18.75px;border:1px solid transparent;border-radius:9999px;background:transparent;color:var(--muted, oklch(0.708 0.02 264));font:500 15px/1.5 Inter,sans-serif;cursor:pointer;outline:none;transition:color 150ms cubic-bezier(.4,0,.2,1),background-color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1);}.ds-button-ghost:hover{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-button-ghost:focus-visible{box-shadow:inset 0 0 0 2px var(--primary, oklch(0.62 0.21 264));}.ds-button-ghost:disabled{pointer-events:none;opacity:.5;}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none;}}"
     },
     {
       "name": "Destructive Button",
       "kind": "button",
       "refersTo": "button-destructive",
-      "description": "Explicit release confirmation.",
+      "description": "Check and release.",
       "html": "<button class=\"ds-button-destructive\">Check and release</button>",
-      "css": ".ds-button-destructive{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid transparent;border-radius:999px;padding:10px 18px;font:500 13px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms,border-color 150ms;background:color-mix(in oklch, var(--error, oklch(0.704 0.191 22.216)), transparent 88%);color:var(--error, oklch(0.704 0.191 22.216));}.ds-button-destructive:hover{background:color-mix(in oklch, var(--error, oklch(0.704 0.191 22.216)), transparent 78%);color:var(--error, oklch(0.704 0.191 22.216));}.ds-button-destructive:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-button-destructive:active:not(:disabled){transform:translateY(1px);}.ds-button-destructive:disabled{opacity:.5;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-button-destructive{transition:none;}}"
+      "css": ".ds-button-destructive{display:inline-flex;align-items:center;justify-content:center;gap:7.5px;min-height:41.25px;padding:9.375px 18.75px;border:1px solid transparent;border-radius:9999px;background:color-mix(in oklch, var(--error, oklch(0.704 0.191 22.216)), transparent 88%);color:var(--error, oklch(0.704 0.191 22.216));font:500 15px/1.5 Inter,sans-serif;cursor:pointer;outline:none;transition:color 150ms cubic-bezier(.4,0,.2,1),background-color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1);}.ds-button-destructive:hover{background:color-mix(in oklch, var(--error, oklch(0.704 0.191 22.216)), transparent 80%);}.ds-button-destructive:focus-visible{box-shadow:inset 0 0 0 2px var(--primary, oklch(0.62 0.21 264));}.ds-button-destructive:disabled{pointer-events:none;opacity:.5;}@media(prefers-reduced-motion:reduce){.ds-button-destructive{transition:none;}}"
     },
     {
       "name": "Labeled Field",
       "kind": "input",
       "refersTo": "input",
-      "description": "Visible label and translucent field.",
+      "description": "Shared labeled Base UI input, expanded to standalone CSS.",
       "html": "<label class=\"ds-field\">Account name<input class=\"ds-input\" value=\"Pearl account\"></label>",
-      "css": ".ds-field{display:flex;flex-direction:column;gap:8px;color:var(--fg, oklch(0.985 0.01 264));font:500 12px/1.5 Inter,sans-serif;}.ds-input{width:100%;min-width:0;min-height:44px;border:1px solid transparent;border-radius:24px;padding:11px 16px;background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 50%);color:var(--fg, oklch(0.985 0.01 264));font:400 14px/1.5 Inter,sans-serif;caret-color:var(--primary, oklch(0.62 0.21 264));transition:background-color 150ms,border-color 150ms;}.ds-input:hover{background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 35%);}.ds-input:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-input::placeholder{color:var(--muted, oklch(0.708 0.02 264));}@media(prefers-reduced-motion:reduce){.ds-input{transition:none;}}"
+      "css": ".ds-field{display:flex;flex-direction:column;gap:8px;color:var(--fg, oklch(0.985 0.01 264));font:500 15px/1.5 Inter,sans-serif;}.ds-input{width:100%;min-width:0;min-height:41.25px;border:1px solid transparent;border-radius:22.5px;padding:9.375px 15px;background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 50%);color:var(--fg, oklch(0.985 0.01 264));font:400 15px/1.5 Inter,sans-serif;outline:none;transition:color 150ms cubic-bezier(.4,0,.2,1),background-color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1);}.ds-input:focus-visible{border-color:var(--primary, oklch(0.62 0.21 264));box-shadow:inset 0 0 0 2px var(--primary, oklch(0.62 0.21 264));}.ds-input::placeholder{color:var(--muted, oklch(0.708 0.02 264));}.ds-input[aria-invalid=\"true\"]{border-color:var(--error, oklch(0.704 0.191 22.216));}.ds-input:disabled{opacity:.5;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-input{transition:none;}}"
     },
     {
       "name": "Wallet Navigation",
       "kind": "nav",
       "refersTo": "nav-selected",
-      "description": "Three destinations with a selected tonal pill.",
+      "description": "Popup destinations; wide desktop moves this row above the task.",
       "html": "<nav class=\"ds-nav\" aria-label=\"Wallet navigation\"><button aria-current=\"page\">Wallet</button><button>Activity</button><button>Settings</button></nav>",
-      "css": ".ds-nav{display:flex;gap:4px;padding:8px 12px 12px;background:var(--bg, oklch(0.145 0.015 264));}.ds-nav button{flex:1;min-height:40px;padding:10px 6px;border:1px solid transparent;border-radius:999px;background:transparent;color:var(--muted, oklch(0.708 0.02 264));font:500 11px/1.4 Inter,sans-serif;cursor:pointer;transition:background-color 150ms,color 150ms;}.ds-nav button:hover{background:color-mix(in oklch, var(--secondary, oklch(0.27 0.03 264)), transparent 60%);color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button[aria-current]{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button:focus-visible{outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:3px;}.ds-nav button:active{transform:translateY(1px);}@media(prefers-reduced-motion:reduce){.ds-nav button{transition:none;}}"
+      "css": ".ds-nav{display:flex;gap:4px;padding:8px 12px 12px;background:var(--bg, oklch(0.145 0.015 264));}.ds-nav button{flex:1;min-height:40px;padding:10px 6px;border:1px solid transparent;border-radius:999px;background:transparent;color:var(--muted, oklch(0.708 0.02 264));font:500 13px/1.5 Inter,sans-serif;cursor:pointer;outline:none;transition:color 150ms cubic-bezier(.4,0,.2,1),background-color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1);}.ds-nav button:hover{background:color-mix(in oklch, var(--secondary, oklch(0.27 0.03 264)), transparent 60%);color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button[aria-current]{background:var(--secondary, oklch(0.27 0.03 264));color:var(--fg, oklch(0.985 0.01 264));}.ds-nav button:focus-visible{box-shadow:inset 0 0 0 2px var(--primary, oklch(0.62 0.21 264));}@media(prefers-reduced-motion:reduce){.ds-nav button{transition:none;}}"
     },
     {
       "name": "Network Badge",
@@ -522,41 +553,41 @@
       "refersTo": "network-badge",
       "description": "Informational account-network marker.",
       "html": "<span class=\"ds-network\">Testnet2</span>",
-      "css": ".ds-network{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:var(--surface, oklch(0.205 0.02 264));color:var(--muted, oklch(0.708 0.02 264));font:400 10px/1.5 Inter,sans-serif;}"
+      "css": ".ds-network{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:var(--surface, oklch(0.205 0.02 264));color:var(--muted, oklch(0.708 0.02 264));font:400 13px/1.5 Inter,sans-serif;}"
     },
     {
       "name": "Balance Surface",
       "kind": "card",
       "refersTo": "balance-card",
-      "description": "Portfolio-inspired spendable balance surface; illustrative content only.",
+      "description": "Spendable balance with explicit state; illustrative content only.",
       "html": "<section class=\"ds-balance\" aria-label=\"Illustrative balance\"><div class=\"ds-balance-content\"><span>Spendable balance</span><p>—<small>PRL</small></p></div><div class=\"ds-balance-status\">Reading your addresses…</div></section>",
-      "css": ".ds-balance{border:1px solid var(--border, oklch(0.32 0.03 264));border-radius:26px;overflow:hidden;background:color-mix(in oklch, var(--surface, oklch(0.205 0.02 264)), transparent 25%);color:var(--fg, oklch(0.985 0.01 264));font:400 12px/1.5 Inter,sans-serif;}.ds-balance-content{padding:16px 20px 20px;background:linear-gradient(125deg,transparent,color-mix(in oklch, var(--secondary, oklch(0.27 0.03 264)), transparent 45%) 55%,color-mix(in oklch, var(--primary, oklch(0.62 0.21 264)), transparent 76%));}.ds-balance-content>span{color:var(--muted, oklch(0.708 0.02 264));}.ds-balance p{margin:12px 0 0;font:500 36px/1.35 \"JetBrains Mono\",monospace;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}.ds-balance small{margin-left:10px;color:var(--muted, oklch(0.708 0.02 264));font:400 16px/1.35 Inter,sans-serif;letter-spacing:0;}.ds-balance-status{padding:10px 20px;color:var(--muted, oklch(0.708 0.02 264));font-size:10px;}"
+      "css": ".ds-balance{border:1px solid var(--border, oklch(0.32 0.03 264));border-radius:26px;overflow:hidden;background:color-mix(in oklch, var(--surface, oklch(0.205 0.02 264)), transparent 25%);color:var(--fg, oklch(0.985 0.01 264));font:400 13px/1.5 Inter,sans-serif;}.ds-balance-content{padding:16px 20px 20px;background:linear-gradient(125deg,transparent,color-mix(in oklch, var(--secondary, oklch(0.27 0.03 264)), transparent 45%) 55%,color-mix(in oklch, var(--primary, oklch(0.62 0.21 264)), transparent 76%));}.ds-balance-content>span{color:var(--muted, oklch(0.708 0.02 264));}.ds-balance p{margin:12px 0 0;font:500 36px/1.35 \"JetBrains Mono\",monospace;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}.ds-balance small{margin-left:10px;color:var(--muted, oklch(0.708 0.02 264));font:400 16px/1.35 Inter,sans-serif;letter-spacing:0;}.ds-balance-status{padding:10px 20px;color:var(--muted, oklch(0.708 0.02 264));font-size:13px;}"
     },
     {
       "name": "Setup Progress",
       "kind": "custom",
       "refersTo": "setup-current",
-      "description": "Current and pending steps of the guided task.",
-      "html": "<ol class=\"ds-progress\" aria-label=\"Wallet setup progress\"><li aria-current=\"step\"><span>1</span>Password</li><li><span>2</span>Backup</li><li><span>3</span>Confirm</li></ol>",
-      "css": ".ds-progress{display:flex;list-style:none;padding:0;margin:0;gap:8px;color:var(--muted, oklch(0.708 0.02 264));font:400 10px/1.5 Inter,sans-serif;}.ds-progress li{display:flex;align-items:center;gap:6px;flex:1;}.ds-progress li>span{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border, oklch(0.32 0.03 264));font-size:9px;}.ds-progress [aria-current]{color:var(--fg, oklch(0.985 0.01 264));}.ds-progress [aria-current]>span{background:var(--action, oklch(0.55 0.21 264));border-color:var(--action, oklch(0.55 0.21 264));color:white;}"
+      "description": "Backup, confirmation and password in creation order.",
+      "html": "<ol class=\"ds-progress\" aria-label=\"Wallet setup progress\"><li aria-current=\"step\"><span>1</span>Backup</li><li><span>2</span>Confirm</li><li><span>3</span>Password</li></ol>",
+      "css": ".ds-progress{display:flex;list-style:none;padding:0;margin:0;gap:8px;color:var(--muted, oklch(0.708 0.02 264));font:400 13px/1.5 Inter,sans-serif;}.ds-progress li{display:flex;align-items:center;gap:6px;flex:1;}.ds-progress li>span{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border, oklch(0.32 0.03 264));font-size:12px;}.ds-progress [aria-current]{color:var(--fg, oklch(0.985 0.01 264));}.ds-progress [aria-current]>span{background:var(--action, oklch(0.55 0.21 264));border-color:var(--action, oklch(0.55 0.21 264));color:white;}"
     },
     {
       "name": "Recovery Word",
       "kind": "input",
       "refersTo": "recovery-word",
-      "description": "Masked numbered recovery entry with parent focus and invalid state.",
+      "description": "Stacked masked word with one inset parent focus indicator.",
       "html": "<label class=\"ds-word\"><span aria-hidden=\"true\">1</span><input type=\"password\" aria-label=\"Recovery word 1\" placeholder=\"word\" autocomplete=\"off\" spellcheck=\"false\"></label>",
-      "css": ".ds-word{display:flex;align-items:center;gap:5px;border:1px solid transparent;border-radius:12px;background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 50%);padding:0 8px;min-width:0;}.ds-word>span{font:400 8px/1.5 \"JetBrains Mono\",monospace;color:var(--muted, oklch(0.708 0.02 264));min-width:10px;}.ds-word>input{width:100%;min-width:0;min-height:38px;padding:7px 0;background:transparent;border:0;border-radius:0;color:var(--fg, oklch(0.985 0.01 264));font:400 11px/1.5 Inter,sans-serif;caret-color:var(--primary, oklch(0.62 0.21 264));}.ds-word>input::placeholder{color:var(--muted, oklch(0.708 0.02 264));}.ds-word>input:focus-visible{outline:none;}.ds-word:has(input:focus-visible){outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:2px;}.ds-word:has(input[aria-invalid=\"true\"]){border-color:var(--error, oklch(0.704 0.191 22.216));}"
+      "css": ".ds-word{display:flex;flex-direction:column;align-items:stretch;gap:2px;border:1px solid transparent;border-radius:12px;background:color-mix(in oklch, var(--input, oklch(0.36 0.03 264)), transparent 50%);padding:6px 10px;min-width:0;}.ds-word>span{font:400 12px/1.5 \"JetBrains Mono\",monospace;color:var(--muted, oklch(0.708 0.02 264));min-width:10px;align-self:flex-start;}.ds-word>input{width:100%;min-width:0;min-height:28px;padding:0;background:transparent;border:0;border-radius:0;color:var(--fg, oklch(0.985 0.01 264));font:400 15px/1.5 Inter,sans-serif;outline:none;}.ds-word>input::placeholder{color:var(--muted, oklch(0.708 0.02 264));}.ds-word>input:focus-visible{outline:none;box-shadow:none;border-color:transparent;}.ds-word:has(input:focus-visible){outline:2px solid var(--primary, oklch(0.62 0.21 264));outline-offset:-2px;}.ds-word:has(input[aria-invalid=\"true\"]){border-color:var(--error, oklch(0.704 0.191 22.216));}"
     }
   ],
   "narrative": {
     "northStar": "The Abyss wallet",
-    "overview": "The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and restrained dot field. This extension adapts that identity to a compact financial task. Inter is an intentional incumbent choice, retained from the user-pinned product.\n\nThe interface is calm and compact. Amounts, account identity and the current task have priority; helper text and secondary actions recede. The early-alpha label stays visible without becoming the dominant color. The full-page background supplies atmosphere while the wallet surface remains stable and readable.",
+    "overview": "The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and restrained dot field. The extension reuses Abyss's shadcn-based Base UI button and input patterns, adapted to its existing React 18 and Tailwind 3 build. Inter is an intentional incumbent choice, retained from the user-pinned product.\n\nThe interface gives amounts, account identity and the current task priority. Body text and ordinary controls are readable at the same size; support copy recedes without becoming miniature. The coherent wordmark, Wallet name and quiet Early alpha badge identify the product. Desktop uses a content-sized workspace; the popup keeps the compact task layout.",
     "keyCharacteristics": [
-      "Established Abyss wordmarks and self-hosted type.",
-      "Rounded tonal surfaces with restrained borders.",
-      "Monospaced financial data and explicit state labels.",
-      "Persistent task actions with a separately scrolling body."
+      "Established Abyss wordmarks, self-hosted type and Phosphor icons.",
+      "Shared Base UI controls within rounded tonal surfaces.",
+      "Readable instructions, monospaced financial data and explicit state labels.",
+      "Responsive desktop workspace and compact popup with persistent task actions."
     ],
     "rules": [
       {
@@ -576,17 +607,19 @@
       }
     ],
     "dos": [
-      "Do preserve the actual Abyss wordmarks, self-hosted fonts and single Phosphor icon family.",
-      "Do use action fill for white primary labels and keep keyboard focus visible.",
+      "Do preserve the actual Abyss wordmarks, self-hosted fonts, Base UI controls and single Phosphor icon family.",
+      "Do use action fill for white primary labels and keep keyboard focus inside clipped fields.",
       "Do keep account, network and requesting origin clear during approval.",
       "Do show unavailable funds as unavailable and preserve pending, reserved and spendable distinctions.",
-      "Do verify compact and full-page layouts in both themes and honor reduced motion."
+      "Do verify compact and full-page layouts in both themes and honor reduced motion.",
+      "Do use explicit reveal, copy and paste actions for recovery words, with clear clipboard feedback."
     ],
     "donts": [
       "Don't replace the established identity with a palette-only approximation.",
+      "Don't shrink ordinary body or control text below the implemented readable ramp, or turn desktop into a narrow phone frame.",
       "Don't add promotional eyebrows, decorative display type or generic security slogans.",
-      "Don't wrap every field in a decorative card or add control glows and panel shadows.",
-      "Don't fabricate activity, prices or balances, or hide complete addresses where users need to verify them."
+      "Don't wrap every field in a decorative card or add decorative control glows and panel shadows.",
+      "Don't fabricate activity, prices or balances, represent concealed recovery words as loading bars, or hide complete addresses where users need to verify them."
     ]
   }
 }

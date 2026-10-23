@@ -1,3 +1,5 @@
+import { Input } from "./components/input";
+import { Button } from "./components/button";
 import { useId, useRef, useState, type ClipboardEvent } from "react";
 import type { AccountFormat } from "../../core/account-formats";
 import type { RecoveryCandidate } from "../model";
@@ -86,34 +88,70 @@ export function RecoveryWords({
   onReveal: () => void;
 }) {
   const words = phrase.split(" ");
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
   return (
     <>
       <div className="phrase-controls">
         <p className="backup-warning">
           Anyone with these words can spend your funds.
         </p>
-        <button type="button" className="secondary" onClick={onReveal}>
+        <Button
+          type="button"
+          className="secondary"
+          onClick={onReveal}
+          variant="outline"
+        >
           <Icon name={revealed ? "eyeOff" : "eye"} />
           {revealed ? "Hide recovery phrase" : "Reveal recovery phrase"}
-        </button>
+        </Button>
       </div>
-      <ol
-        className={`phrase${revealed ? "" : " concealed"}`}
-        aria-label={
-          revealed ? "Your recovery phrase" : "Recovery phrase hidden"
-        }
-      >
-        {words.map((word, index) => (
-          <li key={index}>
-            <span>{index + 1}</span>
-            {revealed ? (
-              word
-            ) : (
-              <span className="concealed-word" aria-hidden="true" />
-            )}
-          </li>
-        ))}
-      </ol>
+      {revealed ? (
+        <ol className="phrase" aria-label="Your recovery phrase">
+          {words.map((word, index) => (
+            <li key={index}>
+              <span>{index + 1}</span>
+              {word}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className="phrase-locked" role="status">
+          <Icon name="lock" />
+          <strong>Recovery phrase hidden</strong>
+          <span>Reveal your {words.length} words somewhere private.</span>
+        </div>
+      )}
+      {revealed && (
+        <Button
+          variant="outline"
+          className="phrase-copy"
+          onClick={async () => {
+            setCopyError("");
+            try {
+              await navigator.clipboard.writeText(phrase);
+              setCopied(true);
+            } catch {
+              setCopyError(
+                "Clipboard access was denied. Write down the words instead.",
+              );
+            }
+          }}
+        >
+          <Icon name={copied ? "check" : "copy"} />
+          {copied ? "Phrase copied" : "Copy recovery phrase"}
+        </Button>
+      )}
+      {revealed && copied && (
+        <p className="footnote" role="status">
+          Copied. Clear your clipboard after saving the phrase privately.
+        </p>
+      )}
+      {copyError && (
+        <p className="field-error" role="alert">
+          {copyError}
+        </p>
+      )}
     </>
   );
 }
@@ -130,7 +168,7 @@ export function VerifyBackup({
     <div className="backup-answers">
       {positions.map((position, index) => (
         <Field key={position} label={`Word ${position + 1}`}>
-          <input
+          <Input
             value={answers[index]}
             onChange={(event) => onAnswer(index, event.target.value)}
             autoComplete="off"
@@ -172,6 +210,21 @@ export function PhraseInput({
       setError((failure as Error).message);
     }
   }
+  async function pasteFromClipboard() {
+    setError("");
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim())
+        return setError(
+          "Your clipboard is empty. Paste or type your original words.",
+        );
+      onChange(pasteRecoveryWords(words, 0, text));
+    } catch {
+      setError(
+        "Clipboard access was denied. Paste into any word field or type your words.",
+      );
+    }
+  }
   return (
     <fieldset className="recovery-entry">
       <legend>Recovery phrase</legend>
@@ -202,22 +255,38 @@ export function PhraseInput({
               </option>
             ))}
         </select>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-button"
+          aria-label="Paste recovery phrase"
+          onClick={pasteFromClipboard}
+        >
+          <Icon name="copy" />
+          Paste
+        </Button>
+        <Button
           type="button"
           className="text-button"
           aria-pressed={revealed}
           onClick={() => setRevealed(!revealed)}
+          variant="ghost"
         >
           <Icon name={revealed ? "eyeOff" : "eye"} />
           {revealed ? "Hide words" : "Show words"}
-        </button>
+        </Button>
       </div>
       <p className="paste-hint">Paste all your words into any field.</p>
+      {error && (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      )}
       <div className="phrase-entry">
         {words.map((word, index) => (
           <label className="phrase-word" key={index}>
             <span aria-hidden="true">{index + 1}</span>
-            <input
+            <Input
               ref={(element) => {
                 inputs.current[index] = element;
               }}
@@ -275,22 +344,18 @@ export function PhraseInput({
           </span>
         )}
       </div>
-      {error && (
-        <p className="field-error" role="alert">
-          {error}
-        </p>
-      )}
       {filled > 0 && (
-        <button
+        <Button
           type="button"
           className="text-button clear-phrase"
           onClick={() => {
             onChange(Array(words.length).fill(""));
             setError("");
           }}
+          variant="ghost"
         >
           Clear phrase
-        </button>
+        </Button>
       )}
     </fieldset>
   );

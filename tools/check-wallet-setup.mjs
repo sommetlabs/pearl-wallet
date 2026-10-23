@@ -18,6 +18,7 @@ import {
   createWallet,
   assertTextContrast,
   browserFailure,
+  settleWallet,
   enterRecoveryPhrase,
   openSettings,
   restoreWallet,
@@ -53,7 +54,7 @@ key.wipePrivateData();
 master.wipePrivateData();
 const report = { checks: [] };
 let context;
-async function launch(name) {
+async function launch(name, rateInitially = false) {
   context = await chromium.launchPersistentContext(join(temp, name), {
     ...(process.env.PEARL_BROWSER_EXECUTABLE
       ? { executablePath: process.env.PEARL_BROWSER_EXECUTABLE }
@@ -77,15 +78,21 @@ async function launch(name) {
     page.getByRole("button", { name: "Create a wallet", exact: true }),
   ).toBeVisible();
   await worker.evaluate(
-    ({ webAddress }) => {
+    ({ webAddress, rateInitially }) => {
       globalThis.walletTestRequests = [];
       globalThis.walletTestOutage = false;
+      globalThis.walletTestRateLimited = rateInitially;
       const original = fetch;
       globalThis.fetch = async (input, options) => {
         const url = new URL(typeof input === "string" ? input : input.url);
         if (!url.hostname.endsWith("pearlresearch.ai"))
           return original(input, options);
         globalThis.walletTestRequests.push(url.pathname);
+        if (globalThis.walletTestRateLimited)
+          return new Response("busy", {
+            status: 429,
+            headers: { "Retry-After": "3" },
+          });
         if (globalThis.walletTestOutage)
           return new Response('{"error":"Test outage"}', { status: 503 });
         const hash = "ab".repeat(32),
@@ -116,19 +123,14 @@ async function launch(name) {
         });
       };
     },
-    { webAddress },
+    { webAddress, rateInitially },
   );
   return { page, worker, errors };
 }
 async function capture(page, name, width = 420, height = 600) {
   if (!reportDir) return;
   await page.setViewportSize({ width, height });
-  await page.evaluate(async () => {
-    await document.fonts.ready;
-    await new Promise((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(resolve)),
-    );
-  });
+  await settleWallet(page);
   const overflow = await page.evaluate(() => ({
     page: document.documentElement.scrollWidth - innerWidth,
     wallet:
@@ -149,7 +151,7 @@ try {
     const { page, errors } = await launch("popup-setup");
     const popupUrl = `${page.url()}?popup=1`;
     for (const [button, kind, heading] of [
-      ["Create a wallet", "create", "Protect your wallet"],
+      ["Create a wallet", "create", "Save your recovery phrase"],
       ["I have a recovery phrase", "restore", "Restore your wallet"],
     ]) {
       const popup = await context.newPage();
@@ -170,7 +172,10 @@ try {
     context = undefined;
   }
   for (const format of ["official", "web"]) {
-    const { page, worker, errors } = await launch(`restore-${format}`);
+    const { page, worker, errors } = await launch(
+      `restore-${format}`,
+      format === "official",
+    );
     if (format === "official") {
       await capture(page, "welcome-popup");
       await capture(page, "welcome-desktop", 1280, 900);
@@ -190,10 +195,41 @@ try {
       await page
         .getByRole("button", { name: "I have a recovery phrase", exact: true })
         .click();
-      await enterRecoveryPhrase(
-        page,
+      await page.evaluate(() =>
+        Object.defineProperty(navigator, "clipboard", {
+          configurable: true,
+          value: {
+            readText: async () => {
+              throw new Error("Denied");
+            },
+          },
+        }),
+      );
+      await page
+        .getByRole("button", { name: "Paste recovery phrase", exact: true })
+        .click();
+      await expect(page.getByRole("alert")).toContainText(
+        "Clipboard access was denied",
+      );
+      await capture(page, "clipboard-denied");
+      await page.evaluate(
+        (value) =>
+          Object.defineProperty(navigator, "clipboard", {
+            configurable: true,
+            value: { readText: async () => value },
+          }),
         fixturePhrase.replace("about", "ability"),
       );
+      await page
+        .getByRole("button", { name: "Paste recovery phrase", exact: true })
+        .click();
+      await expect(
+        page.getByLabel("Recovery word 12", { exact: true }),
+      ).toHaveValue("ability");
+      await page.getByLabel("Recovery word 1", { exact: true }).focus();
+      await capture(page, "restore-focused-first");
+      await page.getByLabel("Recovery word 12", { exact: true }).focus();
+      await capture(page, "restore-focused-last");
       await page
         .getByRole("button", { name: "Find my account", exact: true })
         .click();
@@ -249,13 +285,48 @@ try {
         await capture(page, `restore-candidates-${format}`);
       },
     });
+    if (format === "official") {
+      await expect(page.locator(".overview .notice")).toContainText(
+        "Pearl is busy",
+      );
+      await expect(
+        page.getByRole("button", { name: "Refresh balance" }),
+      ).toBeDisabled();
+      assert.equal(await page.getByRole("alert").count(), 0);
+      await capture(page, "rate-limited-first");
+      await capture(page, "rate-limited-desktop", 1280, 900);
+      const before = (
+        await worker.evaluate(() => globalThis.walletTestRequests)
+      ).length;
+      await page.evaluate(() =>
+        chrome.runtime.sendMessage({
+          channel: "wallet-ui",
+          method: "refresh",
+          params: { force: true },
+        }),
+      );
+      assert.equal(
+        (await worker.evaluate(() => globalThis.walletTestRequests)).length,
+        before,
+      );
+      await worker.evaluate(() => {
+        globalThis.walletTestRateLimited = false;
+      });
+      await page.setViewportSize({ width: 420, height: 600 });
+      report.checks.push(
+        "first-load 429 is shown once, forced reads honor cooldown and observation resumes",
+      );
+    }
     await expect
-      .poll(async () => {
-        const state = (
-          await worker.evaluate(() => chrome.storage.local.get("wallet"))
-        ).wallet;
-        return state.balances[state.selectedId]?.complete;
-      })
+      .poll(
+        async () => {
+          const state = (
+            await worker.evaluate(() => chrome.storage.local.get("wallet"))
+          ).wallet;
+          return state.balances[state.selectedId]?.complete;
+        },
+        { timeout: 45_000 },
+      )
       .toBe(true);
     const initial = (
       await worker.evaluate(() => chrome.storage.local.get("wallet"))
@@ -270,6 +341,23 @@ try {
       `${format} account restoration preserves the expected receive address`,
     );
     if (format === "official") {
+      await worker.evaluate(() => {
+        globalThis.walletTestRateLimited = true;
+      });
+      await page.getByRole("button", { name: "Refresh balance" }).click();
+      await expect(page.locator(".overview .notice")).toContainText(
+        "Showing your last known balance",
+      );
+      await capture(page, "rate-limited-cached");
+      await worker.evaluate(() => {
+        globalThis.walletTestRateLimited = false;
+      });
+      await expect(page.locator(".overview .notice")).toHaveCount(0, {
+        timeout: 45_000,
+      });
+      report.checks.push(
+        "cached balances survive 429 and recover automatically after Retry-After",
+      );
       await capture(page, "popup-dark");
       await capture(page, "desktop", 1280, 900);
       await capture(page, "compact", 380, 600);
@@ -287,7 +375,21 @@ try {
       await page.waitForFunction(
         () => document.documentElement.dataset.theme === "light",
       );
+      await page
+        .getByRole("button", { name: "Save settings", exact: true })
+        .waitFor();
+      await expect(
+        page.getByRole("button", { name: "Save settings", exact: true }),
+      ).toBeEnabled();
       await capture(page, "settings-light");
+      report.contrast.lightInput = await assertTextContrast(
+        page.getByLabel("Account name", { exact: true }),
+      );
+      report.contrast.lightNavigation = await assertTextContrast(
+        page
+          .getByRole("navigation")
+          .getByRole("button", { name: "Settings", exact: true }),
+      );
       const save = page.getByRole("button", {
         name: "Save settings",
         exact: true,
@@ -318,7 +420,13 @@ try {
       await page.waitForFunction(
         () => document.documentElement.dataset.theme === "dark",
       );
+      await expect(
+        page.getByRole("button", { name: "Save settings", exact: true }),
+      ).toBeEnabled();
       await capture(page, "long-account-name", 380, 600);
+      report.contrast.darkInput = await assertTextContrast(
+        page.getByLabel("Account name", { exact: true }),
+      );
       await page.getByRole("button", { name: "Lock wallet" }).click();
       await page
         .getByRole("button", { name: "Forgot password?", exact: true })
@@ -352,7 +460,7 @@ try {
         .click();
       await expect(
         page.getByRole("button", { name: "Send", exact: true }),
-      ).toBeVisible({ timeout: 30_000 });
+      ).toBeVisible({ timeout: 45_000 });
       assert.equal(
         (await worker.evaluate(() => chrome.storage.local.get("wallet"))).wallet
           .accounts[0].addresses[0].address,

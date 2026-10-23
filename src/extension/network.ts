@@ -1,5 +1,5 @@
 import { hexToBytes } from "@noble/hashes/utils";
-import { PearlBlockbook } from "../../packages/connector/src/blockbook";
+import { pearlProvider } from "./provider";
 import { paymentScript, type TransferPlan } from "../core/transactions";
 import {
   activeOperation,
@@ -87,45 +87,45 @@ export async function scan(
   base: string,
   operations: Operation[],
 ): Promise<Balance> {
-  const api = new PearlBlockbook(endpoint(base), account.network);
+  const api = pearlProvider(endpoint(base), account.network);
   const tip = await api.tip(),
     coins: Coin[] = [],
     used: string[] = [];
-  let cursor = 0;
-  await Promise.all(
-    Array.from({ length: 4 }, async () => {
-      while (cursor < account.addresses.length) {
-        const address = account.addresses[cursor++];
-        const history = (await api.read(
-          `/address/${address.address}?details=basic`,
-        )) as { txs?: unknown; unconfirmedTxs?: unknown };
-        if (
-          !Number.isSafeInteger(history.txs) ||
-          !Number.isSafeInteger(history.unconfirmedTxs)
-        )
-          throw new Error("Pearl returned incomplete address history");
-        if (Number(history.txs) > 0 || Number(history.unconfirmedTxs) > 0)
-          used.push(address.address);
-        const utxos = await api.utxos(
-          address.address,
-          hexToBytes(address.scriptHex),
-          tip,
-          { includeImmature: true },
-        );
-        for (const utxo of utxos)
-          coins.push({
-            txid: utxo.outpoint.txid,
-            vout: utxo.outpoint.vout,
-            amountGrains: utxo.amount.toString(),
-            scriptHex: address.scriptHex,
-            branch: address.branch,
-            index: address.index,
-            confirmations: utxo.confirmations,
-            coinbase: utxo.coinbase,
-          });
-      }
-    }),
-  );
+  for (const address of account.addresses) {
+    const history = (await api.read(
+      `/address/${address.address}?details=basic`,
+    )) as {
+      txs?: unknown;
+      unconfirmedTxs?: unknown;
+    };
+    if (
+      !Number.isSafeInteger(history.txs) ||
+      !Number.isSafeInteger(history.unconfirmedTxs) ||
+      Number(history.txs) < 0 ||
+      Number(history.unconfirmedTxs) < 0
+    )
+      throw new Error("Pearl returned incomplete address history");
+    if (Number(history.txs) === 0 && Number(history.unconfirmedTxs) === 0)
+      continue;
+    used.push(address.address);
+    const utxos = await api.utxos(
+      address.address,
+      hexToBytes(address.scriptHex),
+      tip,
+      { includeImmature: true },
+    );
+    for (const utxo of utxos)
+      coins.push({
+        txid: utxo.outpoint.txid,
+        vout: utxo.outpoint.vout,
+        amountGrains: utxo.amount.toString(),
+        scriptHex: address.scriptHex,
+        branch: address.branch,
+        index: address.index,
+        confirmations: utxo.confirmations,
+        coinbase: utxo.coinbase,
+      });
+  }
   if (new Set(coins.map(outpoint)).size !== coins.length)
     throw new Error("Duplicate wallet inputs returned by Pearl");
   await api.assertTip(tip);

@@ -1,3 +1,4 @@
+import { Button } from "./components/button";
 import { useState, type FormEvent } from "react";
 import { command } from "./client";
 import { Icon, Notice } from "./primitives";
@@ -42,10 +43,10 @@ export function AccessRecovery({
   }
   return (
     <section className="onboarding access-recovery">
-      <button className="back" onClick={back} disabled={busy}>
+      <Button className="back" onClick={back} disabled={busy} variant="ghost">
         <Icon name="back" />
         Unlock wallet
-      </button>
+      </Button>
       <h1>Recover wallet access</h1>
       <p className="muted">
         Reset this device's password using the recovery phrase for its existing
@@ -61,9 +62,9 @@ export function AccessRecovery({
             onRepeat={setRepeated}
           />
           {error && <Notice error>{error}</Notice>}
-          <button disabled={busy}>
+          <Button disabled={busy} type="submit">
             {busy ? "Checking account ownership…" : "Reset password and unlock"}
-          </button>
+          </Button>
         </fieldset>
       </form>
       <p className="footnote">

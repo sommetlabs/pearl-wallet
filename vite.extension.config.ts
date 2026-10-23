@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "tailwindcss";
 import { readFileSync } from "node:fs";
 import {
   WALLET_VERSION,
@@ -9,6 +10,34 @@ import {
 export default defineConfig({
   base: "./",
   publicDir: false,
+  css: {
+    postcss: {
+      plugins: [
+        tailwindcss({
+          content: ["./src/extension/ui/**/*.{ts,tsx}"],
+          corePlugins: { preflight: false },
+          theme: {
+            extend: {
+              colors: {
+                primary: {
+                  DEFAULT: "var(--action)",
+                  foreground: "oklch(0.985 0.01 264)",
+                },
+                foreground: "var(--fg)",
+                background: "var(--bg)",
+                secondary: "var(--secondary)",
+                muted: "var(--secondary)",
+                "muted-foreground": "var(--muted)",
+                border: "var(--border)",
+                ring: "var(--primary)",
+                destructive: "var(--error)",
+              },
+            },
+          },
+        }),
+      ],
+    },
+  },
   plugins: [
     react(),
     {
@@ -99,6 +128,17 @@ export default defineConfig({
             source: readFileSync(new URL(file, import.meta.url)),
           });
         for (const name of [
+          "@babel/runtime",
+          "@floating-ui/core",
+          "@floating-ui/dom",
+          "@floating-ui/react-dom",
+          "@floating-ui/utils",
+          "reselect",
+          "@base-ui/react",
+          "@base-ui/utils",
+          "class-variance-authority",
+          "clsx",
+          "cnfast",
           "@noble/curves",
           "@phosphor-icons/react",
           "@noble/hashes",
@@ -117,7 +157,7 @@ export default defineConfig({
             fileName: `licenses/${name.replace(/^@/, "").replaceAll("/", "-")}.txt`,
             source: readFileSync(
               new URL(
-                `node_modules/${name}/${name === "qrcode" ? "license" : "LICENSE"}`,
+                `node_modules/${name}/${["qrcode", "clsx"].includes(name) ? "license" : "LICENSE"}`,
                 import.meta.url,
               ),
             ),

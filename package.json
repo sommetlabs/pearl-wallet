@@ -23,6 +23,7 @@
     "check:extension": "npm run build:extension && node tools/check-wallet-extension.mjs"
   },
   "dependencies": {
+    "@base-ui/react": "^1.9.0",
     "@noble/curves": "1.6.0",
     "@noble/hashes": "1.5.0",
     "@noble/post-quantum": "^0.6.1",
@@ -33,6 +34,8 @@
     "@scure/btc-signer": "^1.4.0",
     "@sommetlabs/pearl-wallet-connect": "file:./packages/connector",
     "@tanstack/react-query": "^5.59.0",
+    "class-variance-authority": "^0.7.1",
+    "cnfast": "^0.1.0",
     "dexie": "^4.0.8",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",

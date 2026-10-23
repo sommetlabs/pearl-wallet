@@ -1,5 +1,5 @@
 import { uiCommand, type UiCommand } from "./commands";
-import { PearlBlockbook } from "../../packages/connector/src/blockbook";
+import { pearlProvider } from "./provider";
 import { cryptoCall, resetCryptoHost } from "./crypto-host";
 import { selected, activeOperation, type Settings } from "./model";
 import { endpoint } from "./network";
@@ -131,12 +131,13 @@ async function internal(request: UiCommand) {
       for (const network of ["mainnet", "testnet2"] as const) {
         next.endpoints[network] = endpoint(next.endpoints[network]);
         if (next.endpoints[network] !== store.settings.endpoints[network]) {
-          await new PearlBlockbook(next.endpoints[network], network).tip();
+          await pearlProvider(next.endpoints[network], network).tip();
           for (const account of store.accounts.filter(
             (a) => a.network === network,
           )) {
             delete store.balances[account.id];
             delete store.errors[account.id];
+            delete store.retryAt[network];
           }
         }
       }

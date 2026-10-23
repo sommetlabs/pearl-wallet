@@ -2,7 +2,7 @@
 
 The extension runs locally in Chrome or Brave. It does not need Vercel, a native companion, or a remote signer. The existing hosted wallet remains a separate build of this repository.
 
-Version 0.2.0 adds guided setup and recovery using Abyss's existing design. See the [implementation review and remaining limits](reviews/extension-0.2.0.md).
+Version 0.1.0 adds guided setup and recovery using Abyss's existing design. See the [implementation review and remaining limits](reviews/extension-0.1.0.md).
 
 ## Build and install
 
@@ -13,7 +13,9 @@ npm run build:extension
 
 Open `chrome://extensions` or `brave://extensions`, enable Developer mode, choose **Load unpacked**, and select `dist-extension`. Use **Reload** after rebuilding. Keep the same directory when updating an installed unpacked extension.
 
-The toolbar opens setup in a regular extension tab so clicking away does not dismiss an unfinished backup. Creation offers 12 words (the official Pearl wallet's default) or 24 words. Reveal and save the phrase, then verify three randomly selected positions before the encrypted wallet is saved. Changing the word count before creation discards the unsaved phrase.
+The toolbar opens setup in a regular extension tab so clicking away does not dismiss an unfinished backup. Creation follows backup, verification, then the local password. It offers 12 words (the official Pearl wallet's default) or 24 words. Reveal and save the phrase, then verify three randomly selected positions before the encrypted wallet is saved. Changing the word count before creation discards the unsaved phrase.
+
+Explicit Copy and Paste controls require a user action and report clipboard failure. Copying words does not replace the independent backup check.
 
 Restore accepts English BIP-39 words in numbered, masked fields. Paste the complete phrase into any field; checksum and spelling validation happen locally. Both supported wallet formats are previewed before import. **Find my account** checks only their first receive addresses on the public indexer; the offline comparison action makes no indexer request. Activity at the first address is a hint, not proof that other addresses are empty. Confirm the format and receive address against the original wallet.
 
@@ -84,3 +86,5 @@ The default extension check uses a temporary profile and controlled Blockbook fi
 The extension check exercises default 12-word creation; the setup check adds 24-word creation, persistent setup tabs, invalid phrases, official/web address compatibility, offline comparison without indexer requests and wrong-phrase recovery that leaves the vault untouched. Set `PEARL_UI_REPORT_DIR` for screenshots and a JSON check report. Generated recovery words are not captured.
 
 For native signature verification, set `PEARL_SOURCE` to the pinned official checkout and `PEARL_GO` to the required Go executable, build its XMSS library with `make -C xmss lib`, then run `node tools/check-wallet-extension.mjs --native`. The official script engine must accept the signed fixture and reject a tampered copy. Fixture signing is not a live payment. `check:core:reference` separately covers native address and transfer vectors.
+
+Provider reads are shared per origin and paced at four requests per second. Empty addresses skip UTXO requests only after valid zero history counters. A 429 honors Retry-After or applies a bounded exponential cooldown; forced refresh respects the same wait. The UI preserves marked last-known balances and retries automatically. Signed transaction POSTs do not acquire automatic retries.

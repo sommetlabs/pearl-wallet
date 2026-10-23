@@ -38,6 +38,7 @@ export class PearlBlockbook {
   constructor(
     private readonly base = "/api/pearl",
     private readonly network: PearlNetwork = "testnet2",
+    private readonly readFetch: typeof fetch = (...args) => fetch(...args),
   ) {}
   async read(path: string): Promise<unknown> {
     if (
@@ -46,12 +47,15 @@ export class PearlBlockbook {
       )
     )
       throw new Error("Unsupported Pearl request");
-    const response = await fetch(`${this.base}${path === "/" ? "" : path}`, {
-      signal: AbortSignal.timeout(25_000),
-      credentials: "same-origin",
-      cache: "no-store",
-      redirect: "error",
-    });
+    const response = await this.readFetch(
+      `${this.base}${path === "/" ? "" : path}`,
+      {
+        signal: AbortSignal.timeout(25_000),
+        credentials: "same-origin",
+        cache: "no-store",
+        redirect: "error",
+      },
+    );
     if (!response.ok) {
       const txid = /^\/tx\/([0-9a-f]{64})$/.exec(path)?.[1];
       const body = await response.json().catch(() => null);

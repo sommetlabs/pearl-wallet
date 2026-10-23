@@ -1,3 +1,5 @@
+import { Input } from "./components/input";
+import { Button } from "./components/button";
 import {
   cloneElement,
   useId,
@@ -68,7 +70,7 @@ export function PasswordField({
     <div className="field">
       <label htmlFor={id}>{label}</label>
       <div className="password-control">
-        <input
+        <Input
           id={id}
           type={visible ? "text" : "password"}
           autoComplete={autoComplete}
@@ -79,15 +81,17 @@ export function PasswordField({
           required
           maxLength={1024}
         />
-        <button
+        <Button
           type="button"
           className="icon"
           aria-label={`${visible ? "Hide" : "Show"} ${label.toLowerCase()}`}
           aria-pressed={visible}
           onClick={() => setVisible(!visible)}
+          variant="ghost"
+          size="icon"
         >
           <Icon name={visible ? "eyeOff" : "eye"} />
-        </button>
+        </Button>
       </div>
       {capsLock && <small role="status">Caps Lock is on</small>}
     </div>
@@ -141,17 +145,18 @@ export function Copy({
 }) {
   const [copied, setCopied] = useState(false);
   return (
-    <button
+    <Button
       className="secondary"
       onClick={async () => {
         await navigator.clipboard.writeText(value);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
+      variant="outline"
     >
       <Icon name={copied ? "check" : "copy"} />
       {copied ? "Copied" : label}
-    </button>
+    </Button>
   );
 }
 const icons = {

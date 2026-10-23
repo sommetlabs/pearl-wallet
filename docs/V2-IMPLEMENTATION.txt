@@ -1,4 +1,4 @@
-ABYSS WALLET V2 — EARLY ALPHA 0.2.0
+ABYSS WALLET V2 — EARLY ALPHA 0.1.0
 
 Repository: sommetlabs/pearl-wallet
 Branch: feat/abyss-wallet-v2
@@ -31,6 +31,16 @@ sendTransaction/signTransaction, disconnect and capabilities. Any approved secur
 top-level site can use it. Internal wallet commands are unavailable to sites.
 Disconnecting a site cancels unapproved requests but retains signed transactions.
 
+Shared per-provider read pacing and 429 cooldown, respecting Retry-After even
+for forced refresh, reduce provider load. Empty histories avoid redundant UTXO
+lookups; canonical input verification remains.
+
+Abyss-derived Base UI/shadcn Button/Input controls use an extension-scoped
+Tailwind compiler. Readable type, three-column words, manual copy/paste and a
+content-sized desktop workspace replace the prior compact-only treatment.
+Creation follows backup, verification, then the local password. Version remains
+0.1.0 until an actual release.
+
 One serialized owner in ordinary typed modules: state, payments, network, sites,
 crypto host/worker and UI. No plugin framework or per-dApp signing implementation.
 Keys/signing live in the dedicated worker; authenticated setup/recovery requests
@@ -39,7 +49,7 @@ persisted. Public account metadata, balances and transaction records are local.
 
 VERIFICATION
 
-The existing suite plus wallet ownership/import tests passes 1674 tests; six
+The existing suite plus wallet ownership/import tests passes 1679 tests; six
 pre-existing live checks remain skipped. Type checking and both extension and
 existing testnet web builds pass. Disposable Chrome/Brave profiles cover creation,
 encrypted storage, canonical balance reads, connection approval, internal-method

@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { Button } from "./components/button";
 import { format, type Account, type Balance, type Operation } from "../model";
 import { Icon, Notice } from "./primitives";
 import { short } from "./client";
@@ -8,6 +10,7 @@ interface OverviewProps {
   operations: Operation[];
   busy: boolean;
   error?: string;
+  retryAt?: number;
   onSend: () => void;
   onReceive: () => void;
   onRefresh: () => void;
@@ -20,12 +23,21 @@ export function Overview({
   operations,
   busy,
   error,
+  retryAt = 0,
   onSend,
   onReceive,
   onRefresh,
   onReview,
   onActivity,
 }: OverviewProps) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!retryAt || retryAt <= Date.now()) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [retryAt]);
+  const retrySeconds = Math.max(0, Math.ceil((retryAt - now) / 1000));
   const stale = !balance || Date.now() - balance.updatedAt > 90_000 || !!error;
   const recent = [...operations]
     .filter((operation) => operation.status !== "cancelled")
@@ -38,14 +50,16 @@ export function Overview({
         <div className="balance-content">
           <div className="row">
             <span className="muted">Spendable balance</span>
-            <button
+            <Button
               className="icon"
               aria-label="Refresh balance"
-              disabled={busy}
+              disabled={busy || retrySeconds > 0}
               onClick={onRefresh}
+              variant="ghost"
+              size="icon"
             >
               <Icon name="refresh" />
-            </button>
+            </Button>
           </div>
           <p className={`balance-value${!balance ? " loading-value" : ""}`}>
             {balance ? format(balance.spendable) : "—"}
@@ -57,24 +71,28 @@ export function Overview({
               : "Pearl Mainnet"}
           </p>
           <div className="actions">
-            <button onClick={onSend}>
+            <Button onClick={onSend}>
               <Icon name="send" />
               Send
-            </button>
-            <button className="secondary" onClick={onReceive}>
+            </Button>
+            <Button className="secondary" onClick={onReceive} variant="outline">
               <Icon name="receive" />
               Receive
-            </button>
+            </Button>
           </div>
         </div>
         <div className={`sync-status${stale ? " stale" : ""}`} role="status">
           <span className="status-dot" />
           <span>
-            {busy
-              ? "Checking Pearl…"
-              : balance
-                ? `${stale ? "Last known" : "Synced"} · Block ${balance.height.toLocaleString()}`
-                : "Reading your addresses…"}
+            {retrySeconds > 0
+              ? `Retrying in ${retrySeconds}s`
+              : busy
+                ? "Checking Pearl…"
+                : balance
+                  ? `${stale ? "Last known" : "Synced"} · Block ${balance.height.toLocaleString()}`
+                  : error
+                    ? "Balance unavailable"
+                    : "Checking your addresses…"}
           </span>
           {balance && (
             <time title={new Date(balance.updatedAt).toLocaleString()}>
@@ -87,11 +105,13 @@ export function Overview({
         </div>
       </section>
       {error && (
-        <Notice error>
-          {error}{" "}
+        <Notice error={!retrySeconds}>
+          {retrySeconds
+            ? `Pearl is busy. Retrying in ${retrySeconds}s.`
+            : error}{" "}
           {balance
-            ? "Your last known balance is kept; retry with Refresh."
-            : "Your balance could not be verified. Retry with Refresh."}
+            ? "Showing your last known balance."
+            : "Your balance has not been verified yet."}
         </Notice>
       )}
       <section className="funds" aria-labelledby="funds-title">
@@ -131,27 +151,34 @@ export function Overview({
             )}
           </dl>
         ) : (
-          <div className="balance-placeholder" aria-label="Loading balances">
-            <span />
-            <span />
-            <span />
+          <div className="balance-unavailable">
+            <Icon name={error ? "info" : "refresh"} />
+            <p>
+              {error
+                ? "Balance details will return when Pearl is available."
+                : "Checking receive and change addresses. This may take a moment."}
+            </p>
           </div>
         )}
       </section>
-      <section aria-labelledby="recent-title">
+      <section className="recent-activity" aria-labelledby="recent-title">
         <div className="section-heading">
           <h2 id="recent-title">Recent activity</h2>
           {recent.length > 0 && (
-            <button className="text-button" onClick={onActivity}>
+            <Button
+              className="text-button"
+              onClick={onActivity}
+              variant="ghost"
+            >
               View all
               <Icon name="external" />
-            </button>
+            </Button>
           )}
         </div>
         {recent.length ? (
           <div className="recent-list">
             {recent.map((operation) => (
-              <button
+              <Button
                 className="recent-item"
                 key={operation.id}
                 onClick={() =>
@@ -183,7 +210,7 @@ export function Overview({
                           : "Pending"}
                   </small>
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         ) : (

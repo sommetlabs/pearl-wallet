@@ -94,6 +94,7 @@ export interface Store {
   settings: Settings;
   balances: Record<string, Balance>;
   errors: Record<string, string>;
+  retryAt: Partial<Record<Network, number>>;
   operations: Operation[];
   grants: Grant[];
   connections: ConnectionRequest[];
@@ -107,6 +108,7 @@ export const defaults = (): Store => ({
   accounts: [],
   balances: {},
   errors: {},
+  retryAt: {},
   operations: [],
   grants: [],
   connections: [],

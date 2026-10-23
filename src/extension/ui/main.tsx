@@ -1,3 +1,4 @@
+import { Button } from "./components/button";
 import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { command } from "./client";
@@ -60,8 +61,8 @@ function Wallet() {
     setError("");
     try {
       await command("refresh", { force });
-    } catch (e) {
-      setError((e as Error).message);
+    } catch {
+      // Account refresh errors are persisted and shown once in the overview.
     } finally {
       setBusy(false);
       await load();
@@ -77,6 +78,17 @@ function Wallet() {
   }, [view?.unlocked, view?.selectedId]);
   const account = view?.accounts.find((a) => a.id === view.selectedId);
   const balance = account && view?.balances[account.id];
+  const retryAt = account ? (view?.retryAt?.[account.network] ?? 0) : 0;
+  useEffect(() => {
+    if (!view?.unlocked || retryAt <= Date.now()) return;
+    const timer = setTimeout(
+      () => {
+        void refresh();
+      },
+      retryAt - Date.now() + 100,
+    );
+    return () => clearTimeout(timer);
+  }, [view?.unlocked, view?.selectedId, retryAt]);
   const op = view?.operations.find(
     (op) => op.id === reviewId && op.status === "review",
   );
@@ -87,14 +99,14 @@ function Wallet() {
     setPage("review");
   }
   return (
-    <div className="wallet">
+    <div className={`wallet${view?.unlocked ? " is-unlocked" : ""}`}>
       <header>
         <div className="brand-group">
           <Brand />
           <span className="alpha">Early alpha</span>
         </div>
         <div className="tools">
-          <button
+          <Button
             className="icon"
             title="Open full page"
             aria-label="Open full page"
@@ -103,11 +115,13 @@ function Wallet() {
                 url: chrome.runtime.getURL("extension/wallet.html"),
               })
             }
+            variant="ghost"
+            size="icon"
           >
             <Icon name="expand" />
-          </button>
+          </Button>
           {view?.unlocked && (
-            <button
+            <Button
               className="icon"
               title="Lock wallet"
               aria-label="Lock wallet"
@@ -115,9 +129,11 @@ function Wallet() {
                 setView(await command("lock"));
                 setPage("home");
               }}
+              variant="ghost"
+              size="icon"
             >
               <Icon name="lock" />
-            </button>
+            </Button>
           )}
         </div>
       </header>
@@ -167,9 +183,13 @@ function Wallet() {
           </div>
           <main>
             {page !== "home" && page !== "settings" && !op && (
-              <button className="back" onClick={() => setPage("home")}>
+              <Button
+                className="back"
+                onClick={() => setPage("home")}
+                variant="ghost"
+              >
                 <Icon name="back" /> Wallet
-              </button>
+              </Button>
             )}
             {error && <Notice error>{error}</Notice>}
             {connection && (
@@ -186,7 +206,7 @@ function Wallet() {
                   </Notice>
                 )}
                 <div className="actions">
-                  <button
+                  <Button
                     disabled={account.network !== connection.network}
                     onClick={async () => {
                       try {
@@ -198,16 +218,17 @@ function Wallet() {
                     }}
                   >
                     Connect
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     className="secondary"
                     onClick={async () => {
                       await command("cancel", { id: connection.id });
                       await load();
                     }}
+                    variant="outline"
                   >
                     Reject
-                  </button>
+                  </Button>
                 </div>
               </section>
             )}
@@ -228,7 +249,8 @@ function Wallet() {
                 operations={view.operations.filter(
                   (operation) => operation.accountId === account.id,
                 )}
-                busy={busy}
+                busy={busy || view.refreshing}
+                retryAt={retryAt}
                 error={view.errors[account.id]}
                 onSend={() => setPage("send")}
                 onReceive={() => setPage("receive")}
@@ -266,7 +288,8 @@ function Wallet() {
                 ["settings", "Settings"],
               ] as const
             ).map(([id, label]) => (
-              <button
+              <Button
+                variant="ghost"
                 key={id}
                 className={page === id ? "active" : ""}
                 aria-current={page === id ? "page" : undefined}
@@ -285,7 +308,7 @@ function Wallet() {
                   }
                 />
                 {label}
-              </button>
+              </Button>
             ))}
           </nav>
         </>

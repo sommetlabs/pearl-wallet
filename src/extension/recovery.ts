@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PearlBlockbook } from "../../packages/connector/src/blockbook";
+import { pearlProvider } from "./provider";
 import { cryptoCall } from "./crypto-host";
 import { store } from "./state";
 import type { RecoveryCandidate } from "./model";
@@ -13,10 +13,7 @@ export async function inspectRecovery(
   const previews = await cryptoCall("previewRecovery", { mnemonic });
   if (!checkActivity)
     return previews.map((preview) => ({ ...preview, activity: "not-checked" }));
-  const indexer = new PearlBlockbook(
-    store.settings.endpoints.testnet2,
-    "testnet2",
-  );
+  const indexer = pearlProvider(store.settings.endpoints.testnet2, "testnet2");
   const history = z.object({
     txs: z.number().int().nonnegative(),
     unconfirmedTxs: z.number().int().nonnegative(),
