@@ -15,5 +15,19 @@
     "revision": "3ab5f883ce052eaf315ec17513ded45bf656e7c6",
     "path": "packages/connector/src/extension.ts",
     "sha256": "0fcc3c397d159db37eaa8f0ae7b9b5b407f584e9e907b314daadefec1124a934"
+  },
+  "previewWprl": {
+    "address": "985645c4ed3785a3c4b6a5b5a3b596aa7875b94fc1efb4d2bb03b4f809f5b112",
+    "colorHex": "137f347261c39475c1d4cc2b45f41f69fdb6578cfd418cf33601b942bf98c498",
+    "admin": "e253e9ed24ec3253bfa365d46ef73801efbeb0663f2bb9610c299c4d27161f4d",
+    "minter": "e253e9ed24ec3253bfa365d46ef73801efbeb0663f2bb9610c299c4d27161f4d",
+    "decimals": 8,
+    "verifiedCircuitCount": 13,
+    "deployment": {
+      "address": "985645c4ed3785a3c4b6a5b5a3b596aa7875b94fc1efb4d2bb03b4f809f5b112",
+      "txId": "003ebae39eed909f7cf000b29c899e59b3213f18d282c31c2ea579f7bc7925cbe2",
+      "txHash": "64e52910f8519d0cd1666b4ac2681554147b9d61e28059174276224eb501b0de",
+      "blockHeight": 1430653
+    }
   }
 }
