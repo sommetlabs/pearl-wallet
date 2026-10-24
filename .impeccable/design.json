@@ -582,7 +582,7 @@
   ],
   "narrative": {
     "northStar": "The Abyss wallet",
-    "overview": "The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and restrained dot field. The extension reuses Abyss's shadcn-based Base UI button and input patterns, adapted to its existing React 18 and Tailwind 3 build. Inter is an intentional incumbent choice, retained from the user-pinned product.\n\nThe interface gives amounts, account identity and the current task priority. Body text and ordinary controls are readable at the same size; support copy recedes without becoming miniature. The coherent wordmark, Wallet name and quiet Early alpha badge identify the product. Desktop uses a content-sized workspace with a left navigation rail; popup and intermediate widths keep bottom navigation. Site connection consent and its outcome use a focused single task surface.",
+    "overview": "The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and a quiet static blue wash. The extension reuses Abyss's shadcn-based Base UI button and input patterns, adapted to its existing React 18 and Tailwind 3 build. Inter is an intentional incumbent choice, retained from the user-pinned product.\n\nThe interface gives amounts, account identity and the current task priority. Body text and ordinary controls are readable at the same size; support copy recedes without becoming miniature. The coherent wordmark, Wallet name and quiet Early alpha badge identify the product. Desktop uses a content-sized workspace with a left navigation rail; popup and intermediate widths keep bottom navigation. Site connection consent and its outcome use a focused single task surface.",
     "keyCharacteristics": [
       "Established Abyss wordmarks, self-hosted type and Phosphor icons.",
       "Shared Base UI controls within rounded tonal surfaces.",
@@ -602,7 +602,7 @@
       },
       {
         "name": "Tonal Depth",
-        "body": "Separate surfaces with tonal fills and subtle borders. Preserve the balance gradient and full-page dot field; controls and panels do not cast decorative shadows.",
+        "body": "Separate surfaces with tonal fills and subtle borders. Preserve the balance gradient and quiet canvas wash; controls and panels do not cast decorative shadows.",
         "section": "elevation"
       }
     ],

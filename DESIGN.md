@@ -242,7 +242,7 @@ components:
 
 **Creative North Star: "The Abyss wallet"**
 
-The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and restrained dot field. The extension reuses Abyss's shadcn-based Base UI button and input patterns, adapted to its existing React 18 and Tailwind 3 build. Inter is an intentional incumbent choice, retained from the user-pinned product.
+The visual authority is Abyss's established app: its wordmark, blue, Inter and JetBrains Mono, rounded tonal surfaces, pill controls and a quiet static blue wash. The extension reuses Abyss's shadcn-based Base UI button and input patterns, adapted to its existing React 18 and Tailwind 3 build. Inter is an intentional incumbent choice, retained from the user-pinned product.
 
 The interface gives amounts, account identity and the current task priority. Body text and ordinary controls are readable at the same size; support copy recedes without becoming miniature. The coherent wordmark, Wallet name and quiet Early alpha badge identify the product. Desktop uses a content-sized workspace with a left navigation rail; popup and intermediate widths keep bottom navigation. Site connection consent and its outcome use a focused single task surface.
 
@@ -263,7 +263,7 @@ Blue-violet neutrals keep both themes recognizably Abyss. Frontmatter records da
 
 - **Abyss Blue** (`primary`): brand, focus, checked controls and recovery selection.
 - **Action Blue** (`action`): the accessible darker fill behind white primary labels and current setup-step numerals. The light action resolves to the light primary value.
-- **Dot Blue** (`dot`): the restrained full-page background pattern.
+- **Dot Blue** (`dot`): an available brand accent; the canvas wash uses primary at 6% opacity.
 
 **The Brand and Action Rule.** Keep the established primary blue for brand, focus and selection. Use the darker action fill for white button labels and the current setup step.
 
@@ -301,7 +301,7 @@ Role sizes come from the source, not a modular scale. The body explicitly inheri
 
 The compact wallet is (420px) wide, with a (360px) body minimum width, a (600px) minimum height and a (760px) maximum height. Header, account/network strip and bottom navigation remain outside the scrolling main area. Compact main padding is (18px 20px). Guided setup and payment approval retain a scrollable body and persistent actions.
 
-From (640px), the surface becomes content-sized up to (760px), within page padding (32px 24px). Height is automatic, with no desktop minimum or maximum. The shell retains rounded corners and a border, while setup, recovery and welcome content is constrained to (560px). Main padding becomes (12px 32px 28px); setup body and actions flow with the page. The dot field uses a (20px) grid.
+From (640px), the surface becomes content-sized up to (760px), within page padding (32px 24px). Height is automatic, with no desktop minimum or maximum. The shell retains rounded corners and a border, while setup, recovery and welcome content is constrained to (560px). Main padding becomes (12px 32px 28px); setup body and actions flow with the page. The canvas uses a static, broad primary-blue wash at 6% opacity.
 
 From (900px), the unlocked workspace grows to (1060px), with a (176px) left sidebar for Wallet, Activity and Settings. The header spans the workspace; account and network sit above the content column. The balance and actions occupy the left content column; fund details occupy the right, at (1.15fr / 1fr) with a (24px) gap. Activity and failure notices span both content columns. Ordinary forms remain constrained to (560px); the setup shell remains (760px). Below this breakpoint navigation stays beneath the task. Pending site connection and its completion temporarily use a single-column (760px) shell with (560px) content, account/network above the task and no wallet navigation or balance content. Compact consent content scrolls independently while the action row stays below it. From (900px), consent content flows naturally without a clipped inner viewport; the content row has a (420px) minimum height.
 
@@ -309,9 +309,9 @@ Recovery input and revealed creation words use two equal columns below the full-
 
 ## Elevation & Depth
 
-Depth comes from tonal surfaces, translucent fields, restrained borders and the balance gradient. Panels have no decorative box shadows. Base UI controls use inset focus rings; these are interaction feedback. The full-page view adds a restrained dot field outside the wallet; the popup keeps a stable canvas.
+Depth comes from tonal surfaces, translucent fields, restrained borders and the balance gradient. Panels have no decorative box shadows. Base UI controls use inset focus rings; these are interaction feedback. The page and popup share a quiet static blue wash. There is no dot field or animated background.
 
-**The Tonal Depth Rule.** Separate surfaces with tonal fills and subtle borders. Preserve the balance gradient and full-page dot field; controls and panels do not cast decorative shadows.
+**The Tonal Depth Rule.** Separate surfaces with tonal fills and subtle borders. Preserve the balance gradient and quiet canvas wash; controls and panels do not cast decorative shadows.
 
 ## Shapes
 
@@ -351,7 +351,7 @@ Restore uses masked responsive word cells, a deliberate Paste action, native who
 
 ### Site connection consent
 
-A dedicated consent screen shows the full requesting origin in a tonal block and two readable permission rows: public account/receive address and PRL balance. Account and network remain above the task. Reject and Connect share the bottom action row; the active action changes to Declining… or Connecting…, both buttons disable while pending, and errors stay with the request. A network mismatch explains which account to select and disables Connect.
+A dedicated consent screen shows the full requesting origin in a tonal block and two readable permission rows: public account/receive address and PRL balance. Account and network remain above the task. Reject and Connect share an equal-width bottom action row, with matching heights and wrapping labels at compact widths; the active action changes to Declining… or Connecting…, both buttons disable while pending, and errors stay with the request. A network mismatch explains which account to select and disables Connect.
 
 Completion explicitly says Connected or Connection declined, retains the origin and provides Continue to wallet. Payment permission remains separate. The request and outcome replace ordinary wallet content while open. Initial wallet loading text appears only after (400ms), avoiding flashes on quick reads; updates keep the current surface visible.
 

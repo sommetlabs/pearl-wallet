@@ -23,26 +23,35 @@ export const ready = (async () => {
   await resetCryptoHost();
   await chrome.alarms.create("wallet-maintenance", { periodInMinutes: 0.5 });
 })();
-let mutations = Promise.resolve();
-export function serial<T>(run: () => Promise<T>): Promise<T> {
-  const next = mutations.then(() => ready).then(run);
-  mutations = next.then(
-    () => undefined,
-    () => undefined,
-  );
-  return next;
-}
-export async function save() {
-  try {
-    await chrome.storage.local.set({ wallet: store });
-  } catch {
-    session.unlocked = false;
-    await resetCryptoHost();
-    throw new Error(
-      "Wallet storage could not be saved. The wallet has been locked; check available disk space before retrying.",
+function queue() {
+  let pending = Promise.resolve();
+  return <T>(run: () => Promise<T>): Promise<T> => {
+    const next = pending.then(() => ready).then(run);
+    pending = next.then(
+      () => undefined,
+      () => undefined,
     );
-  }
-  notifyWalletChange();
+    return next;
+  };
+}
+export const serial = queue();
+export const serialConsent = queue();
+let writes = Promise.resolve();
+export function save() {
+  const next = writes.then(async () => {
+    try {
+      await chrome.storage.local.set({ wallet: store });
+    } catch {
+      session.unlocked = false;
+      await resetCryptoHost();
+      throw new Error(
+        "Wallet storage could not be saved. The wallet has been locked; check available disk space before retrying.",
+      );
+    }
+    notifyWalletChange();
+  });
+  writes = next.catch(() => {});
+  return next;
 }
 export function notifyWalletChange() {
   void chrome.runtime

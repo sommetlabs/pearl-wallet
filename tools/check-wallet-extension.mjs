@@ -39,6 +39,7 @@ let address = "",
   slowNextTip = false,
   slowStarted = false,
   requests = 0,
+  broadcasts = 0,
   fundingAmount = 100_000_000n;
 const blockHash = "ab".repeat(32),
   genesis = "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96";
@@ -106,6 +107,7 @@ const server = createServer(async (req, res) => {
       : reply(400, { error: `Transaction '${id}' not found` });
   }
   if (path === "/api/v2/sendtx/") {
+    broadcasts++;
     let raw = "";
     for await (const chunk of req) raw += chunk;
     const tx = Transaction.fromRaw(Buffer.from(raw, "hex"));
@@ -288,6 +290,41 @@ async function check() {
     parallel.getByText("Loading your wallet…", { exact: true }),
   ).toHaveCount(0);
   await parallel.close();
+  const connectingDuringSync = context.waitForEvent("page", { timeout: 2500 });
+  void connectingDuringSync.catch(() => {});
+  await dapp.evaluate(() => {
+    window.syncConnection = window.abyssWallet
+      .connect({ network: "testnet2" })
+      .then(
+        () => "connected",
+        (error) => error.code,
+      );
+  });
+  const syncApproval = await connectingDuringSync;
+  await expect(
+    syncApproval.getByRole("button", { name: "Connect", exact: true }),
+  ).toBeVisible({ timeout: 2500 });
+  const rejectBox = await syncApproval
+    .getByRole("button", { name: "Reject", exact: true })
+    .boundingBox();
+  const approveBox = await syncApproval
+    .getByRole("button", { name: "Connect", exact: true })
+    .boundingBox();
+  assert(
+    Math.abs(rejectBox.width - approveBox.width) < 1 &&
+      Math.abs(rejectBox.height - approveBox.height) < 1,
+  );
+  await syncApproval
+    .getByRole("button", { name: "Reject", exact: true })
+    .click();
+  assert.equal(
+    await dapp.evaluate(() => window.syncConnection),
+    "REQUEST_REJECTED",
+  );
+  await syncApproval.close();
+  checkpoint(
+    "first Connect opens during active discovery; consent buttons have equal dimensions",
+  );
   await expect(
     page.getByRole("button", { name: "Refresh balance" }),
   ).toBeEnabled({ timeout: 15_000 });
@@ -541,9 +578,9 @@ async function check() {
       siteApproval.getByRole("button", { name: "Connect", exact: true }),
     ).toBeVisible();
     const existingCount = context.pages().length;
-    await abyss
-      .getByRole("button", { name: "Show Pearl wallet", exact: true })
-      .click();
+    await expect(
+      abyss.getByRole("button", { name: "Connecting…", exact: true }),
+    ).toBeDisabled();
     await siteApproval
       .getByRole("button", { name: "Connect", exact: true })
       .click();
@@ -603,7 +640,7 @@ async function check() {
     await abyss.evaluate(() => window.abyssWallet.disconnect());
     await expect(
       abyss.getByRole("button", { name: "Connect Pearl", exact: true }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
     const siteReconnect = nextPage();
     await abyss
       .getByRole("button", { name: "Connect Pearl", exact: true })
@@ -722,6 +759,24 @@ async function check() {
   await expect(
     page.getByRole("button", { name: "Approve and send" }),
   ).toBeVisible({ timeout: 30_000 });
+  for (const width of [380, 420, 1280]) {
+    await page.setViewportSize({ width, height: width === 1280 ? 900 : 600 });
+    const reject = await page
+      .getByRole("button", { name: "Reject", exact: true })
+      .boundingBox();
+    const approve = await page
+      .getByRole("button", { name: "Approve and send", exact: true })
+      .boundingBox();
+    assert(
+      Math.abs(reject.width - approve.width) < 1 &&
+        Math.abs(reject.height - approve.height) < 1,
+    );
+    if (reportDir)
+      await page.screenshot({
+        path: join(reportDir, `payment-review-${width}.png`),
+      });
+  }
+  await page.setViewportSize({ width: 420, height: 600 });
   if (reportDir)
     await page.screenshot({ path: join(reportDir, "payment-review.png") });
   await expect(page.getByText("Network fee", { exact: true })).toBeInViewport();
@@ -791,6 +846,15 @@ async function check() {
       "official Pearl script engine accepts the payment and rejects tampering",
     );
   }
+  const submittedBeforeCheck = broadcasts;
+  await page.getByRole("button", { name: "Check status", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Check status", exact: true }),
+  ).toBeEnabled({ timeout: 30_000 });
+  assert.equal(broadcasts, submittedBeforeCheck);
+  checkpoint(
+    "Activity Check status only observes and never submits a transaction",
+  );
   if (reportDir)
     await page.screenshot({ path: join(reportDir, "uncertain-broadcast.png") });
   await page

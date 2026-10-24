@@ -41,6 +41,7 @@ async function wallet() {
       },
     ]),
     broadcast: vi.fn(),
+    transaction: vi.fn(),
   };
   const cryptoCall = vi.fn(
     async (method: string, params: { request: typeof request }) =>
@@ -89,8 +90,17 @@ async function wallet() {
     { origin, accountId: account.id, createdAt: Date.now() },
   ];
   const { external } = await import("../../src/extension/sites");
-  const { approve } = await import("../../src/extension/payments");
-  return { ...state, external, approve, provider, request, cryptoCall, saved };
+  const { approve, observe } = await import("../../src/extension/payments");
+  return {
+    ...state,
+    external,
+    approve,
+    observe,
+    provider,
+    request,
+    cryptoCall,
+    saved,
+  };
 }
 afterEach(() => {
   vi.doUnmock("../../src/extension/provider");
@@ -143,4 +153,62 @@ it("rechecks the canonical unspent inputs before signing a reviewed PSBT", async
   expect(
     w.cryptoCall.mock.calls.some(([method]) => method === "signPsbt"),
   ).toBe(false);
+});
+
+it("does not sign if site permission is revoked while inputs are being verified", async () => {
+  const w = await wallet();
+  const pending = (await w.external("signPsbt", w.request, origin)) as {
+    pending: string;
+  };
+  const coins = await w.provider.utxos();
+  let release!: (value: typeof coins) => void;
+  w.provider.utxos.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        release = resolve;
+      }),
+  );
+  const approval = w.approve(pending.pending);
+  const refused = expect(approval).rejects.toThrow(
+    "expired or its account changed",
+  );
+  await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+  await w.external("disconnect", {}, origin);
+  release(coins);
+  await refused;
+  expect(
+    w.cryptoCall.mock.calls.some(([method]) => method === "signPsbt"),
+  ).toBe(false);
+  expect(w.store.operations[0].status).toBe("cancelled");
+  expect(w.provider.broadcast).not.toHaveBeenCalled();
+});
+
+it("observes a saved signature without broadcasting another transaction", async () => {
+  const w = await wallet();
+  const pending = (await w.external("signPsbt", w.request, origin)) as {
+    pending: string;
+  };
+  await w.approve(pending.pending);
+  w.provider.transaction.mockResolvedValue({ confirmations: 2 });
+  await w.observe(pending.pending);
+  expect(w.provider.transaction).toHaveBeenCalledOnce();
+  expect(w.store.operations[0].status).toBe("confirmed");
+  expect(w.provider.broadcast).not.toHaveBeenCalled();
+});
+it("keeps a missing saved transaction reserved and explains the observation result", async () => {
+  const w = await wallet();
+  const pending = (await w.external("signPsbt", w.request, origin)) as {
+    pending: string;
+  };
+  await w.approve(pending.pending);
+  const { PearlTransactionNotFound } =
+    await import("../../packages/connector/src/blockbook");
+  w.provider.transaction.mockRejectedValue(
+    new PearlTransactionNotFound("22".repeat(32)),
+  );
+  await expect(w.observe(pending.pending)).rejects.toThrow(
+    "Its coins remain reserved",
+  );
+  expect(w.store.operations[0].status).toBe("signed");
+  expect(w.provider.broadcast).not.toHaveBeenCalled();
 });

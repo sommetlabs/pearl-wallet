@@ -304,7 +304,7 @@ export function Review({
 }
 const statuses: Record<Operation["status"], string> = {
   review: "Awaiting approval",
-  signed: "Signed · inputs reserved",
+  signed: "Signed · not confirmed",
   broadcast: "Waiting for confirmations",
   unknown: "Broadcast needs observation",
   confirmed: "Confirmed",
@@ -322,23 +322,30 @@ export function Activity({
   review: (op: Operation) => void;
 }) {
   const [busy, setBusy] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<{ id: string; text: string }>();
+  const [checked, setChecked] = useState<string>();
   const [releaseId, setReleaseId] = useState<string>();
   const [releaseAcknowledged, setReleaseAcknowledged] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"retry" | "release">();
-  async function act(op: Operation, method: "retry" | "release") {
+  const [action, setAction] = useState<"retry" | "release" | "checkStatus">();
+  async function act(
+    op: Operation,
+    method: "retry" | "release" | "checkStatus",
+  ) {
+    if (busy) return;
     if (method === "release" && (releaseId !== op.id || !releaseAcknowledged))
       return;
     setBusy(op.id);
-    setPendingAction(method);
-    setError("");
+    setAction(method);
+    setError(undefined);
+    setChecked(undefined);
     try {
       await command(method, { id: op.id, acknowledge: true });
+      if (method === "checkStatus") setChecked(op.id);
       setReleaseId(undefined);
       setReleaseAcknowledged(false);
       changed();
     } catch (e) {
-      setError((e as Error).message);
+      setError({ id: op.id, text: (e as Error).message });
     } finally {
       setBusy("");
     }
@@ -355,7 +362,6 @@ export function Activity({
           </div>
         </div>
       )}
-      {error && <Notice error>{error}</Notice>}
       {[...operations].reverse().map((op) => (
         <article className="activity" key={op.id}>
           <div className="row">
@@ -367,6 +373,9 @@ export function Activity({
             {op.confirmations ? ` · ${op.confirmations} confirmations` : ""}
           </p>
           <small className="address">To {op.to}</small>
+          {op.origin !== "Abyss Wallet" && (
+            <small className="address">Requested by {op.origin}</small>
+          )}
           {(op.signed || op.psbt?.signed) && (
             <a
               href={explorer(
@@ -389,27 +398,43 @@ export function Activity({
               Review request
             </Button>
           )}
+          {error?.id === op.id && (
+            <Notice error={action !== "checkStatus"}>{error.text}</Notice>
+          )}
+          {checked === op.id && (
+            <p role="status" className="footnote">
+              Status refreshed from Pearl.
+            </p>
+          )}
+          {["signed", "unknown", "broadcast"].includes(op.status) && (
+            <Button disabled={!!busy} onClick={() => act(op, "checkStatus")}>
+              {busy === op.id && action === "checkStatus"
+                ? "Checking Pearl…"
+                : "Check status"}
+            </Button>
+          )}
           {["unknown", "signed"].includes(op.status) && (
             <>
               <Notice>
-                Its coins stay reserved. Check status before making another
-                payment.
+                {op.signOnly && op.status === "signed"
+                  ? "The requesting site handles submission. Return to its swap screen to continue. Coins stay reserved until the transaction is resolved."
+                  : "Coins stay reserved while the network status is unresolved. Check status before using recovery options."}
               </Notice>
               {op.signed && (
                 <Button
                   className="secondary"
-                  disabled={busy === op.id}
+                  disabled={!!busy}
                   onClick={() => act(op, "retry")}
                   variant="outline"
                 >
-                  {busy === op.id && pendingAction === "retry"
+                  {busy === op.id && action === "retry"
                     ? "Rebroadcasting…"
                     : "Rebroadcast saved transaction"}
                 </Button>
               )}
               <Button
                 className="ghost"
-                disabled={busy === op.id}
+                disabled={!!busy}
                 onClick={() => {
                   setReleaseId(op.id);
                   setReleaseAcknowledged(false);
@@ -437,14 +462,14 @@ export function Activity({
                       onChange={(event) =>
                         setReleaseAcknowledged(event.target.checked)
                       }
-                      disabled={busy === op.id}
+                      disabled={!!busy}
                     />
                     I understand the saved transaction could still be broadcast.
                   </label>
                   <div className="actions">
                     <Button
                       className="secondary"
-                      disabled={busy === op.id}
+                      disabled={!!busy}
                       onClick={() => {
                         setReleaseId(undefined);
                         setReleaseAcknowledged(false);
@@ -459,7 +484,7 @@ export function Activity({
                       onClick={() => act(op, "release")}
                       variant="destructive"
                     >
-                      {busy === op.id && pendingAction === "release"
+                      {busy === op.id && action === "release"
                         ? "Verifying inputs…"
                         : "Check and release"}
                     </Button>

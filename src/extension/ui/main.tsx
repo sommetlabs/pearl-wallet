@@ -206,15 +206,17 @@ function Wallet() {
             </span>
           </div>
           <main>
-            {page !== "home" && page !== "settings" && !op && !approvalOpen && (
-              <Button
-                className="back"
-                onClick={() => navigate({ page: "home" })}
-                variant="ghost"
-              >
-                <Icon name="back" /> Wallet
-              </Button>
-            )}
+            {["send", "receive", "review"].includes(page) &&
+              !op &&
+              !approvalOpen && (
+                <Button
+                  className="back"
+                  onClick={() => navigate({ page: "home" })}
+                  variant="ghost"
+                >
+                  <Icon name="back" /> Wallet
+                </Button>
+              )}
             {(error || loadError) && (
               <Notice error>{error || loadError}</Notice>
             )}

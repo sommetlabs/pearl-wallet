@@ -104,9 +104,9 @@ export const uiCommand = z.discriminatedUnion("method", [
   }),
   z.object({ method: z.literal("settings"), params: settings }),
   z.object({ method: z.literal("prepare"), params: payment }),
-  ...(["approve", "cancel", "retry", "connectApproval"] as const).map(
-    (method) => z.object({ method: z.literal(method), params: id }),
-  ),
+  ...(
+    ["approve", "cancel", "retry", "checkStatus", "connectApproval"] as const
+  ).map((method) => z.object({ method: z.literal(method), params: id })),
   z.object({
     method: z.literal("release"),
     params: id.extend({ acknowledge: z.literal(true) }),

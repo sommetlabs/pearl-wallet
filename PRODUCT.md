@@ -44,3 +44,7 @@ Representative source: ../abyss-app-preview/src/app/globals.css, src/app/layout.
 - Keep account, network and requesting origin clear at approval.
 - Preserve signing, recovery and permission behavior through visual changes.
 - Keep sensitive configuration and recovery away from everyday payment controls.
+
+## Sync and activity correction
+
+A first connection must open the consent window while address discovery is active. Connection, unlock and permission decisions run in a separate short queue; network/signing work remains ordered, all storage writes remain ordered, and permission is rechecked before signing after verification. The site has one Connecting state rather than a second Show wallet action. Activity exposes a read-only Check status action, distinguishes a saved signature from confirmation, and identifies the requesting site. Equal approval/rejection dimensions and a static, faint blue canvas preserve the Abyss identity without a dot field or animated background.

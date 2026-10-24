@@ -178,7 +178,8 @@ export async function refresh(account: Account, force = false) {
     await save();
   }
 }
-export async function observe() {
+export async function observe(id?: string) {
+  let failure: Error | undefined;
   for (const op of store.operations)
     if (op.status === "review" && Date.now() - op.createdAt > 10 * 60_000)
       op.status = "cancelled";
@@ -191,6 +192,7 @@ export async function observe() {
   }
   for (const op of store.operations.filter(
     (op) =>
+      (!id || op.id === id) &&
       (op.signed || op.psbt?.signed) &&
       op.status !== "cancelled" &&
       (op.status !== "confirmed" || (op.confirmations ?? 0) < 100),
@@ -206,6 +208,12 @@ export async function observe() {
           ? "confirmed"
           : "broadcast";
     } catch (error) {
+      if (id)
+        failure = new Error(
+          error instanceof PearlTransactionNotFound
+            ? "Pearl has not reported this transaction yet. Its coins remain reserved."
+            : "Could not check Pearl right now. Its coins remain reserved; try Check status again.",
+        );
       if (error instanceof PearlRateLimitError) {
         store.retryAt[account.network] = error.retryAt;
         break;
@@ -225,6 +233,7 @@ export async function observe() {
       );
   }
   await save();
+  if (failure) throw failure;
 }
 export async function preparePayment(
   params: unknown,
@@ -277,10 +286,10 @@ export async function preparePayment(
   await save();
   return op;
 }
-export async function approve(id: string) {
-  await requireUnlocked();
-  const op = store.operations.find((op) => op.id === id),
-    account = selected(store);
+function requireCurrentReview(
+  op: Operation | undefined,
+  account: Account,
+): asserts op is Operation {
   if (
     !op ||
     (op.origin !== "Abyss Wallet" &&
@@ -294,9 +303,16 @@ export async function approve(id: string) {
     throw new Error(
       "This review expired or its account changed. Request a new review.",
     );
+}
+export async function approve(id: string) {
+  await requireUnlocked();
+  const op = store.operations.find((op) => op.id === id),
+    account = selected(store);
+  requireCurrentReview(op, account);
   if (op.psbt) {
     await verifyPsbt(op, account);
     await requireUnlocked();
+    requireCurrentReview(op, account);
     op.psbt.signed = await cryptoCall("signPsbt", {
       accountIndex: store.accounts.indexOf(account),
       request: op.psbt.request,
@@ -321,6 +337,7 @@ export async function approve(id: string) {
       );
   }
   await requireUnlocked();
+  requireCurrentReview(op, account);
   op.signed = await cryptoCall("sign", {
     accountIndex: store.accounts.indexOf(account),
     plan: op.plan,

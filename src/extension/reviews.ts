@@ -30,6 +30,7 @@ export async function openReview(id: string) {
       `${walletPath}?review=${encodeURIComponent(id)}`,
     ),
     type: "popup",
+    focused: true,
     width: 460,
     height: 720,
   });

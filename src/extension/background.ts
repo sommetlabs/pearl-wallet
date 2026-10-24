@@ -7,6 +7,7 @@ import {
   store,
   session,
   serial,
+  serialConsent,
   save,
   encryptedVault,
   requireUnlocked,
@@ -167,6 +168,15 @@ async function internal(request: UiCommand) {
       await save();
       return view();
     }
+    case "checkStatus": {
+      const operation = store.operations.find(
+        (op) => op.id === params.id && op.accountId === store.selectedId,
+      );
+      if (!operation || !(operation.signed || operation.psbt?.signed))
+        throw new Error("No signed transaction is saved for this account");
+      await observe(operation.id);
+      return view();
+    }
     case "retry":
       return retryPayment(params.id);
     case "release":
@@ -235,12 +245,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       throw new Error("Wallet connections require a secure website");
     return external(message.method, message.params ?? {}, url.origin);
   };
-  const task =
-    (message.channel === "wallet-ui" &&
-      ["lock", "view", "touch"].includes(message.method)) ||
-    (message.channel === "wallet-dapp" && message.method === "getInfo")
-      ? ready.then(run)
-      : serial(run);
+  const task = ready.then(() => {
+    if (
+      (message.channel === "wallet-ui" &&
+        ["lock", "view", "touch"].includes(message.method)) ||
+      (message.channel === "wallet-dapp" &&
+        ["getInfo", "getAccount"].includes(message.method))
+    )
+      return run();
+    const consent =
+      message.channel === "wallet-dapp"
+        ? ["connect", "disconnect", "requestStatus"].includes(message.method)
+        : ["unlock", "connectApproval", "revoke"].includes(message.method) ||
+          (message.method === "cancel" &&
+            store.connections.some(
+              (request) => request.id === message.params?.id,
+            ));
+    return consent ? serialConsent(run) : serial(run);
+  });
   task.then(
     (result) => sendResponse({ result }),
     (error) =>

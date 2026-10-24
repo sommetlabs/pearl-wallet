@@ -79,6 +79,14 @@ body {
   margin: 0;
   min-width: 360px;
   min-height: 600px;
+  background:
+    radial-gradient(
+      ellipse 900px 520px at 12% 0%,
+      color-mix(in oklch, var(--primary), transparent 94%),
+      transparent 75%
+    ),
+    var(--bg);
+  background-attachment: fixed;
 }
 button,
 input,
@@ -196,7 +204,7 @@ strong {
   flex-direction: column;
   margin: auto;
   position: relative;
-  background: var(--bg);
+  background: transparent;
   isolation: isolate;
 }
 .wallet > header {
@@ -715,10 +723,18 @@ form > button {
 }
 .approval-actions {
   display: grid;
-  grid-template-columns: 1fr 1.7fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   padding-top: 14px;
   flex: none;
+}
+.approval-actions > [data-slot="button"] {
+  width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding-inline: 12px;
+  white-space: normal;
+  text-wrap: balance;
 }
 .wallet > main:has(> .review-page) {
   display: flex;
@@ -764,6 +780,10 @@ form > button {
   background: color-mix(in oklch, var(--surface), transparent 10%);
   border-radius: 20px;
   margin: 12px 0;
+}
+.activity .row {
+  align-items: baseline;
+  gap: 16px;
 }
 .activity .row strong {
   font-family: var(--mono);
@@ -1667,20 +1687,7 @@ fieldset:disabled textarea {
   #root {
     width: 100%;
   }
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image: radial-gradient(
-      circle,
-      color-mix(in oklch, var(--dot), transparent 75%) 0.7px,
-      transparent 1px
-    );
-    background-size: 20px 20px;
-    mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
-  }
+
   .wallet {
     width: min(760px, calc(100vw - 48px));
     height: auto;
@@ -1689,7 +1696,7 @@ fieldset:disabled textarea {
     border: 1px solid var(--border);
     border-radius: 32px;
     overflow: hidden;
-    background: var(--bg);
+    background: transparent;
   }
   .wallet > header {
     padding: 24px 28px;
