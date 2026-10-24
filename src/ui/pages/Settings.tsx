@@ -776,6 +776,7 @@ export default function Settings() {
           Wiping removes the encrypted wallet from this browser. Save your recovery
           phrase and the recovery file for every multisig vault first. The phrase alone cannot restore a vault’s full policy. Enter your password
           and the confirmation below to remove this wallet.
+          Save each Pearl swap deposit recovery file from Swaps before wiping; the seed alone does not recover its escrow terms.
         </p>
         <div className="my-3 text-sm">
           {wipeVaults===null ? <p>Vault recovery list unavailable. Reopen Settings before wiping.</p> : wipeVaults.map(v=><div key={v.id} className="flex flex-wrap gap-2 my-2"><span>{v.label} ({v.threshold} of {v.total})</span><button className="btn-secondary" onClick={()=>{try{downloadVaultBackup(v);}catch(e){setError(e instanceof Error ? e.message : String(e));}}}>Save recovery file</button></div>)}

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { PearlNetwork } from "../chains/pearl/network";
+import { DEFAULT_PEARL_NETWORK, selectPearlNetwork, type PearlNetwork } from "../chains/pearl/network";
 import type { EthNetwork } from "../chains/ethereum/network";
 import { cryptoWorker } from "../crypto/worker-client";
 import { MAX_ADDRESSES_PER_BRANCH, RECEIVE_GAP_LIMIT, type HdBranch } from "../crypto/hd";
@@ -385,7 +385,7 @@ async function forgetReplacedWalletLocalData(snapshot: ReplacedWalletSnapshot): 
 export const useWallet = create<WalletState>((set, get) => ({
   status: "initializing",
   addresses: null,
-  pearlNetwork: "mainnet",
+  pearlNetwork: DEFAULT_PEARL_NETWORK,
   ethNetwork: "mainnet",
   blob: null,
   // monotonicNow() — see lib/monotonic.ts. Date.now() would be subject
@@ -411,7 +411,7 @@ export const useWallet = create<WalletState>((set, get) => ({
           pearlChange: rec.publicData.pearlChangePool ?? [],
           eth: rec.publicData.ethAddress,
         },
-        pearlNetwork: "mainnet",
+        pearlNetwork: rec.publicData.pearlNetwork,
         ethNetwork: rec.publicData.ethNetwork,
       });
     } else {
@@ -974,3 +974,4 @@ export function subscribeStoredWalletChange(onChange: () => void): () => void {
 
 // A failed signer has no session. Publish that state before a caller can retry.
 cryptoWorker.onFailure?.(() => { void useWallet.getState().lock(); });
+useWallet.subscribe(state => selectPearlNetwork(state.pearlNetwork));

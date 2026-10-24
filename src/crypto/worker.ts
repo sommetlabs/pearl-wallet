@@ -1,4 +1,5 @@
 import { decodeTaprootAddress } from "../chains/pearl/address";
+import { signSwap, swapAccount, type SwapPlan } from "./pearl-swap";
 // Web Worker — all key material lives here. Main thread never sees raw keys.
 // Verb-based RPC per docs/06-CRYPTO.md.
 
@@ -298,6 +299,8 @@ export interface PearlSigProofResponse {
 }
 
 export type WorkerCmd =
+  | { id: string; cmd: "swapAccount" }
+  | { id: string; cmd: "signSwap"; plan: SwapPlan }
   | { id: string; cmd: "createWallet"; strength: 128 | 256; password: string; network: PearlNetwork }
   | { id: string; cmd: "restoreWallet"; mnemonic: string; password: string; network: PearlNetwork }
   | {
@@ -368,6 +371,14 @@ interface UnlockedResult {
 
 async function handle(msg: WorkerCmd): Promise<unknown> {
   switch (msg.cmd) {
+    case "swapAccount": {
+      if (!session) throw new Error("E_LOCKED");
+      return swapAccount(session.seed);
+    }
+    case "signSwap": {
+      if (!session) throw new Error("E_LOCKED");
+      return signSwap(session.seed,msg.plan);
+    }
     case "generateMnemonic":
       return { mnemonic: generateMnemonic(msg.strength) };
 

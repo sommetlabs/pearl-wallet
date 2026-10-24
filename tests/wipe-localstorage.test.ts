@@ -44,7 +44,7 @@ describe("wipeKeystore localStorage scrub (audit C2)", () => {
     // Stub the table ops so the Dexie path resolves cleanly.
     // FZ2: the IndexedDB part is one transaction; run its body directly.
     vi.spyOn(db, "transaction").mockImplementation((async (...args: unknown[]) => (args[args.length - 1] as () => Promise<unknown>)()) as never);
-    for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+    for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
       const tbl = db[t] as unknown as { clear?: () => Promise<void>; delete?: () => Promise<void> };
       if (tbl.clear) vi.spyOn(tbl, "clear").mockResolvedValue(undefined as never);
       if (tbl.delete) vi.spyOn(tbl, "delete").mockResolvedValue(undefined as never);
@@ -86,7 +86,7 @@ describe("wipeKeystore localStorage scrub (audit C2)", () => {
     const { db, wipeKeystore } = await import("../src/storage/db");
     // FZ2: the IndexedDB part is one transaction; run its body directly.
     vi.spyOn(db, "transaction").mockImplementation((async (...args: unknown[]) => (args[args.length - 1] as () => Promise<unknown>)()) as never);
-    for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+    for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
       const tbl = db[t] as unknown as { clear?: () => Promise<void>; delete?: () => Promise<void> };
       if (tbl.clear) vi.spyOn(tbl, "clear").mockResolvedValue(undefined as never);
       if (tbl.delete) vi.spyOn(tbl, "delete").mockResolvedValue(undefined as never);
@@ -121,7 +121,7 @@ describe("wipeKeystore compare-and-delete (FX2c)", () => {
     );
     const del = vi.spyOn(db.keystore, "delete").mockResolvedValue(undefined as never);
     const put = vi.spyOn(db.keystore, "put").mockResolvedValue("primary" as never);
-    const clears = (["addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const).map((t) =>
+    const clears = (["addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const).map((t) =>
       vi.spyOn(db[t] as unknown as { clear: () => Promise<void> }, "clear").mockResolvedValue(undefined as never),
     );
     return { wipeKeystore, updateKeystoreAddresses, tx, del, put, clears };

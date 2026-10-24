@@ -21,7 +21,7 @@ import { masterFromSeed, pearlMultisigPath } from "../src/crypto/hd";
 import { bytesToHex } from "../src/crypto/descriptor";
 import type { KeystoreBlobJSON, KeystoreRecord } from "../src/storage/db";
 
-const STORES = ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const;
+const STORES = ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const;
 type StoreName = (typeof STORES)[number];
 const data = new Map<StoreName, Map<string, unknown>>();
 const inTx = new AsyncLocalStorage<boolean>();

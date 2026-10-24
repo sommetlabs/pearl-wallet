@@ -50,8 +50,8 @@ export interface PearlUnsignedPayload {
   /** 1, or 2 when any input has branch 1 (see pearlUnsignedVersion). */
   v: 1 | 2;
   k: "pearl-unsigned";
-  /** "mainnet" | "testnet" — must match the signer's loaded network. */
-  network: "mainnet" | "testnet";
+  /** "mainnet" | "testnet" | "testnet2" — must match the signer's loaded network. */
+  network: "mainnet" | "testnet" | "testnet2";
   utxos: Array<{
     txid: string;
     vout: number;
@@ -96,7 +96,7 @@ export interface PearlUnsignedPayload {
 export interface PearlSignedPayload {
   v: 1;
   k: "pearl-signed";
-  network: "mainnet" | "testnet";
+  network: "mainnet" | "testnet" | "testnet2";
   /** Hex-encoded fully-signed transaction. */
   raw: string;
   /** Optional txid the signer pre-computed — broadcaster verifies. */
@@ -242,8 +242,8 @@ function isPrefixedHex(x: unknown): x is string {
   return typeof x === "string" && /^0x[0-9a-f]*$/i.test(x) && (x.length - 2) % 2 === 0;
 }
 
-function isNetwork(x: unknown): x is "mainnet" | "testnet" {
-  return x === "mainnet" || x === "testnet";
+function isNetwork(x: unknown): x is "mainnet" | "testnet" | "testnet2" {
+  return x === "mainnet" || x === "testnet" || x === "testnet2";
 }
 
 function validatePearlUnsigned(o: Record<string, unknown>): PearlUnsignedPayload {

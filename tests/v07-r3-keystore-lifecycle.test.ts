@@ -21,7 +21,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { KeystoreBlobJSON, KeystoreRecord } from "../src/storage/db";
 
-const STORES = ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const;
+const STORES = ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const;
 type StoreName = (typeof STORES)[number];
 const data = new Map<StoreName, Map<string, unknown>>();
 const inTx = new AsyncLocalStorage<boolean>();
@@ -284,6 +284,7 @@ describe("FZ3 (round 3) — a consented overwrite with a different wallet takes 
     data.get("txCache")!.set("1", { id: 1, txHash: "aa" });
     data.get("bridgeCrossings")!.set("x-cross", { id: "x-cross" });
     data.get("bridgeDepositPins")!.set("0xpin", { ethAddress: "0xpin", pearlAddress: "prl1px", pinnedAt: 1 });
+    data.get("nativeSwaps")!.set("x-swap", { id: "x-swap" });
   };
   const associated = STORES.filter((s) => s !== "keystore");
 

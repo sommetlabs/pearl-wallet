@@ -134,7 +134,7 @@ function stubWipeTables(afterCommit?: () => Promise<void> | void) {
     return out;
   }) as never);
   vi.spyOn(db.keystore, "get").mockResolvedValue(undefined as never);
-  for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+  for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
     const tbl = db[t] as unknown as { clear?: () => Promise<void>; delete?: () => Promise<void> };
     if (tbl.clear) vi.spyOn(tbl, "clear").mockResolvedValue(undefined as never);
     if (tbl.delete) vi.spyOn(tbl, "delete").mockResolvedValue(undefined as never);
@@ -296,7 +296,7 @@ async function openTab(afterCommit?: () => Promise<void>) {
   vi.spyOn(dbm.db.keystore, "get").mockImplementation((async () => structuredClone(row.rec)) as never);
   vi.spyOn(dbm.db.keystore, "put").mockImplementation((async (r: unknown) => void (row.rec = structuredClone(r))) as never);
   vi.spyOn(dbm.db.keystore, "delete").mockImplementation((async () => void (row.rec = undefined)) as never);
-  for (const name of ["addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+  for (const name of ["addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
     vi.spyOn(dbm.db[name] as never, "clear" as never).mockResolvedValue(undefined as never);
   }
   const ethTx = await import("../src/services/eth-tx");

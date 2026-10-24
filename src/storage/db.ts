@@ -1,7 +1,10 @@
 // Dexie schema for the encrypted keystore + caches.
-// All sensitive data here is ciphertext (mnemonic encrypted with PBKDF2 + AES-GCM).
+// The mnemonic is encrypted with PBKDF2 + AES-GCM. Native swap recovery
+// records contain signed transactions and protocol secrets, never wallet keys.
 
 import Dexie, { type Table } from "dexie";
+import type { PearlAccount, PearlReceipt } from "@sommetlabs/pearl-wallet-connect/protocol";
+import type { SwapAction } from "../crypto/pearl-swap";
 import type { PearlNetwork } from "../chains/pearl/network";
 import type { EthNetwork } from "../chains/ethereum/network";
 import { sameKeystoreBlob } from "./keystore-blob";
@@ -164,6 +167,14 @@ export interface BridgeDepositPin {
   pinnedAt: number;
 }
 
+export interface NativeSwapRecord {
+  id: string;
+  account: PearlAccount;
+  action: SwapAction;
+  receipt: PearlReceipt;
+  createdAt: number;
+}
+
 export class PearlWalletDB extends Dexie {
   keystore!: Table<KeystoreRecord, "primary">;
   addressBook!: Table<AddressBookEntry, number>;
@@ -172,6 +183,7 @@ export class PearlWalletDB extends Dexie {
   vaultPendingTxs!: Table<VaultPendingTxRecord, string>;
   bridgeCrossings!: Table<BridgeCrossingRecord, string>;
   bridgeDepositPins!: Table<BridgeDepositPin, string>;
+  nativeSwaps!: Table<NativeSwapRecord, string>;
 
   constructor() {
     super("pearl-web-wallet");
@@ -209,6 +221,7 @@ export class PearlWalletDB extends Dexie {
       bridgeCrossings: "id, direction, phase, createdAt",
       bridgeDepositPins: "ethAddress",
     });
+    this.version(5).stores({ nativeSwaps: "id,account.publicKeyHex,createdAt" });
   }
 }
 
@@ -265,7 +278,7 @@ export async function replaceKeystoreIfUnchanged(
 ): Promise<boolean> {
   return db.transaction(
     "rw",
-    [db.keystore, db.addressBook, db.txCache, db.vaults, db.vaultPendingTxs, db.bridgeCrossings, db.bridgeDepositPins],
+    [db.keystore, db.addressBook, db.txCache, db.vaults, db.vaultPendingTxs, db.bridgeCrossings, db.bridgeDepositPins, db.nativeSwaps],
     async () => {
       const rec = await db.keystore.get("primary");
       if (observed === null ? rec !== undefined : !rec || !sameKeystoreBlob(rec.blob, observed)) return false;
@@ -277,6 +290,7 @@ export async function replaceKeystoreIfUnchanged(
         await db.vaultPendingTxs.clear();
         await db.bridgeCrossings.clear();
         await db.bridgeDepositPins.clear();
+        await db.nativeSwaps.clear();
       }
       return true;
     },
@@ -300,6 +314,24 @@ async function assertStoredWallet(walletPrimary: string): Promise<void> {
   const rec = await db.keystore.get("primary");
   if (!rec) throw new Error("E_WALLET_WIPED");
   if (rec.publicData.pearlAddress !== walletPrimary) throw new Error("E_WALLET_CHANGED");
+}
+
+/** Persist signed bytes atomically with the owning wallet check, before broadcasting. */
+export async function addNativeSwap(record: NativeSwapRecord): Promise<void> {
+  await db.transaction("rw", [db.keystore, db.nativeSwaps], async () => {
+    await assertStoredWallet(record.account.address);
+    await db.nativeSwaps.add(record);
+  });
+}
+
+export async function updateNativeSwapReceipt(id: string, account: PearlAccount, receipt: PearlReceipt): Promise<void> {
+  await db.transaction("rw", [db.keystore, db.nativeSwaps], async () => {
+    await assertStoredWallet(account.address);
+    const original = await db.nativeSwaps.get(id);
+    if (!original || original.receipt.rawHex !== receipt.rawHex || original.receipt.transactionId !== receipt.transactionId)
+      throw new Error("Original signed swap transaction cannot be replaced");
+    await db.nativeSwaps.update(id, { receipt });
+  });
 }
 
 /** Stores a vault for the wallet `walletPrimary` (see assertStoredWallet). */
@@ -527,7 +559,7 @@ export async function wipeKeystore(expectedBlob?: KeystoreBlobJSON, expectedVaul
   const prlSnapshot = snapshotBroadcastRecords();
   const deleted = await db.transaction(
     "rw",
-    [db.keystore, db.addressBook, db.txCache, db.vaults, db.vaultPendingTxs, db.bridgeCrossings, db.bridgeDepositPins],
+    [db.keystore, db.addressBook, db.txCache, db.vaults, db.vaultPendingTxs, db.bridgeCrossings, db.bridgeDepositPins, db.nativeSwaps],
     async () => {
       if (expectedBlob !== undefined) {
         const rec = await db.keystore.get("primary");
@@ -553,6 +585,7 @@ export async function wipeKeystore(expectedBlob?: KeystoreBlobJSON, expectedVaul
       // the same browser (audit round-2 item 1). Both must go.
       await db.bridgeCrossings.clear();
       await db.bridgeDepositPins.clear();
+      await db.nativeSwaps.clear();
       return true;
     },
   );

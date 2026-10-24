@@ -1,0 +1,33 @@
+{
+  "repository": "https://github.com/sommetlabs/midnight-swap",
+  "revision": "23e7b8c4e08529096661917507085e28b4a7fc13",
+  "sourceDirectory": "ledger-8/apps/web/src/pearl",
+  "unchangedSources": {
+    "transaction.ts": "c071c0c6d0fda5c19477ff4f9531527852ac94630b2ca523cd0d5e4b29d6d388",
+    "network.ts": "be6d8323d83d4eddaef9cb39f7fd140be65367ee31c4ae55cbfc301a2058e010",
+    "funding.ts": "898933f11bc300b71e37310196124a9f6cbc9b73c4e3c794761e4b44a99b951d",
+    "htlc-script.ts": "e92578199474bf8a2edd7dd6dd52a0582708ad24c2ae7def770707e956da10ef",
+    "terms.ts": "273f044963a75f9b9a82da93368afe1471c1cda68d2cfdfd891d363586e3ebbb",
+    "packages/midnight-l8-client/src/pearl-terms.ts": "44266e6c3821b17d656a78741a568b7f345c2dddaa44fac2db06abc616a8f2f6"
+  },
+  "extensionProvider": {
+    "repository": "https://github.com/sommetlabs/pearl-wallet",
+    "revision": "3ab5f883ce052eaf315ec17513ded45bf656e7c6",
+    "path": "packages/connector/src/extension.ts",
+    "sha256": "0fcc3c397d159db37eaa8f0ae7b9b5b407f584e9e907b314daadefec1124a934"
+  },
+  "previewWprl": {
+    "address": "985645c4ed3785a3c4b6a5b5a3b596aa7875b94fc1efb4d2bb03b4f809f5b112",
+    "colorHex": "137f347261c39475c1d4cc2b45f41f69fdb6578cfd418cf33601b942bf98c498",
+    "admin": "e253e9ed24ec3253bfa365d46ef73801efbeb0663f2bb9610c299c4d27161f4d",
+    "minter": "e253e9ed24ec3253bfa365d46ef73801efbeb0663f2bb9610c299c4d27161f4d",
+    "decimals": 8,
+    "verifiedCircuitCount": 13,
+    "deployment": {
+      "address": "985645c4ed3785a3c4b6a5b5a3b596aa7875b94fc1efb4d2bb03b4f809f5b112",
+      "txId": "003ebae39eed909f7cf000b29c899e59b3213f18d282c31c2ea579f7bc7925cbe2",
+      "txHash": "64e52910f8519d0cd1666b4ac2681554147b9d61e28059174276224eb501b0de",
+      "blockHeight": 1430653
+    }
+  }
+}

@@ -220,6 +220,12 @@ function saveUI(s: PersistedUI): void {
 }
 
 const initial = loadUI();
+if (import.meta.env.VITE_PEARL_NETWORK !== "mainnet") {
+  initial.ethEnabled = false;
+  initial.multisigEnabled = false;
+  initial.tipEnabled = false;
+  initial.btxEnabled = false;
+}
 
 export const useUI = create<UIState>((set, get) => ({
   theme: initial.theme,

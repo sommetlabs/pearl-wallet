@@ -241,7 +241,7 @@ describe("G6 — one versioned record, written before submission, failing closed
     addRecord(T, [{ txid: C1, vout: 0 }]);
     // FZ2: the IndexedDB part of the wipe is one transaction; run its body.
     vi.spyOn(db, "transaction").mockImplementation((async (...args: unknown[]) => (args[args.length - 1] as () => Promise<unknown>)()) as never);
-    for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+    for (const t of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
       const tbl = db[t] as unknown as { clear?: () => Promise<void>; delete?: () => Promise<void> };
       if (tbl.clear) vi.spyOn(tbl, "clear").mockResolvedValue(undefined as never);
       if (tbl.delete) vi.spyOn(tbl, "delete").mockResolvedValue(undefined as never);
@@ -630,6 +630,7 @@ describe("G5 — the broadcast lock", () => {
   });
 
   it("without Web Locks: another listed wallet tab refuses broadcasting until the user says it's gone", async () => {
+    vi.stubGlobal("navigator", {});
     const calls = stubRpc(ACCEPT);
     storage.setItem(WALLET_TABS_STORAGE_KEY, JSON.stringify(["another-tab"]));
     expect(otherWalletTabOpen()).toBe(true);

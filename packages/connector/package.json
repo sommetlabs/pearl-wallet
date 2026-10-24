@@ -1,0 +1,29 @@
+{
+  "name": "@sommetlabs/pearl-wallet-connect",
+  "version": "0.1.0-preview.11",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/client.ts",
+    "./protocol": "./src/protocol.ts",
+    "./native": "./src/native.ts",
+    "./pearl": "./src/pearl/index.ts",
+    "./blockbook": "./src/blockbook.ts",
+    "./proxy": "./src/proxy.ts",
+    "./payout": "./src/payout.ts",
+    "./rpc": "./src/rpc.ts",
+    "./extension": "./src/extension.ts"
+  },
+  "files": [
+    "src",
+    "LICENSE",
+    "provenance.json"
+  ],
+  "dependencies": {
+    "@noble/curves": "2.2.0",
+    "@noble/hashes": "2.2.0",
+    "@scure/base": "2.2.0",
+    "@scure/btc-signer": "2.4.1",
+    "zod": "^4.3.6"
+  }
+}

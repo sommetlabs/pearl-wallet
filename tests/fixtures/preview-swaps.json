@@ -1,0 +1,203 @@
+[
+  {
+    "name": "flow-a",
+    "signed": {
+      "schemaVersion": 1,
+      "kind": "pearl-swap-quote",
+      "quoteIdHex": "0c44a038f2dcb21384d4ffa64097bb833b5a6375cd91f4ed3605e16407127312",
+      "quote": {
+        "solverId": "pearl-preview-testnet2",
+        "networks": {
+          "pearl": {
+            "chain": "pearl-testnet2",
+            "genesisHash": "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96"
+          },
+          "midnight": {
+            "networkId": "preview",
+            "intentSourceAddress": "92bcb2de2268bc9a666060ede2c92ff4d56a8d04a952a3612dbed3612ed42ac9",
+            "intentDestAddress": "dfc7d392c125739addc75bbe84507b3090b3385c602bc9a89a9fc75d0c981739"
+          }
+        },
+        "sell": {
+          "asset": "NIGHT",
+          "amount": "100000",
+          "colorHex": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "buy": {
+          "asset": "PRL",
+          "amount": "9970000"
+        },
+        "price": {
+          "buyPerSell": "99.7",
+          "feeBps": 30,
+          "feeAmount": "30000",
+          "feeAsset": "PRL"
+        },
+        "solver": {
+          "quoteKeyHex": "54ee1aad75661ff1f61335f5d9954c150a25d035f11e99540c76e39e9d4772b7",
+          "pearlKeyHex": "7f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212",
+          "intentSourceCommitmentHex": "a173fd7649b7aa3ad7fff95ba45905c3f3bdef7348d4b1e30ae0ef42d0dd7268",
+          "midnightPayoutAddress": "430dd03dab80686be95cafac1ba3e513d99333a1116d3a066654bf22c6413d72"
+        },
+        "user": {
+          "pearlKeyHex": "6a1ae66ad5eff564ae04e5482fa5b2acec994cfdfe5808f73e03e1792fe989d6",
+          "midnight": {
+            "intentDestCommitmentHex": "7c9d641dbe96b4c05f790a46c572625c6bdb5d880eae8b1ec29a03b87eb49cee",
+            "coinPublicKeyHex": "2be877661884634a411b8274a65b2deb52faf457ce3966266d68bba42d8f65d4",
+            "unshieldedAddress": "feb7e34602d73da40392391dd3082133c62365ad53ec7a22daf4f139884a70e8"
+          }
+        },
+        "pearlLeg": {
+          "terms": {
+            "chain": "pearl-testnet2",
+            "genesisHash": "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96",
+            "assetLabel": "PRL",
+            "amountGrains": "9970000",
+            "claimerKeyHex": "6a1ae66ad5eff564ae04e5482fa5b2acec994cfdfe5808f73e03e1792fe989d6",
+            "refunderKeyHex": "7f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212",
+            "minLockHeight": 114755,
+            "maxLockHeight": 114899,
+            "minConfirmations": 2,
+            "feeRateGrainsPerVb": 2
+          },
+          "termsHashHex": "e56d6ae4807f3b29ef11eb3e2b46b735a8635831153fd18e69bbeaf889f4c3da"
+        },
+        "tipAtQuote": {
+          "pearlHeight": 114680,
+          "midnightBlockTime": "1792686192"
+        },
+        "issuedAt": "1792686211",
+        "expiresAt": "1792686811",
+        "direction": "midnight->pearl",
+        "midnightLeg": {
+          "contract": "intent-source",
+          "depositColorHex": "0000000000000000000000000000000000000000000000000000000000000000",
+          "depositAmount": "100000",
+          "quotedSolverHex": "a173fd7649b7aa3ad7fff95ba45905c3f3bdef7348d4b1e30ae0ef42d0dd7268",
+          "wantColorHex": "e56d6ae4807f3b29ef11eb3e2b46b735a8635831153fd18e69bbeaf889f4c3da",
+          "minWantAmount": "9970000",
+          "wantShielded": false,
+          "minDeadline": "1792737211",
+          "maxDeadline": "1792740811"
+        }
+      },
+      "signature": {
+        "publicKeyHex": "54ee1aad75661ff1f61335f5d9954c150a25d035f11e99540c76e39e9d4772b7",
+        "signatureHex": "755a7079fd43f1e5780c93a6ccfb005176f9a8e9e00ad77ba099847ee7fba688a491efaf77146b033c43cf21c60d0aeed19c1e9ca46e0715e5e5c82f02ae138c"
+      }
+    },
+    "hashlock": "43fdfa3f1cd036decd54d7e879b145fe987d39ee835980df05d47b4ab52b74aa",
+    "terms": {
+      "schema": "pearl-htlc-terms-v1",
+      "chain": "pearl-testnet2",
+      "genesisHash": "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96",
+      "hashlock": "43fdfa3f1cd036decd54d7e879b145fe987d39ee835980df05d47b4ab52b74aa",
+      "claimerKey": "6a1ae66ad5eff564ae04e5482fa5b2acec994cfdfe5808f73e03e1792fe989d6",
+      "refunderKey": "7f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212",
+      "lockHeight": 114755,
+      "amountGrains": "9970000"
+    },
+    "outpoint": "e13510333f0f2d8fded05d9860cf6b80451fa6a36000292280384ac77c43e4f9:0",
+    "parentHex": "02000000000101d11ca68003976cc2a5a30acb3de79eb35894bd887b6f8fe5fd21d62eb7b47c520100000000ffffffff025021980000000000225120a72980255bec351c0a18e7b1413f958f4f6b3f8f1649bc31c2edde8cf4fbfaa9f87cbb0a0000000022512000a0df69197461662165a2a9e0f80a84980aebef91d00f7776238512053de7920140906366b5ac1696f47d81053b4823a9de8b2498960225a80a1543a0c1d6b8ce949717a59a2ed5373d0956c0a5490116d7cb3cafc668ef4692f1bc9bf5dbc1c47b00000000",
+    "payoutHex": "02000000000101f9e4437cc74a388022290060a3a61f45806bcf60985dd0de8f2d0f3f331035e10000000000fdffffff011a209800000000002251207d7573eb631ace9b628439a37f0a922b9a4207d3fef03eb8f4a4938da4b6d15e04405e5bf1ec2cbfa1d90b3ca4e8e9b42ae67988c22b1d1ef4f1ed6cc423faecd64ac8437928f0d7950b5f87f94019f0684338b13cc04697a83e2308bb18ffb35fbd20eff936b2444341ae31d31ab6a33336569ed08904a41d60e382abc1c4fc7c0b544982012088a82043fdfa3f1cd036decd54d7e879b145fe987d39ee835980df05d47b4ab52b74aa88206a1ae66ad5eff564ae04e5482fa5b2acec994cfdfe5808f73e03e1792fe989d6ac41c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0a2a4df7472dfbf6d9eaf566b998070dff2b008f931ae60fb6168b5f6fc2774d700000000"
+  },
+  {
+    "name": "flow-b",
+    "signed": {
+      "schemaVersion": 1,
+      "kind": "pearl-swap-quote",
+      "quoteIdHex": "92dea2dbea791524abc932c91b7109721a49ef95ff806819cec1c59c43b557fb",
+      "quote": {
+        "solverId": "pearl-preview-testnet2",
+        "networks": {
+          "pearl": {
+            "chain": "pearl-testnet2",
+            "genesisHash": "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96"
+          },
+          "midnight": {
+            "networkId": "preview",
+            "intentSourceAddress": "92bcb2de2268bc9a666060ede2c92ff4d56a8d04a952a3612dbed3612ed42ac9",
+            "intentDestAddress": "dfc7d392c125739addc75bbe84507b3090b3385c602bc9a89a9fc75d0c981739"
+          }
+        },
+        "sell": {
+          "asset": "PRL",
+          "amount": "10000000"
+        },
+        "buy": {
+          "asset": "NIGHT",
+          "amount": "99700",
+          "colorHex": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "price": {
+          "buyPerSell": "0.00997",
+          "feeBps": 30,
+          "feeAmount": "300",
+          "feeAsset": "NIGHT"
+        },
+        "solver": {
+          "quoteKeyHex": "54ee1aad75661ff1f61335f5d9954c150a25d035f11e99540c76e39e9d4772b7",
+          "pearlKeyHex": "7f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212",
+          "intentSourceCommitmentHex": "a173fd7649b7aa3ad7fff95ba45905c3f3bdef7348d4b1e30ae0ef42d0dd7268",
+          "midnightPayoutAddress": "430dd03dab80686be95cafac1ba3e513d99333a1116d3a066654bf22c6413d72"
+        },
+        "user": {
+          "pearlKeyHex": "6a1ae66ad5eff564ae04e5482fa5b2acec994cfdfe5808f73e03e1792fe989d6",
+          "midnight": {
+            "intentDestCommitmentHex": "7c9d641dbe96b4c05f790a46c572625c6bdb5d880eae8b1ec29a03b87eb49cee",
+            "coinPublicKeyHex": "2be877661884634a411b8274a65b2deb52faf457ce3966266d68bba42d8f65d4",
+            "unshieldedAddress": "feb7e34602d73da40392391dd3082133c62365ad53ec7a22daf4f139884a70e8"
+          }
+        },
+        "pearlLeg": {
+          "terms": {
+            "chain": "pearl-testnet2",
+            "genesisHash": "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96",
+            "assetLabel": "PRL",
+            "amountGrains": "10000000",
+            "claimerKeyHex": "7f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212",
+            "refunderKeyHex": "6a1ae66ad5eff564ae04e5482fa5b2acec994cfdfe5808f73e03e1792fe989d6",
+            "minLockHeight": 114781,
+            "maxLockHeight": 114925,
+            "minConfirmations": 2,
+            "feeRateGrainsPerVb": 2
+          },
+          "termsHashHex": "08c52ee2b3c67a5d99d12ca77505e71c07ca8f403eb778211a50f15852aaa353",
+          "fundBy": "1792687949"
+        },
+        "tipAtQuote": {
+          "pearlHeight": 114685,
+          "midnightBlockTime": "1792687032"
+        },
+        "issuedAt": "1792687049",
+        "expiresAt": "1792687649",
+        "direction": "pearl->midnight",
+        "midnightLeg": {
+          "contract": "intent-dest",
+          "fillColorHex": "0000000000000000000000000000000000000000000000000000000000000000",
+          "fillAmount": "99700",
+          "fillDeadlineSeconds": "1800",
+          "fillMinBlocksLeft": 90
+        }
+      },
+      "signature": {
+        "publicKeyHex": "54ee1aad75661ff1f61335f5d9954c150a25d035f11e99540c76e39e9d4772b7",
+        "signatureHex": "2f96ff471dacf8ef78a4c4908c933d76058cab186635cd620d48b2a8447ad7ebdf3ea81a7f7f837540a3735a924fa76bfdb8e7da37d744fed7496da59171dee0"
+      }
+    },
+    "hashlock": "999447d7e04faba25df7bdbfcfa4deb402a9a8c698fab56096ffa0a4d76de1fa",
+    "terms": {
+      "schema": "pearl-htlc-terms-v1",
+      "chain": "pearl-testnet2",
+      "genesisHash": "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96",
+      "hashlock": "999447d7e04faba25df7bdbfcfa4deb402a9a8c698fab56096ffa0a4d76de1fa",
+      "claimerKey": "7f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212",
+      "refunderKey": "6a1ae66ad5eff564ae04e5482fa5b2acec994cfdfe5808f73e03e1792fe989d6",
+      "lockHeight": 114781,
+      "amountGrains": "10000000"
+    },
+    "outpoint": "92e8005daa8c5634b92b964eb57fa57c94a64dd2197b5bd35f851c33dc11c05d:0",
+    "parentHex": "0200000000010155a0a04bfd77ea0323ddf8c1ea4d5202451400422f289dd1bca1c1bcc7a60cd90100000000ffffffff0280969800000000002251208f4f17f1bf53adc195c1fef7e3d39c9db720b6ca5a24fd35343d12fdd4e288ec8e6b8628000000002251207d7573eb631ace9b628439a37f0a922b9a4207d3fef03eb8f4a4938da4b6d15e014070d88b7a9811eb4eccaeac3b5ed1d181966d0e7a869b111b54320b1fbeb0c9df459ceb260aad764164604081fb6a31d5f7e3cc50e43bd797ab5c4c2b3f3c44bc00000000",
+    "payoutHex": "020000000001015dc011dc331c855fd35b7b19d24da6947ca57fb54e962bb934568caa5d00e8920000000000fdffffff014a9598000000000022512000a0df69197461662165a2a9e0f80a84980aebef91d00f7776238512053de7920440dc96e7e3ada4d60ecab5aa716369d168e186ca72ce0ccbdfaf9b630655b9069cd926c146ace43e1b2df809cce3f9ba4c87a64f91549978ac1c71816a3e02189620f13528c9aed7e99ec907e6dda4f59ff917e6927d0436efdc619360c09c1cb8534982012088a820999447d7e04faba25df7bdbfcfa4deb402a9a8c698fab56096ffa0a4d76de1fa88207f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212ac41c050929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac06f7082ca9e234450d21a1dca3cdbc31692d57db1e7dda4a38849e21d6d4f92c700000000"
+  }
+]

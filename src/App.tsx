@@ -28,6 +28,8 @@ import VaultPendingTxDetail from "./ui/pages/VaultPendingTxDetail";
 import OfflineSign from "./ui/pages/OfflineSign";
 import VaultProposal from "./ui/pages/VaultProposal";
 import Footer from "./ui/components/Footer";
+import Connect from "./ui/pages/Connect";
+import NativeSwaps from "./ui/pages/NativeSwaps";
 
 /**
  * Pure routing-guard decision. Returns the path to redirect to, or
@@ -52,6 +54,7 @@ export function routeGuardTarget(
   path: string,
 ): string | null {
   if (status === "initializing") return null;
+  if (path === "/connect") return null;
   // Match "/onboarding" exactly OR "/onboarding/..." — NOT "/onboarding-fake"
   // or "/onboardingX". Belt-and-braces: the only routes the Routes
   // block exposes are `/onboarding/create` and `/onboarding/restore`,
@@ -145,7 +148,7 @@ export default function App() {
         // still populated and useQuery firing on stale derivation.
         void (async () => {
           await lock();
-          navigate("/unlock");
+          if (location.pathname !== "/connect") navigate("/unlock");
         })();
         return;
       }
@@ -156,7 +159,7 @@ export default function App() {
       for (const ev of events) window.removeEventListener(ev, bump);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [status, touch, lock, navigate]);
+  }, [status, touch, lock, navigate, location.pathname]);
 
   // Auto-lock poll. Reads lastActivity from the store each tick so we
   // don't need the effect to re-run on every bump (which would tear
@@ -172,12 +175,12 @@ export default function App() {
         // back to /dashboard.
         void (async () => {
           await lock();
-          navigate("/unlock");
+          if (location.pathname !== "/connect") navigate("/unlock");
         })();
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [status, lock, navigate]);
+  }, [status, lock, navigate, location.pathname]);
 
   // Auto-route on status OR navigation. Skip while "initializing" — we
   // don't know yet whether a keystore exists and any navigate() call
@@ -256,6 +259,8 @@ export default function App() {
     <div className="flex min-h-full flex-col">
       <div className="flex-1">
         <Routes>
+          <Route path="/connect" element={<Connect />} />
+          <Route path="/swaps" element={<NativeSwaps />} />
           <Route path="/" element={<Splash />} />
           <Route path="/onboarding/create" element={<OnboardingCreate />} />
           <Route path="/onboarding/restore" element={<OnboardingRestore />} />

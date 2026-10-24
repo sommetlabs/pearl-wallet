@@ -16,6 +16,10 @@
   ! Cache-Control
   Cache-Control: public, max-age=31536000, immutable, no-transform
 
+/connect
+  ! Cross-Origin-Opener-Policy
+  Cross-Origin-Opener-Policy: unsafe-none
+
 /logo-192.png
   ! Cache-Control
   Cache-Control: public, max-age=86400, no-transform

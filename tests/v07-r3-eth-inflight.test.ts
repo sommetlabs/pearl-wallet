@@ -408,7 +408,7 @@ describe("R4 — a wipe while another tab's send is in flight keeps that send's 
   async function wipeIn(t: Tab) {
     const { db, wipeKeystore } = await import("../src/storage/db");
     vi.spyOn(db, "transaction").mockImplementation((async (...args: unknown[]) => (args[args.length - 1] as () => Promise<unknown>)()) as never);
-    for (const name of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins"] as const) {
+    for (const name of ["keystore", "addressBook", "txCache", "vaults", "vaultPendingTxs", "bridgeCrossings", "bridgeDepositPins", "nativeSwaps"] as const) {
       vi.spyOn(db[name] as never, (name === "keystore" ? "delete" : "clear") as never).mockResolvedValue(undefined as never);
     }
     void t;

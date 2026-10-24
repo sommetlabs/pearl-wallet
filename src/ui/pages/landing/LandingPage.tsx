@@ -4,8 +4,9 @@ import AsciiPearl from "./AsciiPearl";
 import WalletActions from "./WalletActions";
 import WalletGuide from "./WalletGuide";
 import "./landing.css";
+import { DEFAULT_PEARL_NETWORK } from "../../../chains/pearl/network";
 
-const SOURCE = "https://github.com/PearlBridgeXYZ/pearlwallet";
+const SOURCE = "https://github.com/sommetlabs/pearl-wallet";
 
 export default function LandingPage() {
   return (
@@ -17,8 +18,13 @@ export default function LandingPage() {
           <h1 id="landing-title">pearlwallet<span className="landing-cursor" aria-hidden="true">_</span></h1>
           <div className="landing-copy">
             <p>your keys stay in your browser.</p>
-            <p>PRL on Pearl. WPRL + ETH on Ethereum.</p>
-            <p>bridge built in.</p>
+            {DEFAULT_PEARL_NETWORK === "testnet2" ? <>
+              <p>Pearl testnet2. Swaps with Midnight Preview.</p>
+              <p>Independent Sommet Labs Preview fork.</p>
+            </> : <>
+              <p>PRL on Pearl. WPRL + ETH on Ethereum.</p>
+              <p>bridge built in.</p>
+            </>}
             <p>open source. non-custodial.</p>
           </div>
           <WalletActions />

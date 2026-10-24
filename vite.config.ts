@@ -56,6 +56,7 @@ export default defineConfig({
     format: "es",
   },
   server: {
+    proxy: { "/api/pearl": {target:"https://blockbook.testnet.pearlresearch.ai",changeOrigin:true,rewrite:path => `/api/v2${path.slice("/api/pearl".length).replace(/^\/(?=\?|$)/,"")}`} },
     port: 5173,
     host: "127.0.0.1",
   },

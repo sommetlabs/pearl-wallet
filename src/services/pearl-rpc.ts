@@ -6,11 +6,13 @@
 
 import * as btc from "@scure/btc-signer";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
-import { PEARL_RPC_POOL, pearlParams } from "../chains/pearl/network";
+import { PEARL_RPC_POOL, pearlParams, activePearlNetwork } from "../chains/pearl/network";
 import { encodeTaprootAddress } from "../chains/pearl/address";
 import { useUI } from "../state/ui-store";
 import { TokenBucket, sleep, type RpcPriority } from "./rpc-limiter";
 import { memoryEpoch, onBalanceMemoryClear } from "../state/balance-memory";
+import { testnetRead } from "@sommetlabs/pearl-wallet-connect/rpc";
+import { PearlBlockbook } from "@sommetlabs/pearl-wallet-connect/blockbook";
 
 interface RpcResult<T> {
   jsonrpc?: string;
@@ -404,6 +406,17 @@ export async function callPearlRpc<T>(
   params: unknown[],
   opts: PearlCallOptions = {},
 ): Promise<T> {
+  if (activePearlNetwork() === "testnet2") {
+    await limiter.take(opts.priority ?? "high",opts.signal);
+    if (method === "sendrawtransaction") {
+      const raw=String(params[0]);const id=rawTxId(raw);
+      if (!id) throw new Error("Invalid signed Pearl transaction");
+      const outcome=await new PearlBlockbook().broadcast(raw,id);
+      if (outcome !== "broadcast") throw new BroadcastStatusUnknownError(id,new Error("Public Pearl broadcast requires observation"));
+      return id as T;
+    }
+    return await testnetRead(method,params,opts.signal) as T;
+  }
   const priority = opts.priority ?? "high";
   const timeoutMs = opts.timeoutMs ?? tuning.requestTimeoutMs;
   const budgetMs = opts.retryBudgetMs ?? tuning.retryBudgetMs;

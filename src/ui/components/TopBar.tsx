@@ -17,6 +17,7 @@ export default function TopBar() {
   const navigate = useNavigate();
   const sending = useMatch("/send/*");
   const ethEnabled = useUI((s) => s.ethEnabled);
+  const pearlNetwork = useWallet((s) => s.pearlNetwork);
   const status = useWallet((s) => s.status);
   const lock = useWallet((s) => s.lock);
   const lastActivity = useWallet((s) => s.lastActivity);
@@ -49,6 +50,7 @@ export default function TopBar() {
             <NavLink to="/receive">Receive</NavLink>
             {ethEnabled && <NavLink to="/bridge">Bridge</NavLink>}
             <NavLink to="/history">Activity</NavLink>
+            {pearlNetwork === "testnet2" && <NavLink to="/swaps">Swaps</NavLink>}
             <NavLink to="/settings">Settings</NavLink>
           </nav>
         )}
