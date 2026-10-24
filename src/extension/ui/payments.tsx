@@ -480,7 +480,7 @@ export function Activity({
                     </Button>
                     <Button
                       className="destructive"
-                      disabled={!releaseAcknowledged || busy === op.id}
+                      disabled={!releaseAcknowledged || !!busy}
                       onClick={() => act(op, "release")}
                       variant="destructive"
                     >
