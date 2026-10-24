@@ -18,8 +18,8 @@ const replies = new Map<
   }
 >();
 chrome.runtime.onConnect.addListener((candidate) => {
+  if (candidate.name !== "wallet-crypto") return;
   if (
-    candidate.name !== "wallet-crypto" ||
     candidate.sender?.id !== chrome.runtime.id ||
     candidate.sender?.url !== chrome.runtime.getURL(offscreenPath) ||
     port

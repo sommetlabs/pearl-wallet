@@ -61,7 +61,12 @@ export interface Operation {
   origin: string;
   createdAt: number;
   status:
-    "review" | "signed" | "broadcast" | "unknown" | "confirmed" | "cancelled";
+    | "review"
+    | "signed"
+    | "broadcast"
+    | "unknown"
+    | "confirmed"
+    | "cancelled";
   plan: TransferPlan;
   to: string;
   amountGrains: string;
@@ -74,12 +79,14 @@ export interface Grant {
   origin: string;
   accountId: string;
   createdAt: number;
+  requestId?: string;
 }
 export interface ConnectionRequest {
   id: string;
   origin: string;
   network: Network;
   createdAt: number;
+  openedAt?: number;
 }
 export interface Settings {
   autoLockMinutes: number;

@@ -10,10 +10,12 @@ import {
   save,
   encryptedVault,
   requireUnlocked,
+  checkUnlocked,
   view,
   walletPath,
   ready,
   selectAccount,
+  notifyWalletChange,
 } from "./state";
 import {
   refresh,
@@ -25,6 +27,7 @@ import {
 } from "./payments";
 import { external, disconnectOrigin } from "./sites";
 import { inspectRecovery } from "./recovery";
+import { WalletError } from "./errors";
 
 async function internal(request: UiCommand) {
   const { method, params } = request;
@@ -71,10 +74,11 @@ async function internal(request: UiCommand) {
         minutes: store.settings.autoLockMinutes,
       });
       session.unlocked = true;
+      notifyWalletChange();
       return view();
     case "lock":
-      await resetCryptoHost();
       session.unlocked = false;
+      await resetCryptoHost();
       await save();
       return view();
     case "touch":
@@ -184,6 +188,7 @@ async function internal(request: UiCommand) {
         origin: request.origin,
         accountId: account.id,
         createdAt: Date.now(),
+        requestId: request.id,
       });
       store.connections = store.connections.filter((c) => c.id !== request.id);
       await save();
@@ -231,8 +236,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return external(message.method, message.params ?? {}, url.origin);
   };
   const task =
-    message.channel === "wallet-ui" &&
-    ["lock", "view", "touch"].includes(message.method)
+    (message.channel === "wallet-ui" &&
+      ["lock", "view", "touch"].includes(message.method)) ||
+    (message.channel === "wallet-dapp" && message.method === "getInfo")
       ? ready.then(run)
       : serial(run);
   task.then(
@@ -240,6 +246,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (error) =>
       sendResponse({
         error: error instanceof Error ? error.message : "Wallet request failed",
+        code: error instanceof WalletError ? error.code : undefined,
       }),
   );
   return true;
@@ -247,7 +254,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name !== "wallet-maintenance") return;
   void serial(async () => {
-    if (session.unlocked) session.unlocked = await cryptoCall("status", {});
+    await checkUnlocked();
     await observe();
     if (store.connections.length) return;
     if (

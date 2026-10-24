@@ -1,15 +1,11 @@
 import { z } from "zod";
-import {
-  store,
-  save,
-  requireUnlocked,
-  walletPath,
-  checkUnlocked,
-} from "./state";
+import { store, save, requireUnlocked, checkUnlocked } from "./state";
 import { selected } from "./model";
 import { preparePayment, refresh } from "./payments";
 import { summarize } from "./network";
 import { WALLET_VERSION } from "./version";
+import { WalletError } from "./errors";
+import { openReview, reviewOpen } from "./reviews";
 
 export async function disconnectOrigin(origin: string) {
   store.grants = store.grants.filter((g) => g.origin !== origin);
@@ -28,16 +24,6 @@ function publicAccount() {
     publicKeyHex: account.addresses.find((a) => a.branch === 0)!.publicKeyHex,
     scheme: account.scheme,
   };
-}
-async function openReview(id: string) {
-  await chrome.windows.create({
-    url: chrome.runtime.getURL(
-      `${walletPath}?review=${encodeURIComponent(id)}`,
-    ),
-    type: "popup",
-    width: 460,
-    height: 720,
-  });
 }
 export async function external(
   method: string,
@@ -66,6 +52,20 @@ export async function external(
     const p = z
       .object({ network: z.enum(["mainnet", "testnet2"]) })
       .parse(params);
+    store.connections = store.connections.filter(
+      (c) => Date.now() - c.createdAt < 600_000,
+    );
+    const existing = store.connections.find((c) => c.origin === origin);
+    if (existing) {
+      existing.openedAt = Date.now();
+      await openReview(existing.id);
+      await save();
+      if (existing.network !== p.network)
+        throw new Error(
+          `A ${existing.network} request is waiting. Finish or reject it before changing networks.`,
+        );
+      return { pending: existing.id };
+    }
     if (
       (await checkUnlocked()) &&
       store.grants.some(
@@ -74,8 +74,6 @@ export async function external(
       selected(store).network === p.network
     )
       return { account: publicAccount() };
-    if (store.connections.some((c) => c.origin === origin))
-      throw new Error("A connection request from this site is already waiting");
     if (store.connections.length >= 10)
       throw new Error("The wallet has too many pending connection requests");
     const request = {
@@ -83,6 +81,7 @@ export async function external(
       origin,
       network: p.network,
       createdAt: Date.now(),
+      openedAt: Date.now(),
     };
     store.connections.push(request);
     await save();
@@ -91,14 +90,35 @@ export async function external(
   }
   if (method === "requestStatus") {
     const id = z.object({ id: z.string().uuid() }).parse(params).id;
-    if (store.connections.some((c) => c.id === id && c.origin === origin))
+    const connection = store.connections.find(
+      (c) => c.id === id && c.origin === origin,
+    );
+    if (connection) {
+      const expired = Date.now() - connection.createdAt >= 600_000;
+      if (
+        expired ||
+        !(await reviewOpen(id, connection.openedAt ?? connection.createdAt))
+      ) {
+        store.connections = store.connections.filter((c) => c.id !== id);
+        await save();
+        throw new WalletError(
+          expired ? "REQUEST_EXPIRED" : "REQUEST_CLOSED",
+          expired
+            ? "Wallet approval expired. Connect again."
+            : "Wallet approval was closed. Connect again.",
+        );
+      }
       return { pending: id };
+    }
     const op = store.operations.find(
       (op) => op.id === id && op.origin === origin,
     );
     if (op) {
       if (op.status === "cancelled")
-        throw new Error("Request rejected or expired");
+        throw new WalletError(
+          "REQUEST_REJECTED",
+          "Request rejected or expired",
+        );
       if (op.status === "review") return { pending: id };
       await requireUnlocked();
       if (
@@ -117,11 +137,14 @@ export async function external(
     await requireUnlocked();
     if (
       store.grants.some(
-        (g) => g.origin === origin && g.accountId === store.selectedId,
+        (g) =>
+          g.origin === origin &&
+          g.accountId === store.selectedId &&
+          g.requestId === id,
       )
     )
       return { account: publicAccount() };
-    throw new Error("Request rejected or expired");
+    throw new WalletError("REQUEST_REJECTED", "Request rejected or expired");
   }
   await requireUnlocked();
   if (
@@ -129,7 +152,10 @@ export async function external(
       (g) => g.origin === origin && g.accountId === store.selectedId,
     )
   )
-    throw new Error("Connect this site to the selected account first");
+    throw new WalletError(
+      "NOT_CONNECTED",
+      "Connect this site to the selected account first",
+    );
   if (method === "getAccount") return publicAccount();
   if (method === "getBalance") {
     const account = selected(store);

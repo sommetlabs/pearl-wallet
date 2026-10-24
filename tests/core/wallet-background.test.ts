@@ -39,6 +39,7 @@ async function background() {
           listener = fn;
         },
       },
+      onConnect: { addListener: vi.fn() },
       sendMessage: vi.fn(async () => {}),
     },
     storage: {
@@ -72,6 +73,42 @@ afterEach(() => {
 });
 
 describe("wallet responsiveness during discovery", () => {
+  it("does not restore unlocked state from a status read that started before locking", async () => {
+    const wallet = await background();
+    wallet.session.unlocked = true;
+    let status!: (value: boolean) => void;
+    wallet.cryptoCall.mockImplementationOnce(
+      () =>
+        new Promise<boolean>((resolve) => {
+          status = resolve;
+        }),
+    );
+    const viewing = wallet.request("view");
+    await vi.waitFor(() => expect(wallet.cryptoCall).toHaveBeenCalledOnce());
+    await wallet.request("lock");
+    status(true);
+    expect((await viewing).result!.unlocked).toBe(false);
+    expect(wallet.session.unlocked).toBe(false);
+  });
+  it("marks the wallet locked before teardown so concurrent reads cannot reopen its worker", async () => {
+    const wallet = await background();
+    wallet.session.unlocked = true;
+    let finish!: () => void;
+    wallet.resetCryptoHost.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const locking = wallet.request("lock");
+    await vi.waitFor(() =>
+      expect(wallet.resetCryptoHost).toHaveBeenCalledOnce(),
+    );
+    expect((await wallet.request("view")).result!.unlocked).toBe(false);
+    expect(wallet.cryptoCall).not.toHaveBeenCalled();
+    finish();
+    await locking;
+  });
   it("serves authenticated view and activity while a network read is blocked, without admitting other senders", async () => {
     const wallet = await background();
     wallet.store.accounts = [{ id: "fixture" }] as typeof wallet.store.accounts;

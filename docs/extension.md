@@ -37,7 +37,7 @@ The first milestone is testnet2. The mainnet configuration is available, but liv
 - Appearance, auto-lock, custom Blockbook endpoints and connected-site revocation.
 - A general browser provider with account/balance reads and separately reviewed payments.
 
-The alpha provider does not yet implement the hosted wallet's `fundSwap`/`claimSwap`/`refundSwap` protocol, arbitrary PSBT signing, message signing, hardware wallets, or XMSS script-path signing. Abyss's existing swap screen still uses the hosted-wallet connector. The new extension API must be integrated explicitly; installing the extension does not replace that transport automatically.
+The alpha provider does not yet implement the hosted wallet's `fundSwap`/`claimSwap`/`refundSwap` protocol, arbitrary PSBT signing, message signing, hardware wallets, or XMSS script-path signing. Abyss's Preview integration reads the extension account and PRL balance. Swap funding, claim and refund approvals remain separate work; an account connection alone does not enable them.
 
 ## dApp API
 
@@ -61,6 +61,10 @@ const receipt = await wallet.sendTransaction({
 
 The provider is `window.abyssWallet`; discovery also emits `abyss-wallet-ready`. The API is experimental and is not claimed to be an official Pearl standard. Any secure top-level site can request connection. Sites receive the selected public account and cached verified balances after consent. A fresh balance includes its chain tip, completeness and timestamp; provider outages reject instead of inventing a zero balance. Calls do not prolong the wallet's unlock timeout.
 
+An approved site receives `abyss-wallet-changed` on account, permission, lock and saved-balance changes. The event contains no account or balance payload; reread the provider to verify current access and values. A revoked site receives a final change signal so it can discard cached data. Unapproved sites do not receive wallet activity signals. Wallet events and foreground polling should invalidate the same account/balance query cache, rather than copying provider data into component state.
+
+Repeated `connect` calls focus or reopen the existing consent window and share its result. Closing a pending window permits a fresh connection attempt; it does not grant permission. Errors can carry `LOCKED`, `NOT_CONNECTED`, `UNAVAILABLE`, `REQUEST_CLOSED`, `REQUEST_EXPIRED` or `REQUEST_REJECTED` in `code`. An unavailable bridge after an extension update requires a page reload. Read `getInfo` for a quick liveness check; approval and signing requests keep their longer observation window.
+
 `sendTransaction` asks the wallet to review, sign, save and broadcast. `signTransaction` reviews and saves the same structured payment without broadcasting; its receipt includes raw bytes and its inputs remain reserved. A receipt with `status: "unknown"` means observation is needed, not permission to make a replacement payment. `disconnect` revokes reads and cancels unapproved requests; already signed transactions remain in activity.
 
 ## Code ownership and security
@@ -79,9 +83,12 @@ npm run check:extension
 node tools/check-wallet-setup.mjs
 PEARL_BROWSER_EXECUTABLE=/path/to/brave npm run check:extension
 node tools/check-wallet-extension.mjs --live
+ABYSS_APP_URL=http://127.0.0.1:3000 node tools/check-wallet-extension.mjs --connection-only
 ```
 
 The default extension check uses a temporary profile and controlled Blockbook fixture. It never opens a personal wallet. It covers creation, encrypted storage, canonical parent reads, connection consent, internal-method refusal, visible fees before signing, uncertain broadcast reservations, guarded release during an outage, exact-byte rebroadcast, manual/idle locking, export reauthentication, revocation, restart persistence and password recovery preserving signed bytes. Add `--live` for an initial public testnet2 discovery of a fresh unfunded account; payments still use fixtures.
+
+The optional `ABYSS_APP_URL` points at a locally running Abyss frontend with fixture-only backend configuration. It exercises the real React connection, updated spendable funds, lock/unlock, disconnect/reconnect and extension-reload recovery. It does not submit a live payment.
 
 The extension check exercises default 12-word creation; the setup check adds 24-word creation, persistent setup tabs, invalid phrases, official/web address compatibility, offline comparison without indexer requests and wrong-phrase recovery that leaves the vault untouched. Set `PEARL_UI_REPORT_DIR` for screenshots and a JSON check report. Generated recovery words are not captured.
 

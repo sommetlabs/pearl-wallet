@@ -79,3 +79,13 @@ The full suite passed 1,690 tests with six existing skips. Five new owner/consen
 Final Chrome and Brave setup runs passed after the body inheritance correction, including an actual computed Inter15 assertion. The final focused consent run also passed create, canonical fixture funding, responsive opening during a stalled provider, and accepted/declined origin-bound connection outcomes. New popup, wide and explicitly marked long-origin fixture captures show readable copy and persistent compact actions.
 
 The fresh reviewer returned **ship** for the five navigation/provider findings and then **ship** for the added connection/startup refinement. These verdicts cover the scored fixes, not the whole wallet or an external security audit.
+
+## Reconnection and reactive balances
+
+Repeated Connect now focuses or reopens the existing origin-bound review and shares its approval result. Closed, expired and rejected reviews are distinct from a locked wallet or invalidated extension bridge. Completed connection requests are bound to the exact accepted request ID, so an older request cannot resolve from a later consent.
+
+A payload-free change channel notifies approved top-level origins after balance, permission and lock changes. Revocation sends one final signal. Unapproved origins and subframes receive no wallet activity events, and content scripts retain no access to internal commands or keys. Liveness checks bypass network discovery and allow a busy page five seconds to respond; a missing bridge fails without waiting for a payment approval timeout. Locking sets the locked state before worker teardown, and an older status response cannot restore it.
+
+The Preview frontend retains TanStack Query for account and balance reads. Connection approval updates the account without awaiting a balance refresh. Wallet events invalidate the same queries, discard superseded reads and complement foreground polling. The UI offers Show Pearl wallet, Unlock Pearl and Reload page as appropriate. Six React regressions cover pending balances, live updates, permission changes and stale responses.
+
+The final wallet suite passed 1,700 tests with six existing skips; the frontend passed 142 tests. Type checking, scoped frontend lint and the extension build passed. The frontend change is in the existing Preview PR, with a successful Vercel build. These changes do not implement swap funding, claim or refund approvals in the extension.

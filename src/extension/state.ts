@@ -1,5 +1,7 @@
 import { cryptoCall, resetCryptoHost } from "./crypto-host";
 import { defaults, type Store, type View } from "./model";
+import { WalletError } from "./errors";
+import { publishWalletChange } from "./events";
 
 export const store: Store = defaults();
 export const session = { unlocked: false, refreshing: false };
@@ -9,11 +11,15 @@ export const ready = (async () => {
     accessLevel: "TRUSTED_CONTEXTS",
   });
   const persisted = (await chrome.storage.local.get("wallet")).wallet as
-    | Store
-    | undefined;
+    Store | undefined;
   if (persisted && persisted.version !== 2)
     throw new Error("This wallet data needs a compatible extension version");
   if (persisted) Object.assign(store, persisted);
+  publishWalletChange(
+    store.grants
+      .filter((g) => g.accountId === store.selectedId)
+      .map((g) => g.origin),
+  );
   await resetCryptoHost();
   await chrome.alarms.create("wallet-maintenance", { periodInMinutes: 0.5 });
 })();
@@ -36,9 +42,17 @@ export async function save() {
       "Wallet storage could not be saved. The wallet has been locked; check available disk space before retrying.",
     );
   }
+  notifyWalletChange();
+}
+export function notifyWalletChange() {
   void chrome.runtime
     .sendMessage({ channel: "wallet-changed" })
     .catch(() => {});
+  publishWalletChange(
+    store.grants
+      .filter((g) => g.accountId === store.selectedId)
+      .map((g) => g.origin),
+  );
 }
 export function selectAccount(id: string) {
   if (!store.accounts.some((account) => account.id === id))
@@ -56,16 +70,20 @@ export function encryptedVault() {
 }
 export async function requireUnlocked() {
   if (!(await checkUnlocked()))
-    throw new Error("Unlock your wallet to continue");
+    throw new WalletError("LOCKED", "Unlock your wallet to continue");
 }
 export async function checkUnlocked(): Promise<boolean> {
   if (!session.unlocked) return false;
-  session.unlocked = await cryptoCall("status", {});
-  if (!session.unlocked) await resetCryptoHost();
+  const unlocked = await cryptoCall("status", {});
+  if (!unlocked) {
+    session.unlocked = false;
+    await resetCryptoHost();
+    notifyWalletChange();
+  }
   return session.unlocked;
 }
 export async function view(): Promise<View> {
-  if (session.unlocked) session.unlocked = await cryptoCall("status", {});
+  await checkUnlocked();
   return {
     ...store,
     unlocked: session.unlocked,

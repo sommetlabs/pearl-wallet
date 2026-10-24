@@ -38,7 +38,8 @@ let address = "",
   outage = false,
   slowNextTip = false,
   slowStarted = false,
-  requests = 0;
+  requests = 0,
+  fundingAmount = 100_000_000n;
 const blockHash = "ab".repeat(32),
   genesis = "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96";
 const server = createServer(async (req, res) => {
@@ -82,7 +83,7 @@ const server = createServer(async (req, res) => {
     return reply(
       200,
       path.endsWith(address) && parent && !payment
-        ? [{ txid: parent.id, vout: 0, value: "100000000" }]
+        ? [{ txid: parent.id, vout: 0, value: fundingAmount.toString() }]
         : [],
     );
   if (path.startsWith("/api/v2/tx-specific/")) {
@@ -116,8 +117,18 @@ const server = createServer(async (req, res) => {
 });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const origin = `http://localhost:${server.address().port}`;
-let context;
+let context, abyss;
+function nextPage() {
+  const opened = context.waitForEvent("page", { timeout: 90_000 });
+  void opened.catch(() => {});
+  return opened;
+}
 const report = { checks: [] };
+function checkpoint(...labels) {
+  report.checks.push(...labels);
+  if (reportDir)
+    writeFileSync(join(reportDir, "progress.json"), JSON.stringify(report));
+}
 async function check() {
   context = await chromium.launchPersistentContext(profile, {
     ...(process.env.PEARL_BROWSER_EXECUTABLE
@@ -129,6 +140,14 @@ async function check() {
       `--load-extension=${extension}`,
     ],
   });
+  const extensionsPage = await context.newPage();
+  await extensionsPage.goto("chrome://extensions");
+  await extensionsPage.evaluate(() =>
+    chrome.developerPrivate.updateProfileConfiguration({
+      inDeveloperMode: true,
+    }),
+  );
+  await extensionsPage.close();
   const worker =
     context.serviceWorkers()[0] ??
     (await context.waitForEvent("serviceworker"));
@@ -169,7 +188,7 @@ async function check() {
   assert(!JSON.stringify(stored).includes(phrase));
   assert(!JSON.stringify(stored).includes(password));
   assert.equal(stored.wallet.accounts[0].scheme, "xmss");
-  report.checks.push(
+  checkpoint(
     "12-word creation, randomized backup verification, official XMSS account and encrypted persistence",
   );
   await expect
@@ -191,26 +210,28 @@ async function check() {
     ).wallet;
     assert.equal(liveState.errors[liveState.selectedId], undefined);
     assert.equal(liveState.balances[liveState.selectedId].confirmed, "0");
-    report.checks.push(
-      "live public testnet2 discovery for a fresh, unfunded account",
-    );
+    checkpoint("live public testnet2 discovery for a fresh, unfunded account");
   }
   address = stored.wallet.accounts[0].addresses[0].address;
   const decoded = bech32m.decode(address),
     outputKey = bech32m.fromWords(decoded.words.slice(1));
-  parent = new Transaction({
-    allowUnknownInputs: true,
-    allowUnknownOutputs: true,
-  });
-  parent.addOutput({
-    script: Uint8Array.from([0x51, 0x20, ...outputKey]),
-    amount: 100000000n,
-  });
-  parent.addInput({
-    txid: new Uint8Array(32),
-    index: 0xffffffff,
-    finalScriptSig: new Uint8Array([1, 1]),
-  });
+  function funding(amount) {
+    const tx = new Transaction({
+      allowUnknownInputs: true,
+      allowUnknownOutputs: true,
+    });
+    tx.addOutput({
+      script: Uint8Array.from([0x51, 0x20, ...outputKey]),
+      amount,
+    });
+    tx.addInput({
+      txid: new Uint8Array(32),
+      index: 0xffffffff,
+      finalScriptSig: new Uint8Array([1, 1]),
+    });
+    return tx;
+  }
+  parent = funding(fundingAmount);
   await openSettings(page, "Network services");
   await page.getByLabel("testnet2 Blockbook API").fill(`${origin}/api/v2`);
   await page
@@ -227,11 +248,18 @@ async function check() {
   await expect(page.locator(".balance-value")).toHaveText(/^1\s*PRL$/, {
     timeout: 75_000,
   });
-  report.checks.push("canonical parent verification and confirmed balance");
+  checkpoint("canonical parent verification and confirmed balance");
   if (reportDir) await page.screenshot({ path: join(reportDir, "wallet.png") });
   const dapp = await context.newPage();
   await dapp.goto(`${origin}/dapp`);
   await dapp.waitForFunction(() => !!window.abyssWallet);
+  await dapp.evaluate(() => {
+    window.walletEvents = 0;
+    window.addEventListener(
+      "abyss-wallet-changed",
+      () => window.walletEvents++,
+    );
+  });
   assert.equal(
     await dapp.evaluate(() =>
       window.abyssWallet.getBalance().then(
@@ -257,10 +285,29 @@ async function check() {
     page.getByRole("button", { name: "Refresh balance" }),
   ).toBeEnabled({ timeout: 15_000 });
   slowStarted = false;
-  report.checks.push(
+  checkpoint(
     "another wallet window opens promptly during a slow provider read",
   );
-  const rejectedPage = context.waitForEvent("page");
+  const closedPage = nextPage();
+  await dapp.evaluate(() => {
+    window.closedConnection = window.abyssWallet
+      .connect({ network: "testnet2" })
+      .then(
+        () => "unexpected",
+        (error) => error.code,
+      );
+  });
+  const dismissed = await closedPage;
+  await expect(
+    dismissed.getByRole("button", { name: "Connect", exact: true }),
+  ).toBeVisible();
+  await dismissed.close();
+  assert.equal(
+    await dapp.evaluate(() => window.closedConnection),
+    "REQUEST_CLOSED",
+  );
+  checkpoint("closing approval rejects promptly and leaves Connect retryable");
+  const rejectedPage = nextPage();
   await dapp.evaluate(() => {
     window.rejectedConnection = window.abyssWallet
       .connect({ network: "testnet2" })
@@ -284,7 +331,7 @@ async function check() {
       path: join(reportDir, "connection-declined.png"),
     });
   await declined.close();
-  const nextApproval = context.waitForEvent("page");
+  const nextApproval = nextPage();
   await dapp.evaluate(() => {
     window.connectionResult = window.abyssWallet.connect({
       network: "testnet2",
@@ -297,6 +344,28 @@ async function check() {
   ).toBeVisible();
   await expect(approval.locator(".overview")).toHaveCount(0);
   await expect(approval.getByRole("navigation")).toHaveCount(0);
+  const beforeRepeat = (
+    await worker.evaluate(() => chrome.storage.local.get("wallet"))
+  ).wallet.connections[0];
+  const pagesBeforeRepeat = context.pages().length;
+  await dapp.evaluate(() => {
+    window.repeatedConnection = window.abyssWallet.connect({
+      network: "testnet2",
+    });
+  });
+  await expect
+    .poll(
+      async () =>
+        (await worker.evaluate(() => chrome.storage.local.get("wallet"))).wallet
+          .connections[0].openedAt,
+    )
+    .toBeGreaterThan(beforeRepeat.openedAt);
+  assert.equal(context.pages().length, pagesBeforeRepeat);
+  assert.equal(
+    (await worker.evaluate(() => chrome.storage.local.get("wallet"))).wallet
+      .connections[0].id,
+    beforeRepeat.id,
+  );
   const beforeConsent = requests;
   const pausedRefresh = await approval.evaluate(() =>
     chrome.runtime.sendMessage({
@@ -343,10 +412,282 @@ async function check() {
     (await dapp.evaluate(() => window.abyssWallet.getBalance())).spendable,
     "100000000",
   );
-  report.checks.push(
+  checkpoint(
     "focused connection approval/rejection, paused discovery and explicit outcomes preserve origin-bound public balance reads",
   );
-  if (process.argv.includes("--connection-only")) return;
+  assert.equal(
+    (await dapp.evaluate(() => window.repeatedConnection)).account.address,
+    address,
+  );
+  const other = await context.newPage();
+  await other.goto(`${origin.replace("localhost", "127.0.0.1")}/dapp`);
+  await other.waitForFunction(() => !!window.abyssWallet);
+  await other.evaluate(() => {
+    window.walletEvents = 0;
+    window.addEventListener(
+      "abyss-wallet-changed",
+      () => window.walletEvents++,
+    );
+  });
+  const beforeBalanceEvent = await dapp.evaluate(() => window.walletEvents);
+  fundingAmount = 200_000_000n;
+  parent = funding(fundingAmount);
+  await page.getByRole("button", { name: "Refresh balance" }).click();
+  await expect(page.locator(".balance-value")).toHaveText(/^2\s*PRL$/, {
+    timeout: 30_000,
+  });
+  await expect
+    .poll(() => dapp.evaluate(() => window.walletEvents))
+    .toBeGreaterThan(beforeBalanceEvent);
+  assert.equal(
+    (await dapp.evaluate(() => window.abyssWallet.getBalance())).spendable,
+    "200000000",
+  );
+  assert.equal(await other.evaluate(() => window.walletEvents), 0);
+  await other.close();
+  checkpoint(
+    "approved sites receive live balance changes; other origins receive no wallet activity",
+  );
+  await dapp.evaluate(() => window.abyssWallet.disconnect());
+  const reconnectPage = nextPage();
+  await dapp.evaluate(() => {
+    window.connectionResult = window.abyssWallet.connect({
+      network: "testnet2",
+    });
+  });
+  const reconnect = await reconnectPage;
+  await reconnect.getByRole("button", { name: "Connect", exact: true }).click();
+  assert.equal(
+    (await dapp.evaluate(() => window.connectionResult)).account.address,
+    address,
+  );
+  await reconnect.close();
+  await page.getByRole("button", { name: "Lock wallet" }).click();
+  assert.equal(
+    await dapp.evaluate(() =>
+      window.abyssWallet.getAccount().then(
+        () => "unexpected",
+        (error) => error.code,
+      ),
+    ),
+    "LOCKED",
+  );
+  const unlockPage = nextPage();
+  await dapp.evaluate(() => {
+    window.connectionResult = window.abyssWallet.connect({
+      network: "testnet2",
+    });
+  });
+  const unlock = await unlockPage;
+  await unlock.getByLabel("Wallet password", { exact: true }).fill(password);
+  await unlock
+    .getByRole("button", { name: "Unlock wallet", exact: true })
+    .click();
+  await unlock.getByRole("button", { name: "Connect", exact: true }).click();
+  assert.equal(
+    (await dapp.evaluate(() => window.connectionResult)).account.address,
+    address,
+  );
+  await unlock.close();
+  checkpoint(
+    "disconnect and auto-lock recovery can reconnect through the same page without losing the account",
+  );
+  if (process.env.ABYSS_APP_URL) {
+    await context.addCookies([
+      { name: "locale", value: "en", url: process.env.ABYSS_APP_URL },
+    ]);
+    abyss = await context.newPage();
+    await abyss.setViewportSize({ width: 1280, height: 900 });
+    await abyss.addInitScript(() => {
+      const calls = new Map();
+      window.walletBridgeTrace = [];
+      window.addEventListener("message", (event) => {
+        if (event.source !== window || event.origin !== location.origin) return;
+        const { channel, id, method, code } = event.data ?? {};
+        if (channel === "abyss-wallet-request") calls.set(id, method);
+        if (
+          ![
+            "abyss-wallet-request",
+            "abyss-wallet-response",
+            "abyss-wallet-event",
+          ].includes(channel)
+        )
+          return;
+        window.walletBridgeTrace.push({
+          at: Date.now(),
+          channel,
+          method: method ?? calls.get(id),
+          code,
+        });
+        window.walletBridgeTrace = window.walletBridgeTrace.slice(-30);
+        if (channel === "abyss-wallet-response") calls.delete(id);
+      });
+    });
+    await abyss.goto(process.env.ABYSS_APP_URL, { timeout: 90_000 });
+    await abyss
+      .getByRole("button", { name: "PRL / WPRL", exact: true })
+      .click({ timeout: 90_000 });
+    const actualApproval = nextPage();
+    await abyss
+      .getByRole("button", { name: "Connect Pearl", exact: true })
+      .click();
+    const siteApproval = await actualApproval;
+    await expect(
+      siteApproval.getByRole("button", { name: "Connect", exact: true }),
+    ).toBeVisible();
+    const existingCount = context.pages().length;
+    await abyss
+      .getByRole("button", { name: "Show Pearl wallet", exact: true })
+      .click();
+    await siteApproval
+      .getByRole("button", { name: "Connect", exact: true })
+      .click();
+    await expect(
+      abyss.getByRole("button", { name: /Pearl connected/ }),
+    ).toBeVisible({ timeout: 15_000 });
+    assert.equal(context.pages().length, existingCount);
+    await expect(
+      abyss.locator('[data-slot="input-group-balance"][title="2 PRL"]'),
+    ).toBeVisible({ timeout: 15_000 });
+    await siteApproval.close();
+    fundingAmount = 300_000_000n;
+    parent = funding(fundingAmount);
+    await page.getByRole("button", { name: "Refresh balance" }).click();
+    await expect(page.locator(".balance-value")).toHaveText(/^3\s*PRL$/, {
+      timeout: 30_000,
+    });
+    await expect(
+      abyss.locator('[data-slot="input-group-balance"][title="3 PRL"]'),
+    ).toBeVisible({ timeout: 15_000 });
+    if (reportDir)
+      await abyss.screenshot({
+        path: join(reportDir, "abyss-connected-fixture.png"),
+        fullPage: true,
+      });
+    checkpoint("actual Abyss account and live balance updates verified");
+    await page.getByRole("button", { name: "Lock wallet" }).click();
+    await expect(
+      abyss.getByRole("button", { name: "Unlock Pearl", exact: true }),
+    ).toBeVisible({ timeout: 15_000 });
+    if (reportDir)
+      await abyss.screenshot({
+        path: join(reportDir, "abyss-locked-fixture.png"),
+        fullPage: true,
+      });
+    const siteUnlocking = nextPage();
+    await abyss
+      .getByRole("button", { name: "Unlock Pearl", exact: true })
+      .click();
+    const siteUnlock = await siteUnlocking;
+    await siteUnlock
+      .getByLabel("Wallet password", { exact: true })
+      .fill(password);
+    await siteUnlock
+      .getByRole("button", { name: "Unlock wallet", exact: true })
+      .click();
+    await siteUnlock
+      .getByRole("button", { name: "Connect", exact: true })
+      .click();
+    await expect(
+      abyss.getByRole("button", { name: /Pearl connected/ }),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(
+      abyss.locator('[data-slot="input-group-balance"][title="3 PRL"]'),
+    ).toBeVisible({ timeout: 15_000 });
+    await siteUnlock.close();
+    await abyss.evaluate(() => window.abyssWallet.disconnect());
+    await expect(
+      abyss.getByRole("button", { name: "Connect Pearl", exact: true }),
+    ).toBeVisible();
+    const siteReconnect = nextPage();
+    await abyss
+      .getByRole("button", { name: "Connect Pearl", exact: true })
+      .click();
+    const siteReapproval = await siteReconnect;
+    await siteReapproval
+      .getByRole("button", { name: "Connect", exact: true })
+      .click();
+    await expect(
+      abyss.getByRole("button", { name: /Pearl connected/ }),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(
+      abyss.locator('[data-slot="input-group-balance"][title="3 PRL"]'),
+    ).toBeVisible({ timeout: 15_000 });
+    await siteReapproval.close();
+    checkpoint(
+      "actual Abyss UI: show pending wallet, connect, live balance change, lock/unlock and disconnect/reconnect without reloading",
+    );
+  }
+  if (process.argv.includes("--connection-only")) {
+    const restarted = context.waitForEvent("serviceworker", {
+      predicate: (candidate) => candidate !== worker,
+    });
+    void restarted.catch(() => {});
+    await worker.evaluate(() => chrome.runtime.reload()).catch(() => {});
+    await expect
+      .poll(
+        () =>
+          dapp.evaluate(() =>
+            window.abyssWallet.getInfo().then(
+              () => "available",
+              (error) => error.code,
+            ),
+          ),
+        { timeout: 10_000 },
+      )
+      .toBe("UNAVAILABLE");
+    const wake = await context.newPage();
+    await expect
+      .poll(
+        async () => {
+          try {
+            await wake.goto(base);
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        { timeout: 30_000 },
+      )
+      .toBe(true);
+    await restarted;
+    await expect(
+      wake.getByRole("button", { name: "Unlock wallet", exact: true }),
+    ).toBeVisible();
+    if (abyss) {
+      await expect(
+        abyss.getByRole("button", { name: "Reload page", exact: true }),
+      ).toBeVisible({ timeout: 25_000 });
+      if (reportDir)
+        await abyss.screenshot({
+          path: join(reportDir, "abyss-reload-recovery-fixture.png"),
+          fullPage: true,
+        });
+      await abyss
+        .getByRole("button", { name: "Reload page", exact: true })
+        .click();
+      await abyss
+        .getByRole("button", { name: "PRL / WPRL", exact: true })
+        .click();
+      await expect(
+        abyss.getByRole("button", { name: "Unlock Pearl", exact: true }),
+      ).toBeVisible();
+      checkpoint(
+        "actual Abyss UI: invalidated bridge offers page reload and preserves the wallet account",
+      );
+    }
+    await dapp.reload();
+    await dapp.waitForFunction(() => !!window.abyssWallet);
+    assert.equal(
+      (await dapp.evaluate(() => window.abyssWallet.getInfo())).name,
+      "Abyss Wallet",
+    );
+    checkpoint(
+      "extension reload fails promptly on the old bridge and recovers after a page reload",
+    );
+    return;
+  }
+
   const forbidden = await dapp.evaluate(
     () =>
       new Promise((resolve) => {
@@ -368,7 +709,7 @@ async function check() {
       }),
   );
   assert.equal(forbidden, "Unsupported Pearl wallet method");
-  report.checks.push("site requests cannot invoke internal key export");
+  checkpoint("site requests cannot invoke internal key export");
   await approval.close();
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await page.getByLabel("Recipient address").fill(address);
@@ -390,8 +731,11 @@ async function check() {
   const signed = state.operations[0].signed;
   assert(signed.rawHex && signed.txid);
   assert.equal(state.operations[0].status, "unknown");
-  assert.equal(state.balances[state.selectedId].reserved, "100000000");
-  report.checks.push(
+  assert.equal(
+    state.balances[state.selectedId].reserved,
+    fundingAmount.toString(),
+  );
+  checkpoint(
     "reviewed XMSS-committed key-path payment, durable uncertain-broadcast reservation",
   );
   if (process.argv.includes("--native")) {
@@ -439,7 +783,7 @@ async function check() {
         },
       ),
     );
-    report.checks.push(
+    checkpoint(
       "official Pearl script engine accepts the payment and rejects tampering",
     );
   }
@@ -476,7 +820,7 @@ async function check() {
   await release
     .getByRole("button", { name: "Keep reserved", exact: true })
     .click();
-  report.checks.push(
+  checkpoint(
     "explicit release acknowledgement and provider failure keep uncertain inputs reserved",
   );
   failBroadcast = false;
@@ -489,7 +833,7 @@ async function check() {
   state = (await worker.evaluate(() => chrome.storage.local.get("wallet")))
     .wallet;
   assert.equal(state.operations[0].signed.rawHex, signed.rawHex);
-  report.checks.push("rebroadcast uses exact journaled bytes");
+  checkpoint("rebroadcast uses exact journaled bytes");
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Wallet", exact: true })
@@ -528,7 +872,7 @@ async function check() {
   await expect(
     page.getByRole("button", { name: "Send", exact: true }),
   ).toBeVisible();
-  report.checks.push(
+  checkpoint(
     "manual lock, locked dApp refusal, wrong-password rejection and unlock",
   );
   await openSettings(page, "Connected sites");
@@ -542,7 +886,7 @@ async function check() {
     ),
     /Connect/,
   );
-  report.checks.push("revoked permissions prevent balance access");
+  checkpoint("revoked permissions prevent balance access");
   await openSettings(page, "Recovery and security");
   await page.getByLabel("Password to reveal recovery phrase").fill(password);
   await page
@@ -550,7 +894,7 @@ async function check() {
     .click();
   await expect(page.locator(".secret")).toHaveText(phrase);
   await page.getByRole("button", { name: "Hide phrase" }).click();
-  report.checks.push("recovery export requires password reauthentication");
+  checkpoint("recovery export requires password reauthentication");
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Wallet", exact: true })
@@ -562,7 +906,7 @@ async function check() {
   await expect(
     page.getByRole("button", { name: "Unlock wallet", exact: true }),
   ).toBeVisible({ timeout: 2500 });
-  report.checks.push(
+  checkpoint(
     "manual lock interrupts keys immediately during a slow indexer request",
   );
   await page.getByLabel("Wallet password", { exact: true }).fill(password);
@@ -580,9 +924,7 @@ async function check() {
   await expect(
     page.getByRole("button", { name: "Unlock wallet", exact: true }),
   ).toBeVisible({ timeout: 75_000 });
-  report.checks.push(
-    "idle auto-lock while background observation stays active",
-  );
+  checkpoint("idle auto-lock while background observation stays active");
   assert.deepEqual(errors, []);
   report.browser = context.browser()?.version();
   await context.close();
@@ -617,7 +959,7 @@ async function check() {
   assert.equal(persisted.accounts[0].addresses[0].address, address);
   assert.equal(persisted.operations[0].signed.rawHex, signed.rawHex);
   assert.equal(persisted.grants.length, 0);
-  report.checks.push(
+  checkpoint(
     "browser restart locks keys and preserves account, journal and revocation",
   );
   await restored.getByRole("button", { name: "Lock wallet" }).click();
@@ -645,7 +987,7 @@ async function check() {
   assert.equal(recovered.accounts[0].addresses[0].address, address);
   assert(!JSON.stringify(recovered).includes(phrase));
   assert(!JSON.stringify(recovered).includes(recoveredPassword));
-  report.checks.push(
+  checkpoint(
     "phrase-based password recovery preserves the signed transaction journal and account",
   );
 }
@@ -659,6 +1001,38 @@ try {
     );
   console.log(JSON.stringify(report, null, 2));
 } catch (error) {
+  if (abyss && reportDir)
+    await abyss
+      .screenshot({
+        path: join(reportDir, "abyss-failure-fixture.png"),
+        fullPage: true,
+      })
+      .catch(() => {});
+  const app =
+    abyss &&
+    (await abyss
+      .evaluate(async () => {
+        const trace = window.walletBridgeTrace;
+        try {
+          const account = await Promise.race([
+            window.abyssWallet.getAccount(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject({ code: "DIAGNOSTIC_TIMEOUT" }), 4000),
+            ),
+          ]);
+          return {
+            trace,
+            network: account.network,
+            idLength: account.id.length,
+            addressLength: account.address.length,
+            publicKeyLength: account.publicKeyHex.length,
+            scheme: account.scheme,
+          };
+        } catch (error) {
+          return { code: error.code ?? "other", trace };
+        }
+      })
+      .catch(() => undefined));
   const worker = context?.serviceWorkers()[0];
   const state =
     worker &&
@@ -686,11 +1060,11 @@ try {
       })
       .catch(() => undefined));
   console.error(
-    JSON.stringify({ ...browserFailure(error, report.checks), state }),
+    JSON.stringify({ ...browserFailure(error, report.checks), state, app }),
   );
   process.exitCode = 1;
 } finally {
-  await context?.close();
+  await context?.close().catch(() => {});
   await new Promise((resolve) => server.close(resolve));
   rmSync(temp, { recursive: true, force: true });
 }
