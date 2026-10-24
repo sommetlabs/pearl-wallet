@@ -1,4 +1,8 @@
 import type { Network } from "../core/networks";
+import type {
+  PearlPsbtRequest,
+  PearlPsbtReceipt,
+} from "../../packages/connector/src/extension";
 import type { TransferPlan, SignedTransfer } from "../core/transactions";
 import type { Account, Address, EncryptedVault } from "./model";
 
@@ -34,6 +38,7 @@ export interface CryptoParams {
   export: Credentials;
   password: Credentials & { newPassword: string };
   sign: { accountIndex: number; plan: TransferPlan };
+  signPsbt: { accountIndex: number; request: PearlPsbtRequest };
 }
 export interface CryptoResults {
   generate: string;
@@ -49,6 +54,7 @@ export interface CryptoResults {
   export: string;
   password: EncryptedVault;
   sign: SignedTransfer;
+  signPsbt: PearlPsbtReceipt;
 }
 export type CryptoRequest = {
   [K in keyof CryptoParams]: { id: string; method: K; params: CryptoParams[K] };

@@ -107,6 +107,7 @@ import type { AbyssWalletProvider } from "../../packages/connector/src/extension
       disconnect: () => liveRequest("disconnect"),
       sendTransaction: (payment) => approved("sendTransaction", payment),
       signTransaction: (payment) => approved("signTransaction", payment),
+      signPsbt: (request) => approved("signPsbt", request),
     } satisfies AbyssWalletProvider),
   });
   window.dispatchEvent(new Event("abyss-wallet-ready"));

@@ -1,9 +1,11 @@
 import { PearlTransactionNotFound } from "../../packages/connector/src/blockbook";
 import { cryptoCall } from "./crypto-host";
-import { payment } from "./commands";
+import { payment, psbtRequest } from "./commands";
+import { readPsbt, checkPsbtKey, scriptAddress } from "../core/psbt";
+import { hexToBytes } from "@noble/hashes/utils";
 import { store, session, save, requireUnlocked, view } from "./state";
 import { selected, outpoint, type Account, type Operation } from "./model";
-import { prepare, scan, summarize } from "./network";
+import { prepare, reservations, scan, summarize } from "./network";
 import { pearlProvider, PearlRateLimitError } from "./provider";
 
 function api(account: Account) {
@@ -12,6 +14,98 @@ function api(account: Account) {
     account.network,
     store.retryAt[account.network],
   );
+}
+function savedRequest(
+  origin: string,
+  account: Account,
+  clientRequestId?: string,
+) {
+  return clientRequestId
+    ? store.operations.find(
+        (op) =>
+          op.origin === origin &&
+          op.accountId === account.id &&
+          op.clientRequestId === clientRequestId,
+      )
+    : undefined;
+}
+async function verifyPsbt(op: Operation, account: Account) {
+  if (!op.psbt) throw new Error("Missing PSBT request");
+  const { tx, plan, txid } = readPsbt(op.psbt.request, account);
+  if (
+    JSON.stringify(plan) !== JSON.stringify(op.plan) ||
+    txid !== op.psbt.txid ||
+    tx.lockTime !== op.psbt.lockTime
+  )
+    throw new Error("PSBT differs from the reviewed transaction");
+  const provider = api(account),
+    tip = await provider.tip(),
+    reserved = reservations(store.operations, account.id, op.id);
+  const checked = new Map<string, Awaited<ReturnType<typeof provider.utxos>>>();
+  for (const [index, input] of plan.inputs.entries()) {
+    const own = account.addresses.find(
+      (a) => a.branch === input.branch && a.index === input.index,
+    );
+    if (!own || reserved.has(outpoint(input)))
+      throw new Error("PSBT input is unavailable to this account");
+    checkPsbtKey(tx, index, own);
+    const script = hexToBytes(input.scriptHex),
+      address = scriptAddress(script, account);
+    let coins = checked.get(address);
+    if (!coins) {
+      coins = await provider.utxos(address, script, tip);
+      checked.set(address, coins);
+    }
+    const coin = coins.find(
+      (c) => c.outpoint.txid === input.txid && c.outpoint.vout === input.vout,
+    );
+    if (
+      !coin ||
+      coin.amount.toString() !== input.amountGrains ||
+      coin.confirmations < (account.network === "mainnet" ? 6 : 2)
+    )
+      throw new Error(
+        "PSBT input differs from an unspent confirmed Pearl output",
+      );
+  }
+  await provider.assertTip(tip);
+}
+export async function preparePsbt(
+  params: unknown,
+  origin: string,
+): Promise<Operation> {
+  await requireUnlocked();
+  const request = psbtRequest.parse(params),
+    account = selected(store),
+    prior = savedRequest(origin, account, request.clientRequestId);
+  if (prior) {
+    if (JSON.stringify(prior.psbt?.request) !== JSON.stringify(request))
+      throw new Error("Request ID already belongs to another transaction");
+    return prior;
+  }
+  if (store.operations.filter((op) => op.status === "review").length >= 10)
+    throw new Error("Finish the wallet’s pending reviews first");
+  const { tx, plan, txid } = readPsbt(request, account);
+  const op: Operation = {
+    id: crypto.randomUUID(),
+    accountId: account.id,
+    origin,
+    createdAt: Date.now(),
+    status: "review",
+    plan,
+    to: plan.outputs[0].address,
+    amountGrains: plan.outputs
+      .reduce((n, output) => n + BigInt(output.amountGrains), 0n)
+      .toString(),
+    feeRate: 0,
+    signOnly: true,
+    clientRequestId: request.clientRequestId,
+    psbt: { request, txid, lockTime: tx.lockTime },
+  };
+  await verifyPsbt(op, account);
+  store.operations.push(op);
+  await save();
+  return op;
 }
 export async function refresh(account: Account, force = false) {
   if (store.connections.length)
@@ -97,14 +191,15 @@ export async function observe() {
   }
   for (const op of store.operations.filter(
     (op) =>
-      op.signed &&
+      (op.signed || op.psbt?.signed) &&
       op.status !== "cancelled" &&
       (op.status !== "confirmed" || (op.confirmations ?? 0) < 100),
   )) {
     const account = store.accounts.find((a) => a.id === op.accountId);
-    if (!account || !op.signed) continue;
+    const txid = op.signed?.txid ?? op.psbt?.signed?.txid;
+    if (!account || !txid) continue;
     try {
-      const result = await api(account).transaction(op.signed.txid);
+      const result = await api(account).transaction(txid);
       op.confirmations = result.confirmations;
       op.status =
         result.confirmations >= (account.network === "mainnet" ? 6 : 2)
@@ -137,12 +232,24 @@ export async function preparePayment(
   signOnly = false,
 ): Promise<Operation> {
   await requireUnlocked();
+  const p = payment.parse(params),
+    account = selected(store);
+  const prior = savedRequest(origin, account, p.clientRequestId);
+  if (prior) {
+    if (
+      prior.psbt ||
+      prior.to !== p.to ||
+      prior.amountGrains !== p.amountGrains ||
+      prior.feeRate !== p.feeRate ||
+      prior.signOnly !== signOnly
+    )
+      throw new Error("Request ID already belongs to another transaction");
+    return prior;
+  }
   if (store.operations.filter((op) => op.status === "review").length >= 10)
     throw new Error(
       "Finish or reject the wallet’s pending payment reviews first",
     );
-  const p = payment.parse(params),
-    account = selected(store);
   const balance = await refresh(account, true);
   const plan = prepare(
     account,
@@ -163,6 +270,7 @@ export async function preparePayment(
     amountGrains: p.amountGrains,
     feeRate: p.feeRate,
     signOnly,
+    clientRequestId: p.clientRequestId,
   };
   store.operations.push(op);
   Object.assign(balance, summarize(account, balance.coins, store.operations));
@@ -186,6 +294,17 @@ export async function approve(id: string) {
     throw new Error(
       "This review expired or its account changed. Request a new review.",
     );
+  if (op.psbt) {
+    await verifyPsbt(op, account);
+    await requireUnlocked();
+    op.psbt.signed = await cryptoCall("signPsbt", {
+      accountIndex: store.accounts.indexOf(account),
+      request: op.psbt.request,
+    });
+    op.status = "signed";
+    await save();
+    return op;
+  }
   const balance = await refresh(account, true);
   const available = new Map(balance.coins.map((c) => [outpoint(c), c]));
   for (const input of op.plan.inputs) {
@@ -226,26 +345,29 @@ export async function retryPayment(id: string) {
 export async function releasePayment(id: string, acknowledge: boolean) {
   const op = store.operations.find((op) => op.id === id);
   if (
-    !op?.signed ||
+    !(op?.signed || op?.psbt?.signed) ||
     !["unknown", "signed"].includes(op.status) ||
     acknowledge !== true
   )
     throw new Error("Confirm release of an unobserved signed transaction");
   const account = store.accounts.find((a) => a.id === op.accountId)!;
   try {
-    await api(account).transaction(op.signed.txid);
+    await api(account).transaction((op.signed ?? op.psbt!.signed!).txid);
     throw new Error(
       "Transaction is visible on Pearl; its inputs cannot be released",
     );
   } catch (error) {
     if (!(error instanceof PearlTransactionNotFound)) throw error;
   }
-  const balance = await refresh(account, true),
-    coins = new Set(balance.coins.map(outpoint));
-  if (!op.plan.inputs.every((c) => coins.has(outpoint(c))))
-    throw new Error(
-      "Not all transaction inputs are demonstrably unspent. Keep them reserved.",
-    );
+  if (op.psbt) await verifyPsbt(op, account);
+  else {
+    const balance = await refresh(account, true),
+      coins = new Set(balance.coins.map(outpoint));
+    if (!op.plan.inputs.every((c) => coins.has(outpoint(c))))
+      throw new Error(
+        "Not all transaction inputs are demonstrably unspent. Keep them reserved.",
+      );
+  }
   op.status = "cancelled";
   await save();
   return view();

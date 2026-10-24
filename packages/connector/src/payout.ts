@@ -18,6 +18,7 @@ export function verifyClaimPayout(input: {
   outpoint: string;
   parent: ParsedPearlTx;
   payout: ParsedPearlTx;
+  destinationScript?: Uint8Array;
 }): bigint {
   const { htlc, amount } = verifyEscrowTerms(input.signed, input.hashlock, input.terms);
   const [txid, index] = input.outpoint.split(":");
@@ -40,7 +41,7 @@ export function verifyClaimPayout(input: {
   )
     throw new Error("Pearl payout does not spend the quoted escrow");
   const output = tx.outputs[0]!;
-  if (!equalBytes(output.script, p2trScript(keyPathOutputKey(hex.decode(input.terms.claimerKey)))))
+  if (!equalBytes(output.script, input.destinationScript ?? p2trScript(keyPathOutputKey(hex.decode(input.terms.claimerKey)))))
     throw new Error("Pearl payout goes to another recipient");
   const witness = spend.witness;
   if (

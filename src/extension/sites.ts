@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { store, save, requireUnlocked, checkUnlocked } from "./state";
 import { selected } from "./model";
-import { preparePayment, refresh } from "./payments";
+import { preparePayment, preparePsbt, refresh } from "./payments";
 import { summarize } from "./network";
 import { WALLET_VERSION } from "./version";
 import { WalletError } from "./errors";
@@ -41,6 +41,8 @@ export async function external(
         "getBalance",
         "sendTransaction",
         "signTransaction",
+        "signPsbt",
+        "idempotentSigning",
       ],
       experimental: true,
     };
@@ -119,7 +121,13 @@ export async function external(
           "REQUEST_REJECTED",
           "Request rejected or expired",
         );
-      if (op.status === "review") return { pending: id };
+      if (op.status === "review") {
+        if (Date.now() - op.createdAt >= 600_000)
+          throw new WalletError("REQUEST_EXPIRED", "Wallet approval expired");
+        if (!(await reviewOpen(id, op.reviewOpenedAt ?? op.createdAt)))
+          throw new WalletError("REQUEST_CLOSED", "Wallet approval was closed");
+        return { pending: id };
+      }
       await requireUnlocked();
       if (
         !store.grants.some(
@@ -128,10 +136,12 @@ export async function external(
         op.accountId !== store.selectedId
       )
         throw new Error("This site's account permission changed");
+      if (op.psbt?.signed) return op.psbt.signed;
       return {
         txid: op.signed?.txid,
         status: op.status,
         ...(op.signOnly && { rawHex: op.signed?.rawHex }),
+        feeGrains: op.signed?.feeGrains,
       };
     }
     await requireUnlocked();
@@ -185,7 +195,20 @@ export async function external(
       origin,
       method === "signTransaction",
     );
-    await openReview(op.id);
+    if (op.status === "review") {
+      op.reviewOpenedAt = Date.now();
+      await save();
+      await openReview(op.id);
+    }
+    return { pending: op.id };
+  }
+  if (method === "signPsbt") {
+    const op = await preparePsbt(params, origin);
+    if (op.status === "review") {
+      op.reviewOpenedAt = Date.now();
+      await save();
+      await openReview(op.id);
+    }
     return { pending: op.id };
   }
   throw new Error("Unsupported Pearl wallet method");

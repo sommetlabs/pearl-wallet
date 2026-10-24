@@ -1,6 +1,6 @@
 {
   "name": "@sommetlabs/pearl-wallet-connect",
-  "version": "0.1.0-preview.8",
+  "version": "0.1.0-preview.12",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -12,12 +12,14 @@
     "./proxy": "./src/proxy.ts",
     "./payout": "./src/payout.ts",
     "./rpc": "./src/rpc.ts",
-    "./extension": "./src/extension.ts"
+    "./extension": "./src/extension.ts",
+    "./signing": "./src/signing.ts"
   },
   "files": [
     "src",
     "LICENSE",
-    "provenance.json"
+    "provenance.json",
+    "README.md"
   ],
   "dependencies": {
     "@noble/curves": "2.2.0",

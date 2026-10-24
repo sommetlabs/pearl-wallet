@@ -11,6 +11,27 @@ export const payment = z.object({
   to: z.string().min(20).max(90),
   amountGrains: z.string().regex(/^[1-9]\d{0,18}$/),
   feeRate: z.number().int().min(1).max(1000).default(2),
+  clientRequestId: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .optional(),
+});
+export const psbtRequest = z.object({
+  psbtHex: z
+    .string()
+    .regex(/^(?:[0-9a-f]{2})+$/)
+    .max(500_000),
+  inputsToSign: z
+    .array(
+      z.object({
+        index: z.number().int().min(0).max(99),
+        branch: z.union([z.literal(0), z.literal(1)]),
+        addressIndex: z.number().int().min(0).max(999),
+      }),
+    )
+    .min(1)
+    .max(100),
+  clientRequestId: z.string().regex(/^[0-9a-f]{64}$/),
 });
 export const settings = z.object({
   autoLockMinutes: z.union([

@@ -7,6 +7,7 @@ import {
   type AccountDescriptor,
 } from "../core/accounts";
 import { signTransfer } from "../core/transactions";
+import { signPsbt } from "../core/psbt";
 import { loadXmss } from "../core/xmss";
 import wasmUrl from "../core/wasm/xmss.wasm?url";
 import {
@@ -273,6 +274,19 @@ async function handle(request: CryptoRequest): Promise<unknown> {
         seed,
         descriptor,
         params.plan,
+        await xmss,
+      );
+      requireUnlocked();
+      return signed;
+    }
+    case "signPsbt": {
+      const { seed, vault } = requireUnlocked();
+      const descriptor = vault.accounts[params.accountIndex];
+      if (!descriptor) throw new Error("Unknown account");
+      const signed = await signPsbt(
+        seed,
+        descriptor,
+        params.request,
         await xmss,
       );
       requireUnlocked();

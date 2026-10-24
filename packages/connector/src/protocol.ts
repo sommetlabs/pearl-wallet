@@ -14,7 +14,7 @@ export const receiptSchema = z.strictObject({
     .regex(/^(?:[0-9a-f]{2})+$/)
     .max(100_000),
   feeGrains: z.string().regex(/^[1-9][0-9]*$/),
-  status: z.enum(["broadcast", "unknown"]),
+  status: z.enum(["signed", "broadcast", "unknown"]),
   terms: nativeEscrowSchema,
 });
 export type PearlReceipt = z.infer<typeof receiptSchema>;

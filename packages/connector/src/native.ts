@@ -15,8 +15,8 @@ export const PREVIEW = Object.freeze({
   source: "92bcb2de2268bc9a666060ede2c92ff4d56a8d04a952a3612dbed3612ed42ac9",
   dest: "dfc7d392c125739addc75bbe84507b3090b3385c602bc9a89a9fc75d0c981739",
   wprl: Object.freeze({
-    address: "1ecfc611899c7c7cc0b6a0bef9f714561fe588d63b2400ef6fcff7c7f92480c6",
-    colorHex: "65c644caf437aec3eeaae671c809cf4782e8bf055fb1c30eadd05a4d0f6365ff",
+    address: "985645c4ed3785a3c4b6a5b5a3b596aa7875b94fc1efb4d2bb03b4f809f5b112",
+    colorHex: "137f347261c39475c1d4cc2b45f41f69fdb6578cfd418cf33601b942bf98c498",
     decimals: 8,
   }),
   quoteKey: "54ee1aad75661ff1f61335f5d9954c150a25d035f11e99540c76e39e9d4772b7",

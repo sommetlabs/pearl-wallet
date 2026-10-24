@@ -6,6 +6,10 @@ import type {
 } from "../core/transactions";
 import type { Network } from "../core/networks";
 import type { AccountFormat } from "../core/account-formats";
+import type {
+  PearlPsbtRequest,
+  PearlPsbtReceipt,
+} from "../../packages/connector/src/extension";
 
 export interface RecoveryCandidate {
   format: AccountFormat;
@@ -74,6 +78,14 @@ export interface Operation {
   signed?: SignedTransfer;
   confirmations?: number;
   signOnly: boolean;
+  clientRequestId?: string;
+  reviewOpenedAt?: number;
+  psbt?: {
+    request: PearlPsbtRequest;
+    signed?: PearlPsbtReceipt;
+    txid: string;
+    lockTime: number;
+  };
 }
 export interface Grant {
   origin: string;

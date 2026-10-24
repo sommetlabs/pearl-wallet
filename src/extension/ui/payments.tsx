@@ -209,10 +209,24 @@ export function Review({
           <span className="currency">PRL</span>
           <strong>{format(op.amountGrains)}</strong>
         </div>
-        <div className="recipient-block">
-          <span>Recipient</span>
-          <p className="address">{op.to}</p>
-        </div>
+        {op.psbt ? (
+          op.plan.outputs.map((output, index) => (
+            <div className="recipient-block" key={index}>
+              <span>
+                {account.addresses.some((a) => a.address === output.address)
+                  ? "Your account"
+                  : "Recipient"}{" "}
+                · {format(output.amountGrains)} PRL
+              </span>
+              <p className="address">{output.address}</p>
+            </div>
+          ))
+        ) : (
+          <div className="recipient-block">
+            <span>Recipient</span>
+            <p className="address">{op.to}</p>
+          </div>
+        )}
         <dl className="details">
           <div>
             <dt>Network fee</dt>
@@ -244,7 +258,13 @@ export function Review({
               <dt>Inputs</dt>
               <dd>{op.plan.inputs.length}</dd>
             </div>
-            {op.plan.outputs[1] && (
+            {!!op.psbt?.lockTime && (
+              <div>
+                <dt>Lock time</dt>
+                <dd>{op.psbt.lockTime}</dd>
+              </div>
+            )}
+            {!op.psbt && op.plan.outputs[1] && (
               <div>
                 <dt>Change to your account</dt>
                 <dd>
@@ -347,16 +367,17 @@ export function Activity({
             {op.confirmations ? ` · ${op.confirmations} confirmations` : ""}
           </p>
           <small className="address">To {op.to}</small>
-          {op.signed && (
+          {(op.signed || op.psbt?.signed) && (
             <a
               href={explorer(
                 accounts.find((a) => a.id === op.accountId)!.network,
-                op.signed.txid,
+                (op.signed ?? op.psbt!.signed!).txid,
               )}
               target="_blank"
               rel="noreferrer"
             >
-              {short(op.signed.txid)} <Icon name="external" />
+              {short((op.signed ?? op.psbt!.signed!).txid)}{" "}
+              <Icon name="external" />
             </a>
           )}
           {op.status === "review" && (
@@ -374,16 +395,18 @@ export function Activity({
                 Its coins stay reserved. Check status before making another
                 payment.
               </Notice>
-              <Button
-                className="secondary"
-                disabled={busy === op.id}
-                onClick={() => act(op, "retry")}
-                variant="outline"
-              >
-                {busy === op.id && pendingAction === "retry"
-                  ? "Rebroadcasting…"
-                  : "Rebroadcast saved transaction"}
-              </Button>
+              {op.signed && (
+                <Button
+                  className="secondary"
+                  disabled={busy === op.id}
+                  onClick={() => act(op, "retry")}
+                  variant="outline"
+                >
+                  {busy === op.id && pendingAction === "retry"
+                    ? "Rebroadcasting…"
+                    : "Rebroadcast saved transaction"}
+                </Button>
+              )}
               <Button
                 className="ghost"
                 disabled={busy === op.id}

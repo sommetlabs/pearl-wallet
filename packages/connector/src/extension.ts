@@ -25,14 +25,27 @@ export interface AbyssWalletPayment {
   to: string;
   amountGrains: string;
   feeRate?: number;
+  clientRequestId?: string;
 }
 export interface AbyssWalletReceipt {
   txid: string;
   status: "signed" | "broadcast" | "unknown" | "confirmed";
   rawHex?: string;
+  feeGrains?: string;
 }
-export interface AbyssWalletProvider {
-  readonly name: "Abyss Wallet";
+export interface PearlPsbtRequest {
+  psbtHex: string;
+  inputsToSign: { index: number; branch: 0 | 1; addressIndex: number }[];
+  clientRequestId: string;
+}
+export interface PearlPsbtReceipt {
+  psbtHex: string;
+  txid: string;
+  feeGrains: string;
+  status: "signed";
+}
+export interface PearlWalletProvider {
+  readonly name: string;
   readonly apiVersion: 1;
   getInfo(): Promise<{
     name: string;
@@ -49,12 +62,22 @@ export interface AbyssWalletProvider {
   getBalance(): Promise<AbyssWalletBalance>;
   sendTransaction(payment: AbyssWalletPayment): Promise<AbyssWalletReceipt>;
   signTransaction(payment: AbyssWalletPayment): Promise<AbyssWalletReceipt>;
+  signPsbt?(request: PearlPsbtRequest): Promise<PearlPsbtReceipt>;
   disconnect(): Promise<boolean>;
+}
+export interface AbyssWalletProvider extends PearlWalletProvider {
+  readonly name: "Abyss Wallet";
 }
 declare global {
   interface Window {
     readonly abyssWallet?: AbyssWalletProvider;
+    readonly pearlWallet?: PearlWalletProvider;
   }
+}
+export function getPearlWallet(): PearlWalletProvider | undefined {
+  return typeof window === "undefined"
+    ? undefined
+    : (window.pearlWallet ?? window.abyssWallet);
 }
 export function getAbyssWallet(): AbyssWalletProvider | undefined {
   return typeof window === "undefined" ? undefined : window.abyssWallet;

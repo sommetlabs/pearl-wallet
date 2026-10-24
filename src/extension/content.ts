@@ -10,7 +10,7 @@ window.addEventListener("message", (event) => {
     typeof id !== "string" ||
     id.length > 100 ||
     typeof method !== "string" ||
-    JSON.stringify(event.data).length > 20_000
+    JSON.stringify(event.data).length > 520_000
   )
     return;
   void (async () => {
