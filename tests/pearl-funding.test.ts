@@ -62,7 +62,7 @@ function context() {
   });
   const chain = {
     tip: async () => ({
-      height: signed.quote.pearlLeg.terms.minLockHeight - 120,
+      height: signed.quote.tipAtQuote.pearlHeight,
       hash: "66".repeat(32),
     }),
     assertTip: async () => {},
@@ -148,4 +148,18 @@ it("keeps signed bytes recoverable without broadcasting when approval outlives t
   await expect(fundPearlSwap(c)).rejects.toThrow("expired");
   expect(c.saved.map((r) => r.status)).toEqual(["signed"]);
   expect(c.broadcast).not.toHaveBeenCalled();
+});
+it("leaves the quoted minting window after confirmation and another block during approval", async () => {
+  const c = context(),
+    quotedHeight = c.signed.quote.tipAtQuote.pearlHeight;
+  vi.spyOn(c.chain, "tip")
+    .mockResolvedValueOnce({ height: quotedHeight + 6, hash: "66".repeat(32) })
+    .mockResolvedValueOnce({ height: quotedHeight + 7, hash: "66".repeat(32) });
+  const receipt = await fundPearlSwap(c);
+  expect(receipt.terms.lockHeight).toBe(
+    c.signed.quote.pearlLeg.terms.maxLockHeight,
+  );
+  expect(receipt.terms.lockHeight - (quotedHeight + 7)).toBeGreaterThan(
+    c.signed.quote.midnightLeg.fillMinBlocksLeft,
+  );
 });

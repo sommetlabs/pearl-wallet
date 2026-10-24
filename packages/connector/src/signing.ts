@@ -85,7 +85,7 @@ export async function fundPearlSwap(context: SigningContext) {
     hashlock: context.hashlock,
     claimerKey: t.claimerKeyHex,
     refunderKey: t.refunderKeyHex,
-    lockHeight: t.minLockHeight,
+    lockHeight: t.maxLockHeight,
     amountGrains: t.amountGrains,
   };
   const { htlc, amount } = verifyEscrowTerms(signed, context.hashlock, terms),
