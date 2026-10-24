@@ -129,6 +129,13 @@ function checkpoint(...labels) {
   if (reportDir)
     writeFileSync(join(reportDir, "progress.json"), JSON.stringify(report));
 }
+async function selectPearl(page) {
+  const button = page.getByRole("button", { name: "PRL / WPRL", exact: true });
+  await expect(async () => {
+    await button.click();
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+  }).toPass({ timeout: 30_000 });
+}
 async function check() {
   context = await chromium.launchPersistentContext(profile, {
     ...(process.env.PEARL_BROWSER_EXECUTABLE
@@ -524,9 +531,7 @@ async function check() {
       });
     });
     await abyss.goto(process.env.ABYSS_APP_URL, { timeout: 90_000 });
-    await abyss
-      .getByRole("button", { name: "PRL / WPRL", exact: true })
-      .click({ timeout: 90_000 });
+    await selectPearl(abyss);
     const actualApproval = nextPage();
     await abyss
       .getByRole("button", { name: "Connect Pearl", exact: true })
@@ -663,15 +668,14 @@ async function check() {
           path: join(reportDir, "abyss-reload-recovery-fixture.png"),
           fullPage: true,
         });
-      await abyss
-        .getByRole("button", { name: "Reload page", exact: true })
-        .click();
-      await abyss
-        .getByRole("button", { name: "PRL / WPRL", exact: true })
-        .click();
+      await Promise.all([
+        abyss.waitForEvent("load"),
+        abyss.getByRole("button", { name: "Reload page", exact: true }).click(),
+      ]);
+      await selectPearl(abyss);
       await expect(
         abyss.getByRole("button", { name: "Unlock Pearl", exact: true }),
-      ).toBeVisible();
+      ).toBeVisible({ timeout: 15_000 });
       checkpoint(
         "actual Abyss UI: invalidated bridge offers page reload and preserves the wallet account",
       );
