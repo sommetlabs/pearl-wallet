@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "kind": "pearl-swap-quote",
+  "quoteIdHex": "1b23e8a96c7bb5cf5014267a28f9e3ec92908a5c68614e603541d89514f9de07",
+  "quote": {
+    "solverId": "pearl-preview-wprl-testnet2",
+    "networks": {
+      "pearl": {
+        "chain": "pearl-testnet2",
+        "genesisHash": "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96"
+      },
+      "midnight": {
+        "networkId": "preview",
+        "intentSourceAddress": "92bcb2de2268bc9a666060ede2c92ff4d56a8d04a952a3612dbed3612ed42ac9",
+        "intentDestAddress": "dfc7d392c125739addc75bbe84507b3090b3385c602bc9a89a9fc75d0c981739"
+      }
+    },
+    "sell": {
+      "asset": "PRL",
+      "amount": "1000000"
+    },
+    "buy": {
+      "asset": "WPRL",
+      "amount": "990000",
+      "colorHex": "137f347261c39475c1d4cc2b45f41f69fdb6578cfd418cf33601b942bf98c498",
+      "issuer": true,
+      "chain": "midnight",
+      "decimals": 8
+    },
+    "price": {
+      "buyPerSell": "0.99",
+      "feeBps": 0,
+      "feeAmount": "10000",
+      "feeAsset": "WPRL"
+    },
+    "solver": {
+      "quoteKeyHex": "54ee1aad75661ff1f61335f5d9954c150a25d035f11e99540c76e39e9d4772b7",
+      "pearlKeyHex": "7f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212",
+      "intentSourceCommitmentHex": "a173fd7649b7aa3ad7fff95ba45905c3f3bdef7348d4b1e30ae0ef42d0dd7268",
+      "midnightPayoutAddress": "430dd03dab80686be95cafac1ba3e513d99333a1116d3a066654bf22c6413d72"
+    },
+    "user": {
+      "pearlKeyHex": "efa269f26d40b4ec549b6ff7b0f20479ed9a27523e7179be12f48bb7cf77555a",
+      "midnight": {
+        "intentDestCommitmentHex": "7c9d641dbe96b4c05f790a46c572625c6bdb5d880eae8b1ec29a03b87eb49cee",
+        "coinPublicKeyHex": "2be877661884634a411b8274a65b2deb52faf457ce3966266d68bba42d8f65d4",
+        "unshieldedAddress": "feb7e34602d73da40392391dd3082133c62365ad53ec7a22daf4f139884a70e8"
+      }
+    },
+    "pearlLeg": {
+      "terms": {
+        "chain": "pearl-testnet2",
+        "genesisHash": "b0c86d0cd8825f4d72260d2de46f470429eece413811d5d82b5f2e2ea0336f96",
+        "assetLabel": "PRL",
+        "amountGrains": "1000000",
+        "claimerKeyHex": "7f9e6f76fda08ecb622ce62aad4ed3c40bd16eab07a1bd7c52174df367147212",
+        "refunderKeyHex": "efa269f26d40b4ec549b6ff7b0f20479ed9a27523e7179be12f48bb7cf77555a",
+        "minLockHeight": 115460,
+        "maxLockHeight": 115604,
+        "minConfirmations": 2,
+        "feeRateGrainsPerVb": 2
+      },
+      "termsHashHex": "158eaba3701c82de1397bff49673bf0a2902c20e95c5e3d4cf93922a8a4dcceb",
+      "fundBy": "1792809483"
+    },
+    "tipAtQuote": {
+      "pearlHeight": 115364,
+      "midnightBlockTime": "1792808568"
+    },
+    "issuedAt": "1792808583",
+    "expiresAt": "1792809183",
+    "direction": "pearl->midnight",
+    "midnightLeg": {
+      "contract": "intent-dest",
+      "fillColorHex": "137f347261c39475c1d4cc2b45f41f69fdb6578cfd418cf33601b942bf98c498",
+      "fillAmount": "990000",
+      "fillDeadlineSeconds": "1800",
+      "fillMinBlocksLeft": 90
+    }
+  },
+  "signature": {
+    "publicKeyHex": "54ee1aad75661ff1f61335f5d9954c150a25d035f11e99540c76e39e9d4772b7",
+    "signatureHex": "39797f50026b2128d3f7d1c6bc95bbb868e6065e0df5913b63f99601892116ea0b53c0e3c52a604db98eb0942b1be0c961fc2b16caac10fdde48ef3e76e896a4"
+  }
+}
