@@ -1,0 +1,70 @@
+{
+  "name": "@sommetlabs/pearl-wallet-connect",
+  "version": "0.1.0-preview.17",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/extension.d.ts",
+      "import": "./dist/extension.js",
+      "default": "./dist/extension.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol.d.ts",
+      "import": "./dist/protocol.js",
+      "default": "./dist/protocol.js"
+    },
+    "./native": {
+      "types": "./dist/native.d.ts",
+      "import": "./dist/native.js",
+      "default": "./dist/native.js"
+    },
+    "./pearl": {
+      "types": "./dist/pearl/index.d.ts",
+      "import": "./dist/pearl/index.js",
+      "default": "./dist/pearl/index.js"
+    },
+    "./blockbook": {
+      "types": "./dist/blockbook.d.ts",
+      "import": "./dist/blockbook.js",
+      "default": "./dist/blockbook.js"
+    },
+    "./proxy": {
+      "types": "./dist/proxy.d.ts",
+      "import": "./dist/proxy.js",
+      "default": "./dist/proxy.js"
+    },
+    "./payout": {
+      "types": "./dist/payout.d.ts",
+      "import": "./dist/payout.js",
+      "default": "./dist/payout.js"
+    },
+    "./extension": {
+      "types": "./dist/extension.d.ts",
+      "import": "./dist/extension.js",
+      "default": "./dist/extension.js"
+    },
+    "./signing": {
+      "types": "./dist/signing.d.ts",
+      "import": "./dist/signing.js",
+      "default": "./dist/signing.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "provenance.json",
+    "README.md"
+  ],
+  "dependencies": {
+    "@noble/curves": "2.2.0",
+    "@noble/hashes": "2.2.0",
+    "@scure/base": "2.2.0",
+    "@scure/btc-signer": "2.4.1",
+    "zod": "^4.3.6"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build"
+  }
+}

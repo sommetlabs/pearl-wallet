@@ -22,6 +22,7 @@ dist-ssr/
 # Build artifacts
 *.tsbuildinfo
 coverage/
+.core-browser/
 
 # Logs
 npm-debug.log*
@@ -29,3 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+dist-extension/
+.impeccable/review/
+.impeccable/cache/

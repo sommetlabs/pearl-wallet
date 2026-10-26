@@ -1,7 +1,12 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable",
+      "WebWorker"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
@@ -19,11 +24,28 @@
     "isolatedModules": true,
     "noEmit": true,
     "useDefineForClassFields": true,
-    "types": ["vite/client", "node"],
+    "allowImportingTsExtensions": true,
+    "types": [
+      "vite/client",
+      "node",
+      "chrome"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   },
-  "include": ["src", "vite.config.ts", "vite.config.offline.ts"]
+  "include": [
+    "src/core",
+    "src/extension",
+    "src/crypto",
+    "packages/connector/src",
+    "tests/core",
+    "tools/browser-core",
+    "vite.core.config.ts",
+    "vite.extension.config.ts",
+    "vitest.config.ts"
+  ]
 }

@@ -1,5 +1,4 @@
 // AES-256-GCM keystore with PBKDF2-HMAC-SHA256 KDF (600k iterations).
-// Conforms to docs/06-CRYPTO.md storage record schema.
 
 export const KDF_ITERATIONS = 600_000;
 export const KDF_SALT_BYTES = 16;

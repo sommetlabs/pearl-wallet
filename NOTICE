@@ -7,3 +7,7 @@ not affiliated with Pearl Research Labs.
 
 "PearlWallet" and "PearlBridge" are names of the PearlBridge project.
 The Apache License 2.0 does not grant permission to use them (section 6).
+
+The v2 browser core also includes code derived from Pearl Research Labs'
+official wallet and a compiled XMSS implementation. See native/NOTICE and
+native/xmss/ for source provenance and the applicable ISC/CC0 notices.
